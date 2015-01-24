@@ -15,7 +15,6 @@ def Exec(command):
 class CommandRule(MappingRule):
     mapping = {
         "save as": Key("c-x, c-w"), 
-        "dired": Key("c-d"),
         "save bookmark": Key("c-x, r, m"),
         "list bookmarks": Key("c-x, r, l"),
         "help variable": Key("c-h, v"), 

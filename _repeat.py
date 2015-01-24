@@ -224,7 +224,8 @@ numbers_map = {
     "point": ".",
     "minus": "-",
     "slash": "/",
-    "coal": ":", 
+    "coal": ":",
+    "nad": ",",
 }
 
 short_letters_map = {
@@ -335,8 +336,8 @@ key_action_map = {
     "east":                              Key("end"),
     "north":                            Key("c-home"),
     "south":                           Key("c-end"),
-    "Y":                           Key("y"),
-    "N":                           Key("n"),
+    "yankee|Y":                           Key("y"),
+    "november|N":                           Key("n"),
 
     "crack [<n>]":                     release + Key("del/5:%(n)d"),
     "delete [<n> | this] (line|lines)": release + Key("home, s-down/5:%(n)d, del"),
@@ -712,6 +713,7 @@ emacs_action_map = combine_maps(
         "white": Key("a-m"),
         "buff": Key("c-x, b"),
         "oaf": Key("c-x, c-f"),
+        "dired": Key("c-d"),
         "furred [<n>]": Key("a-f/5:%(n)d"),
         "bird [<n>]": Key("a-b/5:%(n)d"),
         "kurd [<n>]": Key("a-d/5:%(n)d"),
@@ -968,7 +970,7 @@ gmail_action_map = combine_maps(
     chrome_action_map,
     {
         "open": Key("o"),
-        "archive": Text("["),
+        "(archive|done)": Text("["),
         "list": Key("u"),
         "preev": Key("k"),
         "next": Key("j"),
