@@ -10,9 +10,10 @@ This contains all commands which may be spoken continuously or repeated. It
 requires the presence of dragonfly_local.py in the core subdirectory to define
 the following variables:
 
+HOME: Path to your home directory.
 DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
     DLLs will be ignored.
-HOME: Path to your home directory.
+CHROME_DRIVER_PATH: Path to chrome driver executable.
 
 This is heavily modified from _multiedit.py, found here:
 https://code.google.com/p/dragonfly-modules/
@@ -26,19 +27,25 @@ except ImportError:
     pass
 
 from dragonfly import *
+import dragonfly.log
 
 import dragonfly_words
 from dragonfly_local import *
 
+import BaseHTTPServer
 import Queue
 import SocketServer
-import BaseHTTPServer
+import cProfile
+import json
 import socket
 import threading
-import urllib
-import win32gui
-import cProfile
 import time
+import urllib
+import urllib2
+import win32gui
+
+# Make sure dragonfly errors show up in NatLink messages.
+dragonfly.log.setup_log()
 
 # Load _repeat.txt.
 config = Config("repeat")
@@ -86,6 +93,52 @@ def type_position(format):
 
 def activate_position():
     tracker_dll.activate()
+
+#-------------------------------------------------------------------------------
+# Actions for manipulating Chrome via WebDriver.
+# TODO: Move to a separate module.
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+def create_driver():
+    global driver
+    chrome_options = Options()
+    chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
+    driver = webdriver.Chrome(CHROME_DRIVER_PATH, chrome_options=chrome_options)
+
+def quit_driver():
+    global driver
+    if driver:
+        driver.quit()
+    driver = None
+
+def switch_to_active_tab():
+    tabs = json.load(urllib2.urlopen("http://127.0.0.1:9222/json"))
+    # Chrome always returns the active tab as the first.
+    active_tab = tabs[0]["id"]
+    for window in driver.window_handles:
+        # ChromeDriver adds to the raw ID, so we just look for substring match.
+        if active_tab in window:
+            driver.switch_to_window(window);
+            print "Switched to: " + driver.title.encode('ascii', 'backslashreplace')
+            return
+
+def test_driver():
+    switch_to_active_tab()
+    driver.get('http://www.google.com/xhtml');
+
+class ClickElementAction(ActionBase):
+    def __init__(self, xpath=None):
+        ActionBase.__init__(self)
+        self.xpath = xpath
+
+    def _execute(self, data=None):
+        switch_to_active_tab()
+        if self.xpath:
+            element = driver.find_element_by_xpath(self.xpath)
+        element.click()
+
 
 #-------------------------------------------------------------------------------
 # Utility functions and classes for manipulating grammars and their components.
@@ -912,7 +965,10 @@ chrome_action_map = combine_maps(
         "new bookmark": Key("c-apostrophe"),
         "save bookmark": Key("c-d"), 
         "next frame": Key("c-lbracket"),
-        "developer tools": Key("cs-j"), 
+        "developer tools": Key("cs-j"),
+        "create driver": Function(create_driver),
+        "quit driver": Function(quit_driver),
+        "test driver": Function(test_driver),
     })
 
 link_char_map = {
@@ -990,7 +1046,8 @@ gmail_action_map = combine_maps(
         "new messages": Key("N"),
         "go to inbox": Key("g, i"), 
         "go to starred": Key("g, s"), 
-        "go to sent": Key("g, t"), 
+        "go to sent": Key("g, t"),
+        "expand all": ClickElementAction(xpath="//*[@aria-label='Expand all']"),
     })
 
 gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
