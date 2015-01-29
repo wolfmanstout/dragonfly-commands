@@ -115,8 +115,12 @@ def quit_driver():
 
 def switch_to_active_tab():
     tabs = json.load(urllib2.urlopen("http://127.0.0.1:9222/json"))
-    # Chrome always returns the active tab as the first.
-    active_tab = tabs[0]["id"]
+    # Chrome seems to order the tabs by when they were last updated, so we find
+    # the first one that is not an extension.
+    for tab in tabs:
+        if not tab["url"].startswith("chrome-extension://"):
+            active_tab = tab["id"]
+            break
     for window in driver.window_handles:
         # ChromeDriver adds to the raw ID, so we just look for substring match.
         if active_tab in window:
