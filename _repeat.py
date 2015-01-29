@@ -873,8 +873,13 @@ emacs_element = RuleRef(rule=create_rule("EmacsKeystrokeRule", emacs_action_map,
 emacs_context_helper = ContextHelper("Emacs", AppContext(title = "Emacs editor"), emacs_element)
 global_context_helper.add_child(emacs_context_helper)
 
-
-emacs_shell_element = RuleRef(rule=create_rule("EmacsShellKeystrokeRule", combine_maps(emacs_action_map, shell_command_map), emacs_element_map))
+emacs_shell_action_map = combine_maps(
+    emacs_action_map,
+    shell_command_map,
+    {
+        "show output": Key("c-c, c-r"), 
+    })
+emacs_shell_element = RuleRef(rule=create_rule("EmacsShellKeystrokeRule", emacs_shell_action_map, emacs_element_map))
 emacs_shell_context_helper = ContextHelper("EmacsShell", AppContext(title="- Shell -"), emacs_shell_element)
 emacs_context_helper.add_child(emacs_shell_context_helper)
 
@@ -917,6 +922,7 @@ chrome_action_map = combine_maps(
         "background links": Key("a-f"), 
         "new tab":            Key("c-t"),
         "new incognito":            Key("cs-n"),
+        "new window": Key("c-n"),
         "clote":          Key("c-w"),
         "(search|address) bar":        Key("c-l"),
         "back [<n>]":               Key("a-left/15:%(n)d"),
