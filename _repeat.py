@@ -751,7 +751,8 @@ emacs_action_map = combine_maps(
         "switch project": Key("c-c, p, s"),
         "build file": Key("c-c/10, c-g"),
         "test file": Key("c-c, c-t"),
-        "helm": Key("c-x, c"), 
+        "helm": Key("c-x, c"),
+        "helm resume": Key("c-x, c, b"), 
         "line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
         "re-center": Key("c-l"),
         "set mark": Key("c-backtick"), 
@@ -1016,7 +1017,8 @@ critique_action_map = combine_maps(
         "list": Key("u"),
         "comment": Key("c"),
         "save": Key("c-s"),
-        "expand|collapse": Key("e"), 
+        "expand|collapse": Key("e"),
+        "reply": Key("r"), 
     })
 critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, chrome_element_map))
 critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"), critique_element)
