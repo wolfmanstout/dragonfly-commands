@@ -944,6 +944,7 @@ chrome_action_map = combine_maps(
         "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
         "moma": Key("c-l/15") + Text("moma") + Key("tab"),
         "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
+        "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
         "code search": Key("c-l/15") + Text("cs") + Key("tab"),
         "go to calendar": Key("c-l/15") + Text("c/") + Key("enter"),
         "go to critique": Key("c-l/15") + Text("cr/") + Key("enter"),
