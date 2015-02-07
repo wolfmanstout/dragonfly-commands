@@ -100,6 +100,7 @@ def activate_position():
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 def create_driver():
     global driver
@@ -133,14 +134,14 @@ def test_driver():
     driver.get('http://www.google.com/xhtml');
 
 class ClickElementAction(ActionBase):
-    def __init__(self, xpath=None):
+    def __init__(self, by, value):
         ActionBase.__init__(self)
-        self.xpath = xpath
+        self.by = by
+        self.value = value
 
     def _execute(self, data=None):
         switch_to_active_tab()
-        if self.xpath:
-            element = driver.find_element_by_xpath(self.xpath)
+        element = driver.find_element(self.by, self.value)
         element.click()
 
 
@@ -925,7 +926,7 @@ chrome_action_map = combine_maps(
         "new incognito":            Key("cs-n"),
         "new window": Key("c-n"),
         "clote":          Key("c-w"),
-        "(search|address) bar":        Key("c-l"),
+        "address bar":        Key("c-l"),
         "back [<n>]":               Key("a-left/15:%(n)d"),
         "Frak [<n>]":            Key("a-right/15:%(n)d"),
         "reload": Key("c-r"),
@@ -981,6 +982,7 @@ chrome_action_map = combine_maps(
         "create driver": Function(create_driver),
         "quit driver": Function(quit_driver),
         "test driver": Function(test_driver),
+        "search bar": ClickElementAction(By.NAME, "q"),
     })
 
 link_char_map = {
@@ -1060,7 +1062,7 @@ gmail_action_map = combine_maps(
         "go to inbox": Key("g, i"), 
         "go to starred": Key("g, s"), 
         "go to sent": Key("g, t"),
-        "expand all": ClickElementAction(xpath="//*[@aria-label='Expand all']"),
+        "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
     })
 
 gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
