@@ -133,15 +133,17 @@ def test_driver():
     switch_to_active_tab()
     driver.get('http://www.google.com/xhtml');
 
-class ClickElementAction(ActionBase):
-    def __init__(self, by, value):
-        ActionBase.__init__(self)
+class ClickElementAction(DynStrActionBase):
+    def __init__(self, by, spec):
+        DynStrActionBase.__init__(self, spec)
         self.by = by
-        self.value = value
 
-    def _execute(self, data=None):
+    def _parse_spec(self, spec):
+        return spec
+
+    def _execute_events(self, events):
         switch_to_active_tab()
-        element = driver.find_element(self.by, self.value)
+        element = driver.find_element(self.by, events)
         element.click()
 
 
@@ -1026,6 +1028,25 @@ critique_action_map = combine_maps(
 critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, chrome_element_map))
 critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"), critique_element)
 chrome_context_helper.add_child(critique_context_helper)
+
+calendar_action_map = combine_maps(
+    chrome_action_map,
+    {
+        "click <name>": ClickElementAction(By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
+    })
+names_dict_list = DictList(
+    "name_dict_list",
+    {
+        "sandy": "Sandy"
+    })
+calendar_element_map = combine_maps(
+    chrome_element_map,
+    {
+        "name": DictListRef(None, names_dict_list),
+    })
+calendar_element = RuleRef(rule=create_rule("CalendarKeystrokeRule", calendar_action_map, calendar_element_map))
+calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar"), calendar_element)
+chrome_context_helper.add_child(calendar_context_helper)
 
 code_search_action_map = combine_maps(
     chrome_action_map,
