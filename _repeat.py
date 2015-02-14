@@ -819,7 +819,7 @@ emacs_action_map = combine_maps(
         "prefix": Key("c-u"), 
         "quit": Key("q"),
         "save": Key("c-x, c-s"),
-        "open definition": Key("c-c, comma, d"),
+        "open definition": Key("c-backtick, c-c, comma, d"),
         "open cross references": Key("c-c, comma, x"),
         "clang format": Key("ca-q"),
         "format comment": Key("a-q"),
@@ -1037,7 +1037,7 @@ calendar_action_map = combine_maps(
 names_dict_list = DictList(
     "name_dict_list",
     {
-        "sandy": "Sandy"
+        "Sonica": "Sonica"
     })
 calendar_element_map = combine_maps(
     chrome_element_map,
@@ -1045,7 +1045,7 @@ calendar_element_map = combine_maps(
         "name": DictListRef(None, names_dict_list),
     })
 calendar_element = RuleRef(rule=create_rule("CalendarKeystrokeRule", calendar_action_map, calendar_element_map))
-calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar"), calendar_element)
+calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar") | AppContext(title = "Google.com - Calendar"), calendar_element)
 chrome_context_helper.add_child(calendar_context_helper)
 
 code_search_action_map = combine_maps(
