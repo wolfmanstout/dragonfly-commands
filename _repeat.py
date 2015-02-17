@@ -949,7 +949,7 @@ chrome_action_map = combine_maps(
         "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
         "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
         "code search": Key("c-l/15") + Text("cs") + Key("tab"),
-        "go to calendar": Key("c-l/15") + Text("c/") + Key("enter"),
+        "go to calendar": Key("c-l/15") + Text("calendar.google.com") + Key("enter"),
         "go to critique": Key("c-l/15") + Text("cr/") + Key("enter"),
         "go to (buganizer|bugs)": Key("c-l/15") + Text("b/") + Key("enter"),
         "go to presubmits": Key("c-l/15, b, tab") + Text("One shot") + Key("enter:2"), 
@@ -985,6 +985,7 @@ chrome_action_map = combine_maps(
         "quit driver": Function(quit_driver),
         "test driver": Function(test_driver),
         "search bar": ClickElementAction(By.NAME, "q"),
+        "add a bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
 
 link_char_map = {
@@ -1033,6 +1034,12 @@ calendar_action_map = combine_maps(
     chrome_action_map,
     {
         "click <name>": ClickElementAction(By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
+        "today": Key("t"),
+        "preev": Key("k"),
+        "next": Key("j"),
+        "day": Key("d"),
+        "week": Key("w"),
+        "month": Key("m"),
     })
 names_dict_list = DictList(
     "name_dict_list",
