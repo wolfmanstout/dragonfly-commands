@@ -226,7 +226,7 @@ symbol_map = {
     "dub plus": "++",
     "minus": " - ",
     "nad": ", ",
-    "coal": ": ",
+    "coal": ":",
     "equals": " = ",
     "dub equals": " == ",
     "not equals": " != ",
@@ -861,7 +861,7 @@ emacs_action_map = combine_maps(
         "down fub": Exec("windmove-down"), 
         "left fub": Exec("windmove-left"), 
         "right fub": Exec("windmove-right"),
-        "hello": FastExec("hello-world"),
+        "hello world": FastExec("hello-world"),
         "kill emacs server": Exec("ws-stop-all"), 
         "closure compile": Key("c-c, c-k"),
         "closure namespace": Key("c-c, a-n"), 
@@ -1088,6 +1088,7 @@ gmail_action_map = combine_maps(
     {
         "open": Key("o"),
         "(archive|done)": Text("["),
+        "mark unread": Text("U"),
         "list": Key("u"),
         "preev": Key("k"),
         "next": Key("j"),
@@ -1108,6 +1109,7 @@ gmail_action_map = combine_maps(
         "go to inbox": Key("g, i"), 
         "go to starred": Key("g, s"), 
         "go to sent": Key("g, t"),
+        "go to drafts": Key("g, d"),
         "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
     })
 
