@@ -986,12 +986,6 @@ chrome_action_map = combine_maps(
         "text box": Key("a-i/15, t"),
         "copy format": Key("ca-c"), 
         "paste format": Key("ca-v"),
-        "select column": Key("c-space"), 
-        "select row": Key("s-space"),
-        "row up": Key("a-e/15, k"), 
-        "row down": Key("a-e/15, j"),
-        "column left": Key("a-e/15, m"), 
-        "column right": Key("a-e/15, m"), 
         "next match": Key("c-g"),
         "preev match": Key("cs-g"),
         "(go to|open) bookmark": Key("c-semicolon"),
@@ -1121,6 +1115,23 @@ gmail_context_helper = ContextHelper("Gmail",
                                       AppContext(title = "<inbox.google.com>")),
                                      gmail_element)
 chrome_context_helper.add_child(gmail_context_helper)
+
+docs_action_map = combine_maps(
+    chrome_action_map,
+    {
+        "select column": Key("c-space"), 
+        "select row": Key("s-space"),
+        "row up": Key("a-e/15, k"), 
+        "row down": Key("a-e/15, j"),
+        "column left": Key("a-e/15, m"), 
+        "column right": Key("a-e/15, m"),
+    })
+docs_element = RuleRef(rule=create_rule("DocsKeystrokeRule", docs_action_map, chrome_element_map))
+docs_context_helper = ContextHelper("Docs",
+                                    AppContext(title = "<docs.google.com>"),
+                                    docs_element)
+chrome_context_helper.add_child(docs_context_helper)
+
 
 #-------------------------------------------------------------------------------
 # Populate and load the grammar.
