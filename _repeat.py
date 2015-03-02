@@ -717,8 +717,8 @@ shell_command_map = combine_maps({
     "echo command": Text("echo "),
     "CH mod": Text("chmod "),
     "TK diff": Text("tkdiff "),
-    "move|MV": Text("mv "),
-    "copy|CP": Text("cp "),
+    "MV": Text("mv "),
+    "CP": Text("cp "),
     "RM": Text("rm "),
 }, dict((command, Text(command + " ")) for command in [
     "cd",
@@ -1003,7 +1003,7 @@ chrome_action_map = combine_maps(
         "quit driver": Function(quit_driver),
         "test driver": Function(test_driver),
         "search bar": ClickElementAction(By.NAME, "q"),
-        "add a bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
+        "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
 
 link_char_map = {
