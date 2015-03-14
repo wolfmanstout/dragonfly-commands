@@ -705,6 +705,7 @@ shell_command_map = combine_maps({
     "five pending": Text("5 p "),
     "five export": Text("5 e "), 
     "five fix": Text("5 fix "), 
+    "five tap": Text("5tap "), 
     "git commit": Text("git commit -am "),
     "git commit done": Text("git commit -am done "),
     "git checkout new": Text("git checkout -b "),
