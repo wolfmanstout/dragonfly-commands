@@ -100,6 +100,7 @@ def activate_position():
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 
 def create_driver():
@@ -133,7 +134,7 @@ def test_driver():
     switch_to_active_tab()
     driver.get('http://www.google.com/xhtml');
 
-class ClickElementAction(DynStrActionBase):
+class ElementAction(DynStrActionBase):
     def __init__(self, by, spec):
         DynStrActionBase.__init__(self, spec)
         self.by = by
@@ -144,7 +145,15 @@ class ClickElementAction(DynStrActionBase):
     def _execute_events(self, events):
         switch_to_active_tab()
         element = driver.find_element(self.by, events)
+        self._execute_on_element(element)
+
+class ClickElementAction(ElementAction):
+    def _execute_on_element(self, element):
         element.click()
+
+class DoubleClickElementAction(ElementAction):
+    def _execute_on_element(self, element):
+        ActionChains(driver).double_click(element).perform()
 
 
 #-------------------------------------------------------------------------------
@@ -1037,9 +1046,18 @@ critique_action_map = combine_maps(
         "comment": Key("c"),
         "save": Key("c-s"),
         "expand|collapse": Key("e"),
-        "reply": Key("r"), 
+        "reply": Key("r"),
+        "comment <line_n>": DoubleClickElementAction(By.XPATH,
+                                                     ("//span[contains(@class, 'stx-line') and "
+                                                      "starts-with(@id, 'c') and "
+                                                      "substring-after(@id, '_') = '%(line_n)s']")), 
     })
-critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, chrome_element_map))
+critique_element_map = combine_maps(
+    chrome_element_map,
+    {
+        "line_n": IntegerRef(None, 1, 10000),
+    })
+critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, critique_element_map))
 critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"), critique_element)
 chrome_context_helper.add_child(critique_context_helper)
 
