@@ -846,6 +846,7 @@ emacs_action_map = combine_maps(
         "quit": Key("q"),
         "save": Key("c-x, c-s"),
         "open definition": Key("c-backtick, c-c, comma, d"),
+        "toggle (definition|def)": Key("c-c, comma, D"),
         "open cross references": Key("c-c, comma, x"),
         "clang format": Key("ca-q"),
         "format comment": Key("a-q"),
@@ -890,6 +891,7 @@ templates = {
     "method": "method", 
     "var": "vardef",
     "while": "while",
+    "range": "begin",
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
@@ -1044,6 +1046,7 @@ critique_action_map = combine_maps(
         "open": Key("o"),
         "list": Key("u"),
         "comment": Key("c"),
+        "resolve": Key("c-j"), 
         "save": Key("c-s"),
         "expand|collapse": Key("e"),
         "reply": Key("r"),
@@ -1124,6 +1127,8 @@ gmail_action_map = combine_maps(
         "go to sent": Key("g, t"),
         "go to drafts": Key("g, d"),
         "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
+        "click to": ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
+        "click cc": ClickElementAction(By.XPATH, "//*[@aria-label='Cc']"),
     })
 
 gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
@@ -1150,6 +1155,38 @@ docs_context_helper = ContextHelper("Docs",
                                     AppContext(title = "<docs.google.com>"),
                                     docs_element)
 chrome_context_helper.add_child(docs_context_helper)
+
+buganizer_action_map = combine_maps(
+    chrome_action_map,
+    {
+        "next": Key("j"),
+        "preev": Key("k"),
+        "list": Key("u"),
+        "assign": Key("a"),
+        "duplicate": Key("d"),
+        "bug ID": Key("i"),
+        "comment|reply": Key("r"),
+        "priority <n>": Key("p, %(n)d"),
+        "open": Key("o"),
+        "select": Key("x"), 
+    })
+buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
+buganizer_context_helper = ContextHelper("Buganizer",
+                                         AppContext(title = "<b.corp.google.com>"),
+                                         buganizer_element)
+chrome_context_helper.add_child(buganizer_context_helper)
+
+analog_action_map = combine_maps(
+    chrome_action_map,
+    {
+        "next": Key("n"),
+        "preev": Key("p"),
+    })
+analog_element = RuleRef(rule=create_rule("AnalogKeystrokeRule", analog_action_map, chrome_element_map))
+analog_context_helper = ContextHelper("Analog",
+                                      AppContext(title = "<analog.corp.google.com>"),
+                                      analog_element)
+chrome_context_helper.add_child(analog_context_helper)
 
 
 #-------------------------------------------------------------------------------
