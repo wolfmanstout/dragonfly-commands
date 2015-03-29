@@ -13,6 +13,38 @@ from dragonfly_local import *
 WORDS_PATH = HOME + "/dotfiles/words.txt"
 BLACKLIST_PATH = HOME + "/dotfiles/blacklist.txt"
 
+def SplitDictation(dictation):
+    """Preprocess dictation to do a better job of word separation. Returns a list of
+    words."""
+    # Convert the input to a list of lowercase words, removing punctuation other
+    # than "." within words.
+    word_punctuation_pattern = r"[^\w. ]"
+    raw_words = [word for word
+                 in re.sub(word_punctuation_pattern, "", str(dictation)).lower().split(" ")
+                 if len(word) > 0]
+
+    # Merge contiguous letters into a single word, and merge words separated by
+    # punctuation marks into a single word. This way we can dictate something
+    # like "score test case dot start now" and only have the underscores applied
+    # at word boundaries, to produce "test_case.start_now".
+    words = []
+    previous_letter = False
+    previous_punctuation = False
+    punctuation_pattern = r"\W"
+    for word in raw_words:
+        current_punctuation = re.match(punctuation_pattern, word)
+        current_letter = len(word) == 1 and not re.match(punctuation_pattern, word)
+        if len(words) == 0:
+            words.append(word)
+        else:
+            if current_punctuation or previous_punctuation or (current_letter and previous_letter):
+                words.append(words.pop() + word)
+            else:
+                words.append(word)
+        previous_letter = current_letter
+        previous_punctuation = current_punctuation
+    return words
+
 def ParseWords(path):
   words = set()
   with open(path) as words_file:

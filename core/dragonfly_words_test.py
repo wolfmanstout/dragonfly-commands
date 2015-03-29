@@ -27,5 +27,13 @@ class DragonflyWordsTestCase(unittest.TestCase):
         self.assertEqual(set(["test word"]), ExtractPhrases("test_word // another_word", "cc"))
         self.assertEqual(set(["test word"]), ExtractPhrases("test-word ; another_word", "el"))
 
+    def test_split_dictation(self):
+        self.assertEqual(["test", "word"], SplitDictation("test word"))
+        self.assertEqual(["test", "word", "ab"], SplitDictation("test word A B"))
+        self.assertEqual(["testword"], SplitDictation("test\word"))
+        self.assertEqual(["joes"], SplitDictation("Joe's"))
+        self.assertEqual(["test", "case.start", "now"], SplitDictation("test case.start now"))
+    
+
 if __name__ == "__main__":
     unittest.main()
