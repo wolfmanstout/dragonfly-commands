@@ -16,11 +16,17 @@ BLACKLIST_PATH = HOME + "/dotfiles/blacklist.txt"
 def SplitDictation(dictation):
     """Preprocess dictation to do a better job of word separation. Returns a list of
     words."""
-    # Convert the input to a list of lowercase words, removing punctuation other
-    # than "." within words.
-    word_punctuation_pattern = r"[^\w. ]"
+    # Make lowercase.
+    clean_dictation = str(dictation).lower()
+    # Strip apostrophe.
+    clean_dictation = re.sub(r"'", "", clean_dictation)
+    # Convert dashes into spaces.
+    clean_dictation = re.sub(r"-", " ", clean_dictation)
+    # Surround all other punctuation marks with spaces.
+    clean_dictation = re.sub(r"(\W)", r" \1 ", clean_dictation)
+    # Convert the input to a list of words and punctuation marks.
     raw_words = [word for word
-                 in re.sub(word_punctuation_pattern, "", str(dictation)).lower().split(" ")
+                 in clean_dictation.split(" ")
                  if len(word) > 0]
 
     # Merge contiguous letters into a single word, and merge words separated by

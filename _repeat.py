@@ -1172,7 +1172,7 @@ buganizer_action_map = combine_maps(
     })
 buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
 buganizer_context_helper = ContextHelper("Buganizer",
-                                         AppContext(title = "<b.corp.google.com>"),
+                                         AppContext(title = "<b.corp.google.com>") | AppContext(title = "<buganizer.corp.google.com>"),
                                          buganizer_element)
 chrome_context_helper.add_child(buganizer_context_helper)
 
