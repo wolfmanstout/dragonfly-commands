@@ -34,7 +34,6 @@ from dragonfly_local import *
 
 import BaseHTTPServer
 import Queue
-import SocketServer
 import cProfile
 import json
 import socket
@@ -440,6 +439,13 @@ key_action_map = {
     "(I|eye) triple click": Function(move_to_position) + Mouse("left:3"),
     "(I|eye) start drag": Function(move_to_position) + Mouse("left:down"),
     "(I|eye) stop drag": Function(move_to_position) + Mouse("left:up"),
+    "do click": Mouse("left"),
+    "do right click": Mouse("right"),
+    "do middle click": Mouse("middle"),
+    "do double click": Mouse("left:2"),
+    "do triple click": Mouse("left:3"),
+    "do start drag": Mouse("left:down"),
+    "do stop drag": Mouse("left:up"),
 }
 
 # Actions for speaking out sequences of characters.
@@ -782,7 +788,8 @@ emacs_action_map = combine_maps(
         "test file": Key("c-c, c-t"),
         "helm": Key("c-x, c"),
         "helm resume": Key("c-x, c, b"), 
-        "line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
+        "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
+        "line <n>": Key("c-u") + Text("%(n)s") + Key("c-c, c, g"),
         "re-center": Key("c-l"),
         "set mark": Key("c-backtick"), 
         "jump mark": Key("c-langle"),
@@ -875,7 +882,8 @@ emacs_action_map = combine_maps(
         "hello world": FastExec("hello-world"),
         "kill emacs server": Exec("ws-stop-all"), 
         "closure compile": Key("c-c, c-k"),
-        "closure namespace": Key("c-c, a-n"), 
+        "closure namespace": Key("c-c, a-n"),
+        "pie flakes": Key("c-c, c-v"),
     })
 
 templates = {
@@ -897,6 +905,7 @@ template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
     keystroke_element_map,
     {
+        "n": (IntegerRef(None, 0, 100), 1),
         "line": IntegerRef(None, 1, 10000),
         "template": DictListRef(None, template_dict_list),
         "context_word": ListRef(None, context_word_list),
