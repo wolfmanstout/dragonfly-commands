@@ -2,7 +2,7 @@
 # (c) Copyright 2015 by James Stout
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 
-from dragonfly_words import *
+from _dragonfly_words import *
 import unittest
 
 class DragonflyWordsTestCase(unittest.TestCase):

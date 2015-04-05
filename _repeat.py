@@ -29,8 +29,8 @@ except ImportError:
 from dragonfly import *
 import dragonfly.log
 
-import dragonfly_words
-from dragonfly_local import *
+from _dragonfly_words import *
+from _dragonfly_local import *
 
 import BaseHTTPServer
 import Queue
@@ -362,13 +362,13 @@ char_map = dict((k, v.strip()) for (k, v) in combine_maps(letters_map, numbers_m
 # Load commonly misrecognized words saved to a file.
 saved_words = []
 try:
-    with open(dragonfly_words.WORDS_PATH) as file:
+    with open(WORDS_PATH) as file:
         for line in file:
             word = line.strip()
             if len(word) > 2 and word not in letters_map:
                 saved_words.append(line.strip())
 except:
-    print("Unable to open: " + dragonfly_words.WORDS_PATH)
+    print("Unable to open: " + WORDS_PATH)
 
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
@@ -1240,8 +1240,8 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         file_type = self.headers.getheader("My-File-Type")
         text = self.rfile.read(int(length)) if length else ""
         # print("received text: %s" % text)
-        words = dragonfly_words.ExtractWords(text, file_type)
-        phrases = dragonfly_words.ExtractPhrases(text, file_type)
+        words = ExtractWords(text, file_type)
+        phrases = ExtractPhrases(text, file_type)
         # Asynchronously update word lists available to Dragon.
         callbacks.put_nowait(lambda: UpdateWords(words, phrases))
         self.send_response(204)  # no content

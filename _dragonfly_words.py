@@ -8,7 +8,7 @@ import sys
 import re
 import os
 import fileinput
-from dragonfly_local import *
+from _dragonfly_local import *
 
 WORDS_PATH = HOME + "/dotfiles/words.txt"
 BLACKLIST_PATH = HOME + "/dotfiles/blacklist.txt"

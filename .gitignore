@@ -1,7 +1,5 @@
 # NatLink built-in modules.
 /core/*
-!/core/dragonfly_words.py
-!/core/dragonfly_words_test.py
 /_vocola_main.py
 
 # Byte-compiled / optimized / DLL files

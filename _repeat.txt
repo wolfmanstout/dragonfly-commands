@@ -9,60 +9,60 @@
 #  See below for various examples.
 
 import re
-import dragonfly_words
+from _dragonfly_words import *
 
 # Format: some_words
 def format_score(dictation):          # Function name must start with "format_".
     """ score <dictation> """         # Docstring defining spoken-form.
-    return "_".join(dragonfly_words.SplitDictation(dictation))  # Put underscores between words.
+    return "_".join(SplitDictation(dictation))  # Put underscores between words.
 
 # Format: some_words_
 def format_field(dictation):
     """ field <dictation> """
-    return "_".join(dragonfly_words.SplitDictation(dictation)) + "_"
+    return "_".join(SplitDictation(dictation)) + "_"
 
 # Format: some_words()
 def format_under_function(dictation):
     """ under func <dictation> """
-    return "_".join(dragonfly_words.SplitDictation(dictation)) + "()"
+    return "_".join(SplitDictation(dictation)) + "()"
 
 # Format: SomeWords
 def format_studley(dictation):
     """ studley <dictation> """
-    words = [word.capitalize() for words in dragonfly_words.SplitDictation(dictation)
+    words = [word.capitalize() for words in SplitDictation(dictation)
              for word in re.findall(r"(\W+|\w+)", words)]
     return "".join(words)
 
 # Format: somewords
 def format_one_word(dictation):
     """ [all] one word <dictation> """
-    return "".join(dragonfly_words.SplitDictation(dictation))
+    return "".join(SplitDictation(dictation))
 
 # Format: SOMEWORDS
 def format_upper_one_word(dictation):
     """ upper one word <dictation> """
-    words = [word.upper() for word in dragonfly_words.SplitDictation(dictation)]
+    words = [word.upper() for word in SplitDictation(dictation)]
     return "".join(words)
 
 # Format: SOME_WORDS
 def format_upper_score(dictation):
     """ upper score <dictation> """
-    words = [word.upper() for word in dragonfly_words.SplitDictation(dictation)]
+    words = [word.upper() for word in SplitDictation(dictation)]
     return "_".join(words)
 
 # Format: someWords
 def format_java_method(dictation):
     """ camel <dictation> """
-    words = dragonfly_words.SplitDictation(dictation)
+    words = SplitDictation(dictation)
     return words[0] + "".join(w.capitalize() for w in words[1:])
 
 # Format: some-words
 def format_dashes(dictation):
     """ dashes <dictation> """
-    return "-".join(dragonfly_words.SplitDictation(dictation))
+    return "-".join(SplitDictation(dictation))
 
 # Format: some words
 def format_spaces(dictation):
     """ spaces <dictation> """
-    return " ".join(dragonfly_words.SplitDictation(dictation))
+    return " ".join(SplitDictation(dictation))
 
