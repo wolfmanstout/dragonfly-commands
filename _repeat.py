@@ -763,6 +763,33 @@ def Exec(command):
 def FastExec(command):
     return Function(lambda: urllib.urlopen("http://127.0.0.1:9091/" + command).close())
 
+def jump_to_line(line_string):
+    return Key("c-u") + Text(line_string) + Key("c-c, c, g")
+
+class MarkLinesAction(ActionBase):
+    def _execute(self, data=None):
+        jump_to_line("%(n1)d" % data).execute()
+        Key("c-space").execute()
+        if "n2" in data:
+            jump_to_line("%d" % (data["n2"] + 1)).execute()
+        else:
+            Key("down").execute()
+
+class UseLinesAction(ActionBase):
+    def __init__(self, pre_action, post_action):
+        super(UseLinesAction, self).__init__()
+        self.pre_action = pre_action
+        self.post_action = post_action
+
+    def _execute(self, data=None):
+        # Set mark without activating.
+        Key("c-backtick").execute()
+        MarkLinesAction().execute(data)
+        self.pre_action.execute(data)
+        # Jump to mark twice then to the beginning of the line.
+        (Key("c-langle") + Key("c-langle") + Key("c-a")).execute()
+        self.post_action.execute(data)
+
 emacs_action_map = combine_maps(
     command_action_map,
     {
@@ -789,7 +816,7 @@ emacs_action_map = combine_maps(
         "helm": Key("c-x, c"),
         "helm resume": Key("c-x, c, b"), 
         "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
-        "line <n>": Key("c-u") + Text("%(n)s") + Key("c-c, c, g"),
+        "line <n1>": jump_to_line("%(n1)s"),
         "re-center": Key("c-l"),
         "set mark": Key("c-backtick"), 
         "jump mark": Key("c-langle"),
@@ -830,8 +857,11 @@ emacs_action_map = combine_maps(
         "cut": Key("c-w"),
         "copy": Key("a-w"),
         "yank": Key("c-y"),
+        "yank <n1> [to <n2>]": UseLinesAction(Key("a-w"), Key("c-y")),
+        "grab <n1> [to <n2>]": UseLinesAction(Key("c-w"), Key("c-y")),
         "sank": Key("a-y"), 
         "Mark": Key("c-space"),
+        "Mark <n1> [to <n2>]": MarkLinesAction(),
         "nasper": Key("ca-f"),
         "pesper": Key("ca-b"),
         "moosper": Key("cas-2"),
@@ -905,7 +935,8 @@ template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
     keystroke_element_map,
     {
-        "n": (IntegerRef(None, 0, 100), 1),
+        "n1": IntegerRef(None, 0, 100),
+        "n2": IntegerRef(None, 0, 100), 
         "line": IntegerRef(None, 1, 10000),
         "template": DictListRef(None, template_dict_list),
         "context_word": ListRef(None, context_word_list),
