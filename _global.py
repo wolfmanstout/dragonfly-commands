@@ -36,7 +36,7 @@ class CommandRule(MappingRule):
 # TODO: Extract these to a per-user configuration file.
 windows = [
     "explorer",
-    ["dragon", "dragonpad"],
+    ["dragonbar", "dragon [messages]", "dragonpad"],
     "home chrome",
     "home terminal",
     "home emacs",

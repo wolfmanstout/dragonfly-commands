@@ -495,10 +495,8 @@ long_letters_dict_list = DictList("long_letters_dict_list", long_letters_map)
 char_dict_list = DictList("char_dict_list", char_map)
 saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
-# Dummy value is to work around dragonfly bug where list is not added to a
-# grammar if it is equal to an existing list.
-context_phrase_list = List("context_phrase_list", ["dummy_context_phrase_list"])
-context_word_list = List("context_word_list", ["dummy_context_word_list"])
+context_phrase_list = List("context_phrase_list", [])
+context_word_list = List("context_word_list", [])
 
 # Dictation consisting of sources of contextually likely words.
 custom_dictation = Alternative([
