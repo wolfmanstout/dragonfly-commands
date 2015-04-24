@@ -832,6 +832,7 @@ emacs_action_map = combine_maps(
         "white": Key("a-m"),
         "buff": Key("c-x, b"),
         "oaf": Key("c-x, c-f"),
+        "no ido": Key("c-f"),
         "dired": Key("c-d"),
         "furred [<n>]": Key("a-f/5:%(n)d"),
         "bird [<n>]": Key("a-b/5:%(n)d"),
@@ -880,7 +881,7 @@ emacs_action_map = combine_maps(
         "prefix": Key("c-u"), 
         "quit": Key("q"),
         "save": Key("c-x, c-s"),
-        "open definition": Key("c-backtick, c-c, comma, d"),
+        "open (definition|def)": Key("c-backtick, c-c, comma, d"),
         "toggle (definition|def)": Key("c-c, comma, D"),
         "open cross references": Key("c-c, comma, x"),
         "clang format": Key("ca-q"),
@@ -927,7 +928,9 @@ templates = {
     "method": "method", 
     "var": "vardef",
     "while": "while",
-    "range": "begin",
+    "beginend": "beginend",
+    "ref": "ref",
+    "const ref": "const_ref", 
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
@@ -1153,6 +1156,7 @@ gmail_action_map = combine_maps(
         "reply all": Key("a"),
         "forward": Key("f"),
         "important": Key("plus"),
+        "mark starred": Key("s"),
         "next section": Key("backtick"),
         "preev section": Key("tilde"),
         "not important|don't care": Key("minus"),
@@ -1194,6 +1198,9 @@ docs_context_helper = ContextHelper("Docs",
                                     docs_element)
 chrome_context_helper.add_child(docs_context_helper)
 
+def go_to_hotlist(hotlist):
+    return Key("h") + Text(hotlist) + Key("down, enter");
+
 buganizer_action_map = combine_maps(
     chrome_action_map,
     {
@@ -1206,7 +1213,9 @@ buganizer_action_map = combine_maps(
         "comment|reply": Key("r"),
         "priority <n>": Key("p, %(n)d"),
         "open": Key("o"),
-        "select": Key("x"), 
+        "select": Key("x"),
+        "hotlist Q2": go_to_hotlist("Q2 2015"),
+        "hotlist task queue": go_to_hotlist("task queue"),
     })
 buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
 buganizer_context_helper = ContextHelper("Buganizer",
