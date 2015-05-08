@@ -916,21 +916,26 @@ emacs_action_map = combine_maps(
     })
 
 templates = {
+    "beginend": "beginend",
     "car": "car",
     "class": "class",
+    "const ref": "const_ref", 
     "def": "function",
     "each": "each",
+    "error": "error", 
     "eval": "eval",
     "for": "for",
     "fun declaration": "fun_declaration",
     "function": "function",
     "if": "if",
+    "info": "info", 
     "method": "method", 
-    "var": "vardef",
-    "while": "while",
-    "beginend": "beginend",
     "ref": "ref",
-    "const ref": "const_ref", 
+    "to do": "todo",
+    "var": "vardef",
+    "warning": "warning",
+    "while": "while",
+    "unique pointer": "unique_pointer", 
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
