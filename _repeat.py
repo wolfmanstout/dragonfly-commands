@@ -935,7 +935,10 @@ templates = {
     "var": "vardef",
     "warning": "warning",
     "while": "while",
-    "unique pointer": "unique_pointer", 
+    "unique pointer": "unique_pointer",
+    "inverse if": "inverse_if",
+    "else": "else",
+    "ternary": "ternary", 
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(

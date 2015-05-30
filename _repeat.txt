@@ -23,7 +23,7 @@ def format_field(dictation):
 
 # Format: some_words()
 def format_under_function(dictation):
-    """ under func <dictation> """
+    """ func score <dictation> """
     return "_".join(SplitDictation(dictation)) + "()"
 
 # Format: SomeWords
