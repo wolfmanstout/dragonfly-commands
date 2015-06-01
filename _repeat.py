@@ -325,6 +325,35 @@ short_letters_map = {
     "Z": "z",
 }
 
+quick_letters_map = {
+    "arch": "a", 
+    "brov": "b", 
+    "char": "c",
+    "dell": "d", 
+    "etch": "e", 
+    "fomp": "f", 
+    "goof": "g", 
+    "hark": "h", 
+    "ice": "i", 
+    "jinks": "j", 
+    "koop": "k", 
+    "lug": "l", 
+    "mowsh": "m", 
+    "nerb": "n", 
+    "ork": "o", 
+    "pooch": "p", 
+    "quash": "q", 
+    "rosh": "r", 
+    "souk": "s", 
+    "teek": "t", 
+    "unks": "u", 
+    "verge": "v", 
+    "womp": "w", 
+    "trex": "x", 
+    "yang": "y", 
+    "zooch": "z",
+}
+
 long_letters_map = {
     "alpha": "a",
     "bravo": "b",
@@ -355,7 +384,7 @@ long_letters_map = {
     "dot": ".",
 }
 
-letters_map = combine_maps(short_letters_map, long_letters_map)
+letters_map = combine_maps(short_letters_map, quick_letters_map, long_letters_map)
 
 char_map = dict((k, v.strip()) for (k, v) in combine_maps(letters_map, numbers_map, symbol_map).iteritems())
 
@@ -490,8 +519,6 @@ if namespace:
 
 numbers_dict_list  = DictList("numbers_dict_list", numbers_map)
 letters_dict_list = DictList("letters_dict_list", letters_map)
-short_letters_dict_list = DictList("short_letters_dict_list", short_letters_map)
-long_letters_dict_list = DictList("long_letters_dict_list", long_letters_map)
 char_dict_list = DictList("char_dict_list", char_map)
 saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
@@ -507,14 +534,12 @@ custom_dictation = Alternative([
 # Either arbitrary dictation or letters.
 mixed_dictation = Alternative([
     Dictation(),
-    DictListRef(None, short_letters_dict_list), 
-    DictListRef(None, long_letters_dict_list), 
+    DictListRef(None, letters_dict_list), 
 ])
 
 # A sequence of either short letters or long letters.
 letters_element = Alternative([
-    JoinedRepetition("", DictListRef(None, short_letters_dict_list), min = 1, max = 10),
-    JoinedRepetition("", DictListRef(None, long_letters_dict_list), min = 1, max = 10),
+    JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10),
 ])
 
 # Simple element map corresponding to keystroke action maps from earlier.
@@ -560,8 +585,7 @@ single_character_rule = create_rule(
     character_action_map,
     {
         "numerals": DictListRef(None, numbers_dict_list),
-        "letters": Alternative([DictListRef(None, short_letters_dict_list),
-                                DictListRef(None, long_letters_dict_list)]), 
+        "letters": DictListRef(None, letters_dict_list),
         "char": DictListRef(None, char_dict_list),
     }
 )
@@ -815,6 +839,7 @@ emacs_action_map = combine_maps(
         "helm resume": Key("c-x, c, b"), 
         "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
         "line <n1>": jump_to_line("%(n1)s"),
+        "open line <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
         "re-center": Key("c-l"),
         "set mark": Key("c-backtick"), 
         "jump mark": Key("c-langle"),
@@ -1022,6 +1047,7 @@ chrome_action_map = combine_maps(
         "reote":         Key("cs-t"),
         "duplicate tab": Key("c-l/15, a-enter"), 
         "find":               Key("c-f"),
+        "fink": Key("apostrophe"),
         "<link>":          Text("%(link)s"), 
         "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
         "moma": Key("c-l/15") + Text("moma") + Key("tab"),
