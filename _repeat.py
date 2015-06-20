@@ -1226,6 +1226,7 @@ docs_action_map = combine_maps(
         "row down": Key("a-e/15, j"),
         "column left": Key("a-e/15, m"), 
         "column right": Key("a-e/15, m"),
+        "add comment": Key("ca-m"), 
     })
 docs_element = RuleRef(rule=create_rule("DocsKeystrokeRule", docs_action_map, chrome_element_map))
 docs_context_helper = ContextHelper("Docs",
