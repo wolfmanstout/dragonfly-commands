@@ -789,27 +789,38 @@ def jump_to_line(line_string):
     return Key("c-u") + Text(line_string) + Key("c-c, c, g")
 
 class MarkLinesAction(ActionBase):
+    def __init__(self, tight=False):
+        super(MarkLinesAction, self).__init__()
+        self.tight = tight
+    
     def _execute(self, data=None):
         jump_to_line("%(n1)d" % data).execute()
+        if self.tight:
+            Key("a-m").execute()
         Key("c-space").execute()
         if "n2" in data:
-            jump_to_line("%d" % (data["n2"] + 1)).execute()
+            jump_to_line("%d" % (data["n2"])).execute()
+        if self.tight:
+            Key("c-e").execute()
         else:
             Key("down").execute()
 
 class UseLinesAction(ActionBase):
-    def __init__(self, pre_action, post_action):
+    def __init__(self, pre_action, post_action, tight=False):
         super(UseLinesAction, self).__init__()
         self.pre_action = pre_action
         self.post_action = post_action
+        self.tight = tight
 
     def _execute(self, data=None):
         # Set mark without activating.
         Key("c-backtick").execute()
-        MarkLinesAction().execute(data)
+        MarkLinesAction(self.tight).execute(data)
         self.pre_action.execute(data)
         # Jump to mark twice then to the beginning of the line.
-        (Key("c-langle") + Key("c-langle") + Key("c-a")).execute()
+        (Key("c-langle") + Key("c-langle")).execute()
+        if not self.tight:
+            Key("c-a").execute()
         self.post_action.execute(data)
 
 emacs_action_map = combine_maps(
@@ -882,10 +893,13 @@ emacs_action_map = combine_maps(
         "copy": Key("a-w"),
         "yank": Key("c-y"),
         "yank <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y")),
+        "yank tight <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y"), True),
         "grab <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y")),
+        "grab tight <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y"), True),
         "sank": Key("a-y"), 
         "Mark": Key("c-space"),
         "Mark <n1> [(through|to) <n2>]": MarkLinesAction(),
+        "Mark tight <n1> [(through|to) <n2>]": MarkLinesAction(True),
         "nasper": Key("ca-f"),
         "pesper": Key("ca-b"),
         "moosper": Key("cas-2"),
