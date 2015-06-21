@@ -384,7 +384,7 @@ long_letters_map = {
     "dot": ".",
 }
 
-letters_map = combine_maps(short_letters_map, quick_letters_map, long_letters_map)
+letters_map = combine_maps(quick_letters_map, long_letters_map)
 
 char_map = dict((k, v.strip()) for (k, v) in combine_maps(letters_map, numbers_map, symbol_map).iteritems())
 
@@ -433,8 +433,8 @@ key_action_map = {
     "east":                              Key("end"),
     "north":                            Key("c-home"),
     "south":                           Key("c-end"),
-    "yankee|Y":                           Key("y"),
-    "november|N":                           Key("n"),
+    "yankee|yang":                           Key("y"),
+    "november|zooch":                           Key("n"),
 
     "crack [<n>]":                     release + Key("del/5:%(n)d"),
     "delete [<n> | this] (line|lines)": release + Key("home, s-down/5:%(n)d, del"),
@@ -443,10 +443,9 @@ key_action_map = {
     "cancel":                             release + Key("escape"),
     "(volume|audio|turn it) up": Key("volumeup"), 
     "(volume|audio|turn it) down": Key("volumedown"), 
-    "mute": Key("volumemute"),
+    "(volume|audio) mute": Key("volumemute"),
 
     "paste":                            release + Key("c-v"),
-    "duplicate <n>":                    release + Key("c-c, c-v/5:%(n)d"),
     "copy":                             release + Key("c-c"),
     "cut":                              release + Key("c-x"),
     "select everything":                       release + Key("c-a"),
@@ -758,14 +757,13 @@ shell_command_map = combine_maps({
     "MV": Text("mv "),
     "CP": Text("cp "),
     "RM": Text("rm "),
+    "CD": Text("cd "),
+    "LS": Text("ls "),
+    "PS": Text("ps "),
 }, dict((command, Text(command + " ")) for command in [
-    "cd",
-    "ls",
-    "rm",
     "grep",
     "ssh",
     "diff",
-    "ps",
     "cat",
     "man",
     "less",
@@ -882,6 +880,8 @@ emacs_action_map = combine_maps(
         "symbol search": Key("a-s, underscore"), 
         "replace": Key("as-5"),
         "replace symbol": Key("a-apostrophe"),
+        "narrow region": Key("c-x, n, n"),
+        "widen buffer": Key("c-x, n, w"),
         "(prev|preev) symbol": Key("c-c, c, c-r, a-s, underscore, c-y"), 
         "(next symbol|neck symbol)": Key("c-c, c, c-s, a-s, underscore, c-y"),
         "jump before <context_word>": Key("c-r") + Text("%(context_word)s") + Key("enter"),
@@ -979,6 +979,8 @@ templates = {
     "inverse if": "inverse_if",
     "else": "else",
     "ternary": "ternary", 
+    "key": "key",
+    "text": "text",
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
