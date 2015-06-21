@@ -234,7 +234,7 @@ symbol_map = {
     "dub plus": "++",
     "minus": " - ",
     "nad": ", ",
-    "coal": ":",
+    "coal": ": ",
     "equals": " = ",
     "dub equals": " == ",
     "not equals": " != ",
@@ -434,7 +434,7 @@ key_action_map = {
     "north":                            Key("c-home"),
     "south":                           Key("c-end"),
     "yankee|yang":                           Key("y"),
-    "november|zooch":                           Key("n"),
+    "november|nerb":                           Key("n"),
 
     "crack [<n>]":                     release + Key("del/5:%(n)d"),
     "delete [<n> | this] (line|lines)": release + Key("home, s-down/5:%(n)d, del"),
