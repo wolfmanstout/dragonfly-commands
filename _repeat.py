@@ -933,10 +933,12 @@ emacs_action_map = combine_maps(
         "R grep": Exec("rgrep"),
         "code search": Exec("cs"),
         "code search car": Exec("csc"),
-        "set position <char>": Key("c-x, r, space, %(char)s"),
-        "jump position <char>": Key("c-x, r, j, %(char)s"),
-        "copy register <char>": Key("c-x, r, s, %(char)s"),
-        "yank register <char>": Key("c-u, c-x, r, i, %(char)s"),
+        "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
+        "save mark <char>": Key("c-c, c, m, %(char)s"),
+        "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
+        "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
+        "save copy <char>": Key("c-c, c, w, %(char)s"),
+        "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
         "expand diff": Key("a-4"),
         "expand region": Key("c-equals"),
         "contract region": Key("c-plus"),
@@ -981,6 +983,7 @@ templates = {
     "ternary": "ternary", 
     "key": "key",
     "text": "text",
+    "entry": "entry",
 }
 template_dict_list = DictList("template_dict_list", templates)
 emacs_element_map = combine_maps(
