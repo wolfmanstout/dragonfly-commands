@@ -842,8 +842,8 @@ emacs_action_map = combine_maps(
         "open bookmark": Key("c-x, r, b"),
         "indent region": Key("ca-backslash"), 
         "comment region": Key("a-semicolon"), 
-        "project file": Key("c-c, p, h"),
-        "switch project": Key("c-c, p, s"),
+        "project file": Key("c-c, p, f"),
+        "switch project": Key("c-c, p, p"),
         "build file": Key("c-c/10, c-g"),
         "test file": Key("c-c, c-t"),
         "helm": Key("c-x, c"),
@@ -922,7 +922,8 @@ emacs_action_map = combine_maps(
         "save": Key("c-x, c-s"),
         "open (definition|def)": Key("c-backtick, c-c, comma, d"),
         "toggle (definition|def)": Key("c-c, comma, D"),
-        "open cross references": Key("c-c, comma, x"),
+        "open cross (references|ref)": Key("c-c, comma, x"),
+        "open tag": Key("a-dot, enter"), 
         "clang format": Key("ca-q"),
         "format comment": Key("a-q"),
         "other top": Key("c-minus, ca-v"),
@@ -1239,6 +1240,7 @@ docs_action_map = combine_maps(
         "row down": Key("a-e/15, j"),
         "column left": Key("a-e/15, m"), 
         "column right": Key("a-e/15, m"),
+        "add comment": Key("ca-m"), 
     })
 docs_element = RuleRef(rule=create_rule("DocsKeystrokeRule", docs_action_map, chrome_element_map))
 docs_context_helper = ContextHelper("Docs",
