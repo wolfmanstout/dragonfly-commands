@@ -179,8 +179,8 @@ def text_map_to_action_map(text_map):
     return dict((k, Text(v.replace("%", "%%"))) for (k, v) in text_map.iteritems())
 
 class JoinedRepetition(Repetition):
-    """Accepts multiple repetitions of the given element, and joins them with the
-    given delimiter. See Repetition class for available arguments."""
+    """Like Repetition, except the results are joined with the given delimiter
+    instead of returned as a list."""
     def __init__(self, delimiter, *args, **kwargs):
         Repetition.__init__(self, *args, **kwargs)
         self.delimiter = delimiter
@@ -189,8 +189,8 @@ class JoinedRepetition(Repetition):
         return self.delimiter.join(Repetition.value(self, node))
 
 class JoinedSequence(Sequence):
-    """Accepts multiple repetitions of the given element, and joins them with the
-    given delimiter. See Repetition class for available arguments."""
+    """Like Sequence, except the results are joined with the given delimiter instead
+    of returned as a list."""
     def __init__(self, delimiter, *args, **kwargs):
         Sequence.__init__(self, *args, **kwargs)
         self.delimiter = delimiter
