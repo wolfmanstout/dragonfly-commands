@@ -234,7 +234,7 @@ symbol_map = {
     "dub plus": "++",
     "minus": " - ",
     "nad": ", ",
-    "coal": ": ",
+    "coal": ":",
     "equals": " = ",
     "dub equals": " == ",
     "not equals": " != ",
