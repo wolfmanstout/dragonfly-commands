@@ -328,7 +328,7 @@ short_letters_map = {
 quick_letters_map = {
     "arch": "a", 
     "brov": "b", 
-    "char": "c",
+    "chair": "c",
     "dell": "d", 
     "etch": "e", 
     "fomp": "f", 
