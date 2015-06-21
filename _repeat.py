@@ -188,6 +188,16 @@ class JoinedRepetition(Repetition):
     def value(self, node):
         return self.delimiter.join(Repetition.value(self, node))
 
+class JoinedSequence(Sequence):
+    """Accepts multiple repetitions of the given element, and joins them with the
+    given delimiter. See Repetition class for available arguments."""
+    def __init__(self, delimiter, *args, **kwargs):
+        Sequence.__init__(self, *args, **kwargs)
+        self.delimiter = delimiter
+
+    def value(self, node):
+        return self.delimiter.join(str(v) for v in Sequence.value(self, node) if v)
+
 class ElementWrapper(Sequence):
     """Identity function on element, useful for renaming."""
 
@@ -384,6 +394,14 @@ long_letters_map = {
     "dot": ".",
 }
 
+prefixes = [
+    "num",
+]
+
+suffixes = [
+    "bytes",
+]
+
 letters_map = combine_maps(quick_letters_map, long_letters_map)
 
 char_map = dict((k, v.strip()) for (k, v) in combine_maps(letters_map, numbers_map, symbol_map).iteritems())
@@ -523,6 +541,8 @@ saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
 context_phrase_list = List("context_phrase_list", [])
 context_word_list = List("context_word_list", [])
+prefix_list = List("prefix_list", prefixes)
+suffix_list = List("suffix_list", suffixes)
 
 # Dictation consisting of sources of contextually likely words.
 custom_dictation = Alternative([
@@ -531,10 +551,13 @@ custom_dictation = Alternative([
 ])
 
 # Either arbitrary dictation or letters.
-mixed_dictation = Alternative([
-    Dictation(),
-    DictListRef(None, letters_dict_list), 
-])
+mixed_dictation = JoinedSequence(" ", [
+    Optional(ListRef(None, prefix_list)),
+    Alternative([
+        Dictation(),
+        DictListRef(None, letters_dict_list),
+    ]),
+    Optional(ListRef(None, suffix_list))])
 
 # A sequence of either short letters or long letters.
 letters_element = Alternative([
