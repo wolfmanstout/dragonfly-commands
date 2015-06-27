@@ -1165,6 +1165,7 @@ critique_action_map = combine_maps(
         "list": Key("u"),
         "comment": Key("c"),
         "resolve": Key("c-j"), 
+        "done": Key("d"),
         "save": Key("c-s"),
         "expand|collapse": Key("e"),
         "reply": Key("r"),
@@ -1222,7 +1223,7 @@ gmail_action_map = combine_maps(
     {
         "open": Key("o"),
         "(archive|done)": Text("["),
-        "mark unread": Text("U"),
+        "mark unread": Text("_"),
         "list": Key("u"),
         "preev": Key("k"),
         "next": Key("j"),
