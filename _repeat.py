@@ -28,6 +28,7 @@ except ImportError:
 
 from dragonfly import *
 import dragonfly.log
+from dragonfly.windows.window import Window
 
 from _dragonfly_words import *
 from _dragonfly_local import *
@@ -236,6 +237,27 @@ def combine_contexts(context1, context2):
         return context1
     return context1 & context2
 
+class RunApp(ActionBase):
+    """Starts an app and waits for it to be the foreground app."""
+
+    def __init__(self, executable):
+        super(RunApp, self).__init__()
+        self.executable = executable
+
+    def _execute(self, data=None):
+        StartApp(self.executable).execute()
+        WaitWindow(None, self.executable, 1).execute()
+
+class UniversalPaste(ActionBase):
+    """Paste action that works everywhere, including Emacs."""
+
+    def _execute(self, data=None):
+        foreground = Window.get_foreground()
+        if foreground.title.find("Emacs editor") != -1:
+            Key("c-y").execute()
+        else:
+            Key("c-v").execute()
+
 
 #-------------------------------------------------------------------------------
 # Common maps and lists.
@@ -437,7 +459,7 @@ key_action_map = {
     "right [<n>]":                      Key("right/5:%(n)d"),
     "fomble [<n>]": Key("c-right/5:%(n)d"),
     "bamble [<n>]": Key("c-left/5:%(n)d"),
-    "dumbble [<n>]": Key("c-backspace/5:%(n)d"),
+    "dumbbell [<n>]": Key("c-backspace/5:%(n)d"),
     "kimble [<n>]": Key("c-del/5:%(n)d"),
     "dird [<n>]": Key("a-backspace/5:%(n)d"),
     "kill [<n>]": Key("c-k/5:%(n)d"),
@@ -458,7 +480,7 @@ key_action_map = {
     "delete [<n> | this] (line|lines)": release + Key("home, s-down/5:%(n)d, del"),
     "snap [<n>]":                  release + Key("backspace/5:%(n)d"),
     "pop up":                           release + Key("apps"),
-    "cancel":                             release + Key("escape"),
+    "cancel|escape":                             release + Key("escape"),
     "(volume|audio|turn it) up": Key("volumeup"), 
     "(volume|audio|turn it) down": Key("volumedown"), 
     "(volume|audio) mute": Key("volumemute"),
@@ -467,6 +489,9 @@ key_action_map = {
     "copy":                             release + Key("c-c"),
     "cut":                              release + Key("c-x"),
     "select everything":                       release + Key("c-a"),
+    "edit text": RunApp("notepad"),
+    "edit everything": Key("c-a, c-x") + RunApp("notepad") + Key("c-v"),
+    "edit region": Key("c-x") + RunApp("notepad") + Key("c-v"),
     "[hold] shift":                     Key("shift:down"),
     "release shift":                    Key("shift:up"),
     "[hold] control":                   Key("ctrl:down"),
@@ -851,6 +876,8 @@ emacs_action_map = combine_maps(
         "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
         "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
         "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
+        "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
+        "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
         "(shuck|undo)": Key("c-slash"),
         "scratch": Key("c-x, r, U, U"),  
         "redo": Key("c-question"),
@@ -861,6 +888,8 @@ emacs_action_map = combine_maps(
         "die fub": Key("c-x, k"),
         "even fub": Key("c-x, plus"), 
         "open bookmark": Key("c-x, r, b"),
+        "(save|set) bookmark": Key("c-x, r, m"),
+        "list bookmarks": Key("c-x, r, l"),
         "indent region": Key("ca-backslash"), 
         "comment region": Key("a-semicolon"), 
         "project file": Key("c-c, p, f"),
@@ -942,9 +971,12 @@ emacs_action_map = combine_maps(
         "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"), 
         "open template <template>": Key("c-c, ampersand, c-v") + Text("%(template)s") + Key("enter"),
         "open template": Key("c-c, ampersand, c-v"), 
+        "new template": Key("c-c, ampersand, c-n"),
+        "reload templates": Exec("yas-reload-all"), 
         "prefix": Key("c-u"), 
         "quit": Key("q"),
         "save": Key("c-x, c-s"),
+        "save as": Key("c-x, c-w"), 
         "open (definition|def)": Key("c-backtick, c-c, comma, d"),
         "toggle (definition|def)": Key("c-c, comma, D"),
         "open cross (references|ref)": Key("c-c, comma, x"),
@@ -975,11 +1007,26 @@ emacs_action_map = combine_maps(
         "down fub": Exec("windmove-down"), 
         "left fub": Exec("windmove-left"), 
         "right fub": Exec("windmove-right"),
+        "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+        "header": Key("c-x, c-h"),
+        "create shell": Exec("shell"),
         "hello world": FastExec("hello-world"),
         "kill emacs server": Exec("ws-stop-all"), 
         "closure compile": Key("c-c, c-k"),
         "closure namespace": Key("c-c, a-n"),
         "pie flakes": Key("c-c, c-v"),
+        "help variable": Key("c-h, v"), 
+        "help function": Key("c-h, f"), 
+        "help key": Key("c-h, k"),
+        "help mode": Key("c-h, m"), 
+        "help back": Key("c-c, c-b"), 
+        "eval defun": Key("ca-x"),
+        "eval region": Exec("eval-region"),
+        "magit status": Exec("magit-status"),
+        "submit comment": Key("c-c, c-c"),
+        "show diff": Key("c-x, v, equals"),
+        "recompile": Exec("recompile"),
+        "customize": Exec("customize-apropos"), 
     })
 
 templates = {
@@ -1318,6 +1365,15 @@ analog_context_helper = ContextHelper("Analog",
                                       analog_element)
 chrome_context_helper.add_child(analog_context_helper)
 
+notepad_action_map = combine_maps(
+    command_action_map,
+    {
+        "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
+    })
+
+notepad_element = RuleRef(rule=create_rule("NotepadKeystrokeRule", notepad_action_map, keystroke_element_map))
+notepad_context_helper = ContextHelper("Notepad", AppContext(executable = "notepad"), notepad_element)
+global_context_helper.add_child(notepad_context_helper)
 
 #-------------------------------------------------------------------------------
 # Populate and load the grammar.
