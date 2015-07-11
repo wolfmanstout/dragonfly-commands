@@ -418,6 +418,7 @@ long_letters_map = {
 
 prefixes = [
     "num",
+    "min",
 ]
 
 suffixes = [
@@ -1161,10 +1162,10 @@ chrome_action_map = combine_maps(
         "delete row": Key("a-e/15, d"),
         "strikethrough": Key("as-5"),
         "bullets": Key("cs-8"),
-        "bold": Key("c-b"), 
+        "bold": Key("c-b"),
+        "create link": Key("c-k"),
         "text box": Key("a-i/15, t"),
-        "copy format": Key("ca-c"), 
-        "paste format": Key("ca-v"),
+        "paste raw": Key("cs-v"),
         "next match": Key("c-g"),
         "preev match": Key("cs-g"),
         "(go to|open) bookmark": Key("c-semicolon"),
@@ -1271,7 +1272,7 @@ gmail_action_map = combine_maps(
     chrome_action_map,
     {
         "open": Key("o"),
-        "(archive|done)": Text("["),
+        "(archive|done)": Text("{"),
         "mark unread": Text("_"),
         "list": Key("u"),
         "preev": Key("k"),
@@ -1342,7 +1343,7 @@ buganizer_action_map = combine_maps(
         "priority <n>": Key("p, %(n)d"),
         "open": Key("o"),
         "select": Key("x"),
-        "hotlist Q2": go_to_hotlist("Q2 2015"),
+        "hotlist OKRs": go_to_hotlist("okrs"),
         "hotlist task queue": go_to_hotlist("task queue"),
     })
 buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
