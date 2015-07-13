@@ -753,12 +753,13 @@ class ContextHelper:
     """Helper to define a context hierarchy in terms of sub-rules but pass it to
     dragonfly as top-level rules."""
 
-    def __init__(self, name, context, element):
+    def __init__(self, name, context, element, terminal_element=terminal_element):
         """Associate the provided context with the element to be repeated."""
         self.name = name
         self.context = context
         self.element = element
         self.children = []
+        self.terminal_element = terminal_element
 
     def add_child(self, child):
         """Add child ContextHelper."""
@@ -774,7 +775,7 @@ class ContextHelper:
             exclusive_context = combine_contexts(exclusive_context, ~child.context)
         grammar.add_rule(RepeatRule(self.name + "RepeatRule",
                                     self.element,
-                                    terminal_element,
+                                    self.terminal_element,
                                     exclusive_context))
 
 global_context_helper = ContextHelper("Global", None, single_action)
@@ -959,8 +960,8 @@ emacs_action_map = combine_maps(
         "kisper": Key("ca-k"),
         "dowsper": Key("ca-d"),
         "usper": Key("ca-u"),
-        "feeper": Key("c-c, c, c-f"),
-        "beeper": Key("c-c, c, c-b"), 
+        "fopper": Key("c-c, c, c-f"),
+        "bapper": Key("c-c, c, c-b"), 
         "exec": Key("a-x"),
         "preelin": Key("a-p"),
         "nollin": Key("a-n"),
@@ -1140,9 +1141,9 @@ chrome_action_map = combine_maps(
         "reote":         Key("cs-t"),
         "duplicate tab": Key("c-l/15, a-enter"), 
         "find":               Key("c-f"),
-        "fink": Key("apostrophe"),
+        "frink": Key("apostrophe"),
         "<link>":          Text("%(link)s"), 
-        "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+        "(caret|carrot) browsing": Key("f7"),
         "moma": Key("c-l/15") + Text("moma") + Key("tab"),
         "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
         "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
@@ -1179,6 +1180,9 @@ chrome_action_map = combine_maps(
         "search bar": ClickElementAction(By.NAME, "q"),
         "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
+chrome_terminal_action_map = {
+    "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+}
 
 link_char_map = {
     "zero": "0",
@@ -1201,7 +1205,12 @@ chrome_element_map = combine_maps(
     })
 
 chrome_element = RuleRef(rule=create_rule("ChromeKeystrokeRule", chrome_action_map, chrome_element_map))
-chrome_context_helper = ContextHelper("Chrome", AppContext(executable="chrome"), chrome_element)
+chrome_terminal_element = Alternative([
+    terminal_element,
+    RuleRef(rule=create_rule("ChromeTerminalRule", chrome_terminal_action_map, keystroke_element_map))
+])
+chrome_context_helper = ContextHelper("Chrome", AppContext(executable="chrome"),
+                                      chrome_element, chrome_terminal_element)
 global_context_helper.add_child(chrome_context_helper)
 
 critique_action_map = combine_maps(
@@ -1230,7 +1239,8 @@ critique_element_map = combine_maps(
         "line_n": IntegerRef(None, 1, 10000),
     })
 critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, critique_element_map))
-critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"), critique_element)
+critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"),
+                                        critique_element, chrome_terminal_element)
 chrome_context_helper.add_child(critique_context_helper)
 
 calendar_action_map = combine_maps(
@@ -1255,7 +1265,8 @@ calendar_element_map = combine_maps(
         "name": DictListRef(None, names_dict_list),
     })
 calendar_element = RuleRef(rule=create_rule("CalendarKeystrokeRule", calendar_action_map, calendar_element_map))
-calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar") | AppContext(title = "Google.com - Calendar"), calendar_element)
+calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar") | AppContext(title = "Google.com - Calendar"),
+                                        calendar_element, chrome_terminal_element)
 chrome_context_helper.add_child(calendar_context_helper)
 
 code_search_action_map = combine_maps(
@@ -1265,7 +1276,8 @@ code_search_action_map = combine_maps(
         "source": Key("r/25, c"), 
     })
 code_search_element = RuleRef(rule=create_rule("CodeSearchKeystrokeRule", code_search_action_map, chrome_element_map))
-code_search_context_helper = ContextHelper("CodeSearch", AppContext(title = "<cs.corp.google.com>"), code_search_element)
+code_search_context_helper = ContextHelper("CodeSearch", AppContext(title = "<cs.corp.google.com>"),
+                                           code_search_element, chrome_terminal_element)
 chrome_context_helper.add_child(code_search_context_helper)
 
 gmail_action_map = combine_maps(
@@ -1298,16 +1310,26 @@ gmail_action_map = combine_maps(
         "go to drafts": Key("g, d"),
         "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
         "click to": ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
-        "click cc": ClickElementAction(By.XPATH, "//*[@aria-label='Cc']"),
+        "click cc": Key("cs-c"),
+        "open chat": Key("q"),
+    })
+gmail_terminal_action_map = combine_maps(
+    chrome_terminal_action_map,
+    {
+        "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
     })
 
 gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
+gmail_terminal_element = Alternative([
+    chrome_terminal_element,
+    RuleRef(rule=create_rule("GmailTerminalRule", gmail_terminal_action_map, keystroke_element_map))
+])
 gmail_context_helper = ContextHelper("Gmail",
                                      (AppContext(title = "Gmail") |
                                       AppContext(title = "Google.com Mail") |
                                       AppContext(title = "<mail.google.com>") |
                                       AppContext(title = "<inbox.google.com>")),
-                                     gmail_element)
+                                     gmail_element, gmail_terminal_element)
 chrome_context_helper.add_child(gmail_context_helper)
 
 docs_action_map = combine_maps(
@@ -1324,7 +1346,7 @@ docs_action_map = combine_maps(
 docs_element = RuleRef(rule=create_rule("DocsKeystrokeRule", docs_action_map, chrome_element_map))
 docs_context_helper = ContextHelper("Docs",
                                     AppContext(title = "<docs.google.com>"),
-                                    docs_element)
+                                    docs_element, chrome_terminal_element)
 chrome_context_helper.add_child(docs_context_helper)
 
 def go_to_hotlist(hotlist):
@@ -1351,7 +1373,7 @@ buganizer_context_helper = ContextHelper("Buganizer",
                                          AppContext(title = "<b.corp.google.com>") |
                                          AppContext(title = "<buganizer.corp.google.com>") |
                                          AppContext(title = "<b2.corp.google.com>"),
-                                         buganizer_element)
+                                         buganizer_element, chrome_terminal_element)
 chrome_context_helper.add_child(buganizer_context_helper)
 
 analog_action_map = combine_maps(
@@ -1363,12 +1385,13 @@ analog_action_map = combine_maps(
 analog_element = RuleRef(rule=create_rule("AnalogKeystrokeRule", analog_action_map, chrome_element_map))
 analog_context_helper = ContextHelper("Analog",
                                       AppContext(title = "<analog.corp.google.com>"),
-                                      analog_element)
+                                      analog_element, chrome_terminal_element)
 chrome_context_helper.add_child(analog_context_helper)
 
 notepad_action_map = combine_maps(
     command_action_map,
     {
+        "dumbbell": Key("shift:down, c-left, backspace, shift:up"),
         "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
     })
 
