@@ -1181,7 +1181,7 @@ chrome_action_map = combine_maps(
         "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
 chrome_terminal_action_map = {
-    "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+    "search google <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
 }
 
 link_char_map = {
