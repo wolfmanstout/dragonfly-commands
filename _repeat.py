@@ -582,6 +582,8 @@ mixed_dictation = JoinedSequence(" ", [
     Alternative([
         Dictation(),
         DictListRef(None, letters_dict_list),
+        ListRef(None, saved_word_list),
+        ListRef(None, context_phrase_list),
     ]),
     Optional(ListRef(None, suffix_list))])
 
