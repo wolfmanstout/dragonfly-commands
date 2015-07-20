@@ -588,9 +588,7 @@ mixed_dictation = JoinedSequence(" ", [
     Optional(ListRef(None, suffix_list))])
 
 # A sequence of either short letters or long letters.
-letters_element = Alternative([
-    JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10),
-])
+letters_element = JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10)
 
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
@@ -674,7 +672,7 @@ single_action = RuleRef(rule=create_rule("CommandKeystrokeRule",
 # For efficiency, this should not contain any repeating elements. For accuracy,
 # few custom commands should be included to avoid clashes with dictation
 # elements.
-terminal_element = Alternative([
+dictation_element = Alternative([
     RuleRef(rule=dictation_rule),
     RuleRef(rule=format_rule),
     RuleRef(rule=custom_format_rule),
@@ -694,27 +692,29 @@ terminal_element = Alternative([
 #  recognition in the "extras" argument: the sequence of
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
-    def __init__(self, name, repeated, terminal, context):
+    def __init__(self, name, command, terminal_command, context):
         # Here we define this rule's spoken-form and special elements. Note that
-        # the middle element is the only one that contains Repetitions, and it
+        # nested_repetitions is the only one that contains Repetitions, and it
         # is not itself repeated. This is for performance purposes. We also
-        # include a special escape command "terminal <terminal_command>" in case
-        # recognition problems occur with repeated terminal commands.
-        spec     = "[<sequence>] [<middle_element>] [<terminal_sequence>] [terminal <terminal>] [[[and] repeat [that]] <n> times]"
+        # include a special escape command "terminal <dictation>" in case
+        # recognition problems occur with repeated dictation commands.
+        spec     = "[<sequence>] [<nested_repetitions>] ([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) [[[and] repeat [that]] <n> times]"
         extras   = [
-            Repetition(repeated, min=1, max = 5, name="sequence"), 
+            Repetition(command, min=1, max = 5, name="sequence"), 
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
-                        name="middle_element"),
-            Repetition(terminal, min = 1, max = 5, name = "terminal_sequence"), 
-            Alternative([terminal], name = "terminal"), 
+                        name="nested_repetitions"),
+            Repetition(dictation_element, min = 1, max = 5, name = "dictation_sequence"), 
+            ElementWrapper("dictation", dictation_element), 
+            ElementWrapper("terminal_command", terminal_command),
             IntegerRef("n", 1, 100),  # Times to repeat the sequence.
         ]
         defaults = {
             "n": 1,                   # Default repeat count.
             "sequence": [], 
-            "middle_element": None, 
-            "terminal_sequence": [],
-            "terminal": None, 
+            "nested_repetitions": None, 
+            "dictation_sequence": [],
+            "dictation": None, 
+            "terminal_command": None, 
         }
 
         CompoundRule.__init__(self, name=name, spec=spec,
@@ -728,21 +728,24 @@ class RepeatRule(CompoundRule):
     #     . extras["n"] gives the repeat count.
     def _process_recognition(self, node, extras):
         sequence = extras["sequence"]   # A sequence of actions.
-        middle_element = extras["middle_element"]
-        terminal_sequence = extras["terminal_sequence"]
-        terminal = extras["terminal"]
+        nested_repetitions = extras["nested_repetitions"]
+        dictation_sequence = extras["dictation_sequence"]
+        dictation = extras["dictation"]
+        terminal_command = extras["terminal_command"]
         count = extras["n"]             # An integer repeat count.
         for i in range(count):
             for action in sequence:
                 action.execute()
                 Pause("5").execute()
-            if middle_element:
-                middle_element.execute()
-            for action in terminal_sequence:
+            if nested_repetitions:
+                nested_repetitions.execute()
+            for action in dictation_sequence:
                 action.execute()
                 Pause("5").execute()
-            if terminal:
-                terminal.execute()
+            if dictation:
+                dictation.execute()
+            if terminal_command:
+                terminal_command.execute()
         release.execute()
 
 #-------------------------------------------------------------------------------
@@ -755,7 +758,7 @@ class ContextHelper:
     """Helper to define a context hierarchy in terms of sub-rules but pass it to
     dragonfly as top-level rules."""
 
-    def __init__(self, name, context, element, terminal_element=terminal_element):
+    def __init__(self, name, context, element, terminal_element=Empty()):
         """Associate the provided context with the element to be repeated."""
         self.name = name
         self.context = context
@@ -1183,7 +1186,7 @@ chrome_action_map = combine_maps(
         "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
 chrome_terminal_action_map = {
-    "search google <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+    "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
 }
 
 link_char_map = {
@@ -1207,10 +1210,7 @@ chrome_element_map = combine_maps(
     })
 
 chrome_element = RuleRef(rule=create_rule("ChromeKeystrokeRule", chrome_action_map, chrome_element_map))
-chrome_terminal_element = Alternative([
-    terminal_element,
-    RuleRef(rule=create_rule("ChromeTerminalRule", chrome_terminal_action_map, keystroke_element_map))
-])
+chrome_terminal_element = RuleRef(rule=create_rule("ChromeTerminalRule", chrome_terminal_action_map, chrome_element_map))
 chrome_context_helper = ContextHelper("Chrome", AppContext(executable="chrome"),
                                       chrome_element, chrome_terminal_element)
 global_context_helper.add_child(chrome_context_helper)
@@ -1322,10 +1322,7 @@ gmail_terminal_action_map = combine_maps(
     })
 
 gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
-gmail_terminal_element = Alternative([
-    chrome_terminal_element,
-    RuleRef(rule=create_rule("GmailTerminalRule", gmail_terminal_action_map, keystroke_element_map))
-])
+gmail_terminal_element = RuleRef(rule=create_rule("GmailTerminalRule", gmail_terminal_action_map, chrome_element_map))
 gmail_context_helper = ContextHelper("Gmail",
                                      (AppContext(title = "Gmail") |
                                       AppContext(title = "Google.com Mail") |
