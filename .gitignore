@@ -1,6 +1,7 @@
 # NatLink built-in modules.
 /core/*
 /_dragonfly_local.py
+/_dragonfly_local_hooks.py
 /_vocola_main.py
 
 # Byte-compiled / optimized / DLL files

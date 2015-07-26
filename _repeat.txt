@@ -9,7 +9,7 @@
 #  See below for various examples.
 
 import re
-from _dragonfly_words import *
+from _text_utils import *
 
 # Format: some_words
 def format_score(dictation):          # Function name must start with "format_".

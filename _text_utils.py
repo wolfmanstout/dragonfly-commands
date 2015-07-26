@@ -4,14 +4,11 @@
 
 """Library for extracting words and phrases from text."""
 
-import sys
 import re
-import os
-import fileinput
-from _dragonfly_local import *
+import _dragonfly_local as local
 
-WORDS_PATH = HOME + "/dotfiles/words.txt"
-BLACKLIST_PATH = HOME + "/dotfiles/blacklist.txt"
+WORDS_PATH = local.HOME + "/dotfiles/words.txt"
+BLACKLIST_PATH = local.HOME + "/dotfiles/blacklist.txt"
 
 def SplitDictation(dictation):
     """Preprocess dictation to do a better job of word separation. Returns a list of

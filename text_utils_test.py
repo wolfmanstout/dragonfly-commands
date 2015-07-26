@@ -2,10 +2,10 @@
 # (c) Copyright 2015 by James Stout
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 
-from _dragonfly_words import *
+from _text_utils import *
 import unittest
 
-class DragonflyWordsTestCase(unittest.TestCase):
+class TextUtilsTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
