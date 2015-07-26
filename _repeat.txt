@@ -18,13 +18,18 @@ def format_score(dictation):          # Function name must start with "format_".
 
 # Format: some_words_
 def format_field(dictation):
-    """ field <dictation> """
+    """ trail score <dictation> """
     return "_".join(SplitDictation(dictation)) + "_"
 
 # Format: some_words()
 def format_under_function(dictation):
     """ func score <dictation> """
     return "_".join(SplitDictation(dictation)) + "()"
+
+# Format: FLAGS_some_words
+def format_flag(dictation):
+    """ flag score <dictation> """
+    return "FLAGS_" + "_".join(SplitDictation(dictation))
 
 # Format: SomeWords
 def format_studley(dictation):

@@ -403,6 +403,14 @@ format_rule = create_rule(
     {"dictation": mixed_dictation}
 )
 
+# Rule for formatting pure dictation elements.
+pure_format_rule = create_rule(
+    "PureFormatRule",
+    dict([("pure " + k, v)
+          for (k, v) in format_functions.items()]),
+    {"dictation": Dictation()}
+)
+
 # Rule for formatting custom_dictation elements.
 custom_format_rule = create_rule(
     "CustomFormatRule",
@@ -471,6 +479,7 @@ single_action = RuleRef(rule=create_rule("CommandKeystrokeRule",
 dictation_element = Alternative([
     RuleRef(rule=dictation_rule),
     RuleRef(rule=format_rule),
+    RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
     RuleRef(rule=create_rule("GlobalKeystrokeRule",
                              global_action_map,
@@ -829,7 +838,9 @@ emacs_action_map = combine_maps(
         "submit comment": Key("c-c, c-c"),
         "show diff": Key("c-x, v, equals"),
         "recompile": Exec("recompile"),
-        "customize": Exec("customize-apropos"), 
+        "customize": Exec("customize-apropos"),
+        "python indent": Key("c-c, rangle"),
+        "python dedent": Key("c-c, langle"),
     })
 
 templates = {
