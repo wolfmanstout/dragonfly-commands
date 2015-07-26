@@ -34,13 +34,19 @@ from _dragonfly_utils import *
 from _text_utils import *
 from _eye_tracker_utils import *
 from _webdriver_utils import *
-import _dragonfly_local_hooks as local_hooks
 
-# Function to run local hook if defined.
-def RunLocalHook(name, *args, **kwargs):
-    hook = getattr(local_hooks, name)
-    if hook:
-        return hook(*args, **kwargs)
+# Load local hooks if defined.
+try:
+    import _dragonfly_local_hooks as local_hooks
+    def RunLocalHook(name, *args, **kwargs):
+        """Function to run local hook if defined."""
+        hook = getattr(local_hooks, name)
+        if hook:
+            return hook(*args, **kwargs)
+except:
+    print("Local hooks not loaded.")
+    def RunLocalHook(name, *args, **kwargs):
+        pass
 
 # Make sure dragonfly errors show up in NatLink messages.
 dragonfly.log.setup_log()
