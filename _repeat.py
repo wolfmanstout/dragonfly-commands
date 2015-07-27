@@ -688,6 +688,7 @@ emacs_action_map = combine_maps(
         "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
         "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
         "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
+        "select everything": Key("c-x, h"), 
         "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
         "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
         "(shuck|undo)": Key("c-slash"),
