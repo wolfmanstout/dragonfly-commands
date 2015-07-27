@@ -1156,27 +1156,13 @@ docs_context_helper = ContextHelper("Docs",
                                     docs_element, chrome_terminal_element)
 chrome_context_helper.add_child(docs_context_helper)
 
-def go_to_hotlist(hotlist):
-    return Key("h") + Text(hotlist) + Key("down, enter");
-
 buganizer_action_map = combine_maps(
     chrome_action_map,
-    {
-        "next": Key("j"),
-        "preev": Key("k"),
-        "list": Key("u"),
-        "assign": Key("a"),
-        "duplicate": Key("d"),
-        "bug ID": Key("i"),
-        "comment|reply": Key("r"),
-        "priority <n>": Key("p, %(n)d"),
-        "open": Key("o"),
-        "select": Key("x"),
-        "hotlist OKRs": go_to_hotlist("okrs"),
-        "hotlist task queue": go_to_hotlist("task queue"),
-    })
+    {})
+RunLocalHook("AddBuganizerCommands", buganizer_action_map)
 buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
 buganizer_context_helper = ContextHelper("Buganizer",
+                                         AppContext(title = "Buganizer V2") |
                                          AppContext(title = "<b.corp.google.com>") |
                                          AppContext(title = "<buganizer.corp.google.com>") |
                                          AppContext(title = "<b2.corp.google.com>"),

@@ -65,3 +65,12 @@ class ClickElementAction(ElementAction):
 class DoubleClickElementAction(ElementAction):
     def _execute_on_element(self, element):
         ActionChains(driver).double_click(element).perform()
+
+class ClickElementOffsetAction(ElementAction):
+    def __init__(self, by, spec, xoffset, yoffset):
+        super(ClickElementOffsetAction, self).__init__(by, spec)
+        self.xoffset = xoffset
+        self.yoffset = yoffset
+
+    def _execute_on_element(self, element):
+        ActionChains(driver).move_to_element_with_offset(element, self.xoffset, self.yoffset).click().perform()
