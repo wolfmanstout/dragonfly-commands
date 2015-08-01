@@ -13,8 +13,14 @@ DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
 CHROME_DRIVER_PATH: Path to chrome driver executable.
 """
 
+import os
+import os.path
+import tempfile
+
 from dragonfly import *
 from dragonfly.windows.window import Window
+
+import _dragonfly_local as local
 
 #-------------------------------------------------------------------------------
 # Utility functions and classes for manipulating grammars and their components.
@@ -100,14 +106,30 @@ def combine_contexts(context1, context2):
 class RunApp(ActionBase):
     """Starts an app and waits for it to be the foreground app."""
 
-    def __init__(self, executable):
+    def __init__(self, *args):
         super(RunApp, self).__init__()
-        self.executable = executable
+        self.args = args
 
     def _execute(self, data=None):
-        StartApp(self.executable).execute()
-        WaitWindow(None, self.executable, 1).execute()
+        StartApp(*self.args).execute()
+        WaitWindow(None, os.path.basename(self.args[0]), 3).execute()
 
+class RunEmacs(ActionBase):
+    """Runs Emacs on a temporary file with the given suffix."""
+
+    def __init__(self, suffix):
+        super(RunEmacs, self).__init__()
+        self.suffix = suffix
+
+    def _execute(self, data=None):
+        cygwin_tmp = local.CYGWIN_ROOT + "/tmp"
+        (f, path) = tempfile.mkstemp(prefix="emacs", suffix=self.suffix, dir=cygwin_tmp)
+        os.close(f)
+        os.unlink(path)
+        cygwin_path = path[path.index("tmp") - 1:].replace("\\", "/")
+        emacs_path = local.CYGWIN_ROOT + "/bin/emacsclient-w32.exe"
+        RunApp(emacs_path, "-c", "-n", cygwin_path).execute()
+    
 class UniversalPaste(ActionBase):
     """Paste action that works everywhere, including Emacs."""
 

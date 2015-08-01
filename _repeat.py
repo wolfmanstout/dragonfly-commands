@@ -289,6 +289,7 @@ key_action_map = {
     "cut":                              release + Key("c-x"),
     "select everything":                       release + Key("c-a"),
     "edit text": RunApp("notepad"),
+    "edit emacs": RunEmacs(".txt"),
     "edit everything": Key("c-a, c-x") + RunApp("notepad") + Key("c-v"),
     "edit region": Key("c-x") + RunApp("notepad") + Key("c-v"),
     "[hold] shift":                     Key("shift:down"),
