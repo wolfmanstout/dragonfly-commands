@@ -40,9 +40,11 @@ try:
     import _dragonfly_local_hooks as local_hooks
     def RunLocalHook(name, *args, **kwargs):
         """Function to run local hook if defined."""
-        hook = getattr(local_hooks, name)
-        if hook:
+        try:
+            hook = getattr(local_hooks, name)
             return hook(*args, **kwargs)
+        except AttributeError:
+            pass
 except:
     print("Local hooks not loaded.")
     def RunLocalHook(name, *args, **kwargs):
