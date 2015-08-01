@@ -732,7 +732,7 @@ emacs_action_map = combine_maps(
         "buff": Key("c-x, b"),
         "oaf": Key("c-x, c-f"),
         "no ido": Key("c-f"),
-        "dear ed": Key("c-d"),
+        "dear red": Key("c-d"),
         "furred [<n>]": Key("a-f/5:%(n)d"),
         "bird [<n>]": Key("a-b/5:%(n)d"),
         "kurd [<n>]": Key("a-d/5:%(n)d"),
