@@ -317,6 +317,9 @@ key_action_map = {
     "do triple click": Mouse("left:3"),
     "do start drag": Mouse("left:down"),
     "do stop drag": Mouse("left:up"),
+
+    "create driver": Function(create_driver),
+    "quit driver": Function(quit_driver),
 }
 
 # Actions for speaking out sequences of characters.
@@ -990,8 +993,6 @@ chrome_action_map = combine_maps(
         "save bookmark": Key("c-d"), 
         "next frame": Key("c-lbracket"),
         "developer tools": Key("cs-j"),
-        "create driver": Function(create_driver),
-        "quit driver": Function(quit_driver),
         "test driver": Function(test_driver),
         "search bar": ClickElementAction(By.NAME, "q"),
         "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
@@ -1260,6 +1261,12 @@ server_thread = threading.Thread(target = server.serve_forever)
 server_thread.start()
 print("started server")
 
+# Connect to Chrome WebDriver if possible.
+create_driver()
+
+# Connect to eye tracker if possible.
+connect()
+
 #-------------------------------------------------------------------------------
 # Unload function which will be called by NatLink.
 def unload():
@@ -1267,6 +1274,8 @@ def unload():
     if grammar:
         grammar.unload()
         grammar = None
+    disconnect()
+    quit_driver()
     timer.stop()
     server.shutdown()
     server_thread.join()

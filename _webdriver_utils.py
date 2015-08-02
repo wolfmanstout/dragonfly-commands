@@ -16,6 +16,11 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 def create_driver():
     global driver
+    try:
+        urllib2.urlopen("http://127.0.0.1:9222/json")
+    except urllib2.URLError:
+        print("Unable to start WebDriver, Chrome is not responding.")
+        return
     chrome_options = Options()
     chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
     driver = webdriver.Chrome(local.CHROME_DRIVER_PATH, chrome_options=chrome_options)
