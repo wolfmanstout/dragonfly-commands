@@ -376,13 +376,13 @@ prefix_list = List("prefix_list", prefixes)
 suffix_list = List("suffix_list", suffixes)
 
 # Dictation consisting of sources of contextually likely words.
-custom_dictation = Alternative([
+custom_dictation = RuleWrap(None, Alternative([
     ListRef(None, saved_word_list),
     ListRef(None, context_phrase_list),
-])
+]))
 
 # Either arbitrary dictation or letters.
-mixed_dictation = JoinedSequence(" ", [
+mixed_dictation = RuleWrap(None, JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
         Dictation(),
@@ -390,10 +390,13 @@ mixed_dictation = JoinedSequence(" ", [
         ListRef(None, saved_word_list),
         ListRef(None, context_phrase_list),
     ]),
-    Optional(ListRef(None, suffix_list))])
+    Optional(ListRef(None, suffix_list))]))
 
 # A sequence of either short letters or long letters.
-letters_element = JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10)
+letters_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10))
+
+# A sequence of numbers.
+numbers_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, numbers_dict_list), min = 0, max = 10))
 
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
@@ -464,8 +467,7 @@ character_rule = create_rule(
     "CharacterRule",
     character_action_map,
     {
-        "numerals": JoinedRepetition("", DictListRef(None, numbers_dict_list),
-                                       min = 0, max = 10),
+        "numerals": numbers_element,
         "letters": letters_element,
         "char": DictListRef(None, char_dict_list),
     }
@@ -485,7 +487,7 @@ single_action = RuleRef(rule=create_rule("CommandKeystrokeRule",
 # For efficiency, this should not contain any repeating elements. For accuracy,
 # few custom commands should be included to avoid clashes with dictation
 # elements.
-dictation_element = Alternative([
+dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=dictation_rule),
     RuleRef(rule=format_rule),
     RuleRef(rule=pure_format_rule),
@@ -494,7 +496,7 @@ dictation_element = Alternative([
                              global_action_map,
                              keystroke_element_map)), 
     RuleRef(rule=single_character_rule),
-])
+]))
 
 
 #---------------------------------------------------------------------------
@@ -963,7 +965,6 @@ chrome_action_map = combine_maps(
         "reote":         Key("cs-t"),
         "duplicate tab": Key("c-l/15, a-enter"), 
         "find":               Key("c-f"),
-        "frink": Key("apostrophe"),
         "<link>":          Text("%(link)s"), 
         "(caret|carrot) browsing": Key("f7"),
         "moma": Key("c-l/15") + Text("moma") + Key("tab"),
