@@ -1188,7 +1188,7 @@ chrome_context_helper.add_child(analog_context_helper)
 notepad_action_map = combine_maps(
     command_action_map,
     {
-        "dumbbell": Key("shift:down, c-left, backspace, shift:up"),
+        "dumbbell [<n>]": Key("shift:down, c-left/5:%(n)d, backspace, shift:up"),
         "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
     })
 
