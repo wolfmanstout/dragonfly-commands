@@ -283,6 +283,9 @@ key_action_map = {
     "(volume|audio|turn it) up": Key("volumeup"), 
     "(volume|audio|turn it) down": Key("volumedown"), 
     "(volume|audio) mute": Key("volumemute"),
+    "next track": Key("tracknext"),
+    "prev track": Key("trackprev"),
+    "play pause": Key("playpause"), 
 
     "paste":                            release + Key("c-v"),
     "copy":                             release + Key("c-c"),
