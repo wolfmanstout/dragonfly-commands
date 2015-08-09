@@ -22,6 +22,8 @@ class TextUtilsTestCase(unittest.TestCase):
     def test_extract_phrases(self):
         self.assertEqual(set(["test word"]), ExtractPhrases("testWord"))
         self.assertEqual(set(["test word"]), ExtractPhrases("test_word"))
+        self.assertEqual(set(["test word"]), ExtractPhrases("kTestWord"))
+        self.assertEqual(set(["test word"]), ExtractPhrases("TEST_WORD"))
         self.assertEqual(set(["q test word"]), ExtractPhrases("QTestWord"))
         self.assertEqual(set(["test word", "another word"]), ExtractPhrases("test_word another_word"))
         self.assertEqual(set(["test word"]), ExtractPhrases("test_word // another_word", "cc"))

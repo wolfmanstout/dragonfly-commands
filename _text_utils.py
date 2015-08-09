@@ -79,7 +79,9 @@ def RemoveBlacklistWords(words):
   return words - blacklist_words
 
 def GetWords(text):
-  return [word.lower() for word in re.findall(r"([A-Z][a-z]*|[a-z]+)", text)]
+  # Discard "k" which can be a prefix for constants and rarely occurs elsewhere.
+  return [word.lower() for word in re.findall(r"([A-Z][a-z]+|[a-z]+|[A-Z]+(?![a-z]))", text)
+          if word != "k"]
 
 def ExtractWords(text, file_type = None):
   text = RemovePlaintext(text, file_type)
