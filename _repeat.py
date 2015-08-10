@@ -285,7 +285,7 @@ key_action_map = {
     "(volume|audio) mute": Key("volumemute"),
     "next track": Key("tracknext"),
     "prev track": Key("trackprev"),
-    "play pause": Key("playpause"), 
+    "play pause|pause play": Key("playpause"), 
 
     "paste":                            release + Key("c-v"),
     "copy":                             release + Key("c-c"),

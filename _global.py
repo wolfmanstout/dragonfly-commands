@@ -40,7 +40,7 @@ windows = [
     "home chrome",
     "home terminal",
     "home emacs",
-    ["work chrome", "mapreduces", "oncall"],
+    ["(work chrome|spotify)", "mapreduces", "oncall"],
     ["work terminal", "work emacs", "work one", "work two", "work three"],
     "putty"
 ]
