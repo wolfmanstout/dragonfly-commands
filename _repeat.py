@@ -853,6 +853,8 @@ emacs_action_map = combine_maps(
         "customize": Exec("customize-apropos"),
         "python indent": Key("c-c, rangle"),
         "python dedent": Key("c-c, langle"),
+        "copy import": Key("f5"),
+        "paste import": Key("f6"), 
     })
 
 templates = {
