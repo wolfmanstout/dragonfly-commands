@@ -41,6 +41,7 @@ windows = [
     "home terminal",
     "home emacs",
     ["(work chrome|spotify)", "mapreduces", "oncall"],
+    "no machine",
     ["work terminal", "work emacs", "work one", "work two", "work three"],
     "putty"
 ]
