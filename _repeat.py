@@ -328,7 +328,7 @@ key_action_map = {
 # Actions for speaking out sequences of characters.
 character_action_map = {
     "plain <char>": Text("%(char)s"),
-    "number <numerals>": Text("%(numerals)s"),
+    "numbers <numerals>": Text("%(numerals)s"),
     "print <letters>": Text("%(letters)s"),
     "shout <letters>": Function(lambda letters: Text(letters.upper()).execute()),
 }
@@ -434,8 +434,8 @@ custom_format_rule = create_rule(
 dictation_rule = create_rule(
     "DictationRule",
     {
-        "say <text>":                       release + Text("%(text)s"),
-        "mimic <text>":                     release + Mimic(extra="text"),
+        "mimic text <text>": release + Text("%(text)s"),
+        "mimic <text>": release + Mimic(extra="text"),
     },
     {
         "text": Dictation()
@@ -752,8 +752,10 @@ emacs_action_map = combine_maps(
         "next [<n>]": Key("c-s/5:%(n)d"),
         "edit search": Key("a-e"),
         "word search": Key("a-s, w"),
-        "symbol search": Key("a-s, underscore"), 
+        "symbol search": Key("a-s, underscore"),
+        "regex search": Key("ca-s"),
         "replace": Key("as-5"),
+        "regex replace": Key("cas-5"),
         "replace symbol": Key("a-apostrophe"),
         "narrow region": Key("c-x, n, n"),
         "widen buffer": Key("c-x, n, w"),
@@ -925,6 +927,7 @@ shell_action_map = combine_maps(
         "net [<n>]": Key("cs-right/5:%(n)d"),
         "move tab left [<n>]": Key("cs-pgup/5:%(n)d"), 
         "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"), 
+        "shot <tab_n>": Key("a-%(tab_n)d"),
         "(prev|preev|back)": Key("c-r"),
         "(next|frack)": Key("c-s"), 
         "(nope|no way)": Key("c-g"),
@@ -936,7 +939,13 @@ shell_action_map = combine_maps(
         "kill process": Key("c-c"),
     })
 
-shell_element = RuleRef(rule=create_rule("ShellKeystrokeRule", shell_action_map, keystroke_element_map))
+shell_element_map = combine_maps(
+    keystroke_element_map,
+    {
+        "tab_n": IntegerRef(None, 1, 10),
+    })
+
+shell_element = RuleRef(rule=create_rule("ShellKeystrokeRule", shell_action_map, shell_element_map))
 shell_context_helper = ContextHelper("Shell", AppContext(title = "Terminal"), shell_element)
 global_context_helper.add_child(shell_context_helper)
 
@@ -1000,6 +1009,7 @@ chrome_action_map = combine_maps(
         "developer tools": Key("cs-j"),
         "test driver": Function(test_driver),
         "search bar": ClickElementAction(By.NAME, "q"),
+        "amazon bar": ClickElementAction(By.NAME, "field-keywords"), 
         "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
     })
 chrome_terminal_action_map = {
