@@ -399,7 +399,7 @@ numbers_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, numbers_
 
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
-    "n": (IntegerRef(None, 1, 100), 1),
+    "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
     "char": DictListRef(None, char_dict_list),
 }
@@ -716,6 +716,7 @@ emacs_action_map = combine_maps(
         "indent region": Key("ca-backslash"), 
         "comment region": Key("a-semicolon"), 
         "project file": Key("c-c, p, f"),
+        "simulator file": Key("c-c, c, p, s"),
         "switch project": Key("c-c, p, p"),
         "build file": Key("c-c/10, c-g"),
         "test file": Key("c-c, c-t"),
