@@ -47,3 +47,6 @@ def type_position(format):
 
 def activate_position():
     tracker_dll.activate()
+
+def panning_step_position():
+    tracker_dll.panning_step()
