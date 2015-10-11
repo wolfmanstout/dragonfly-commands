@@ -630,6 +630,7 @@ shell_command_map = combine_maps({
     "CD": Text("cd "),
     "LS": Text("ls "),
     "PS": Text("ps "),
+    "reset terminal": Text("exec bash\n"), 
 }, dict((command, Text(command + " ")) for command in [
     "grep",
     "ssh",
