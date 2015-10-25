@@ -328,7 +328,7 @@ key_action_map = {
 
 # Actions for speaking out sequences of characters.
 character_action_map = {
-    "plain <char>": Text("%(char)s"),
+    "plain <chars>": Text("%(chars)s"),
     "numbers <numerals>": Text("%(numerals)s"),
     "print <letters>": Text("%(letters)s"),
     "shout <letters>": Function(lambda letters: Text(letters.upper()).execute()),
@@ -398,6 +398,9 @@ letters_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, letters_
 # A sequence of numbers.
 numbers_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, numbers_dict_list), min = 0, max = 10))
 
+# A sequence of characters.
+chars_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, char_dict_list), min = 0, max = 10))
+
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
@@ -450,7 +453,7 @@ single_character_rule = create_rule(
     {
         "numerals": DictListRef(None, numbers_dict_list),
         "letters": DictListRef(None, letters_dict_list),
-        "char": DictListRef(None, char_dict_list),
+        "chars": DictListRef(None, char_dict_list),
     }
 )
 
@@ -469,7 +472,7 @@ character_rule = create_rule(
     {
         "numerals": numbers_element,
         "letters": letters_element,
-        "char": DictListRef(None, char_dict_list),
+        "chars": chars_element,
     }
 )
     
@@ -631,6 +634,9 @@ shell_command_map = combine_maps({
     "CD": Text("cd "),
     "LS": Text("ls "),
     "PS": Text("ps "),
+    "G4": Text("g4 "), 
+    "G4 sync": Text("g4 sync "), 
+    "G4 D": Text("g4d "),
     "reset terminal": Text("exec bash\n"), 
 }, dict((command, Text(command + " ")) for command in [
     "grep",
