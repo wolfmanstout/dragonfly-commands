@@ -250,7 +250,7 @@ global_key_action_map = {
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
-release = Key("shift:up, ctrl:up")
+release = Key("shift:up, ctrl:up, alt:up")
 key_action_map = {
     "up [<n>]":                         Key("up/5:%(n)d"),
     "down [<n>]":                       Key("down/5:%(n)d"),
@@ -299,6 +299,8 @@ key_action_map = {
     "release shift":                    Key("shift:up"),
     "[hold] control":                   Key("ctrl:down"),
     "release control":                  Key("ctrl:up"),
+    "[hold] (meta|alt)":                   Key("alt:down"),
+    "release (meta|alt)":                  Key("alt:up"),
     "release [all]":                    release,
 
     "(I|eye) connect": Function(connect),
@@ -863,8 +865,7 @@ emacs_action_map = combine_maps(
         "show diff": Key("c-x, v, equals"),
         "recompile": Exec("recompile"),
         "customize": Exec("customize-apropos"),
-        "python indent": Key("c-c, rangle"),
-        "python dedent": Key("c-c, langle"),
+        "open link": Exec("browse-url-at-point"), 
         "copy import": Key("f5"),
         "paste import": Key("f6"), 
     })
@@ -911,6 +912,38 @@ emacs_element_map = combine_maps(
 emacs_element = RuleRef(rule=create_rule("EmacsKeystrokeRule", emacs_action_map, emacs_element_map))
 emacs_context_helper = ContextHelper("Emacs", AppContext(title = "Emacs editor"), emacs_element)
 global_context_helper.add_child(emacs_context_helper)
+
+
+emacs_python_action_map = combine_maps(
+    emacs_action_map,
+    {
+        "[python] indent": Key("c-c, rangle"),
+        "[python] dedent": Key("c-c, langle"),
+    })
+emacs_python_element = RuleRef(rule=create_rule("EmacsPythonKeystrokeRule", emacs_python_action_map, emacs_element_map))
+emacs_python_context_helper = ContextHelper("EmacsPython", AppContext(title="- Python -"), emacs_python_element)
+emacs_context_helper.add_child(emacs_python_context_helper)
+
+
+emacs_org_action_map = combine_maps(
+    emacs_action_map,
+    {
+        "[new] heading": Key("a-enter"),
+        "toggle heading": Key("c-c, asterisk"),
+        "[new] to do": Key("as-enter"),
+        "toggle to do": Key("c-c, c-t"),
+        "indent": Key("as-right"),
+        "indent heading": Key("a-right"),
+        "dedent": Key("as-left"),
+        "dedent heading": Key("a-left"),
+        "move tree down": Key("as-down"),
+        "move tree up": Key("as-up"),
+        "open link": Key("c-c, c-o"),
+    })
+emacs_org_element = RuleRef(rule=create_rule("EmacsOrgKeystrokeRule", emacs_org_action_map, emacs_element_map))
+emacs_org_context_helper = ContextHelper("EmacsOrg", AppContext(title="- Org -"), emacs_org_element)
+emacs_context_helper.add_child(emacs_org_context_helper)
+
 
 emacs_shell_action_map = combine_maps(
     emacs_action_map,
