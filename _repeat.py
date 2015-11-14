@@ -639,7 +639,8 @@ shell_command_map = combine_maps({
     "G4": Text("g4 "), 
     "G4 sync": Text("g4 sync "), 
     "G4 D": Text("g4d "),
-    "reset terminal": Text("exec bash\n"), 
+    "reset terminal": Text("exec bash\n"),
+    "source FS get read-only": Text("srcfs get_readonly\n"), 
 }, dict((command, Text(command + " ")) for command in [
     "grep",
     "ssh",
