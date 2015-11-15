@@ -653,7 +653,9 @@ shell_command_map = combine_maps({
     "git diff",
     "git checkout",
     "git stash",
-    "git stash pop", 
+    "git stash pop",
+    "git push",
+    "git pull",
 ]))
 
 
@@ -849,6 +851,7 @@ emacs_action_map = combine_maps(
         "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
         "header": Key("c-x, c-h"),
         "create shell": Exec("shell"),
+        "durr shell": Key("c-c, c, dollar"),
         "hello world": FastExec("hello-world"),
         "kill emacs server": Exec("ws-stop-all"), 
         "closure compile": Key("c-c, c-k"),
@@ -933,10 +936,10 @@ emacs_org_action_map = combine_maps(
         "toggle heading": Key("c-c, asterisk"),
         "[new] to do": Key("as-enter"),
         "toggle to do": Key("c-c, c-t"),
-        "indent": Key("as-right"),
-        "indent heading": Key("a-right"),
-        "dedent": Key("as-left"),
-        "dedent heading": Key("a-left"),
+        "indent tree": Key("as-right"),
+        "indent": Key("a-right"),
+        "dedent tree": Key("as-left"),
+        "dedent": Key("a-left"),
         "move tree down": Key("as-down"),
         "move tree up": Key("as-up"),
         "open link": Key("c-c, c-o"),
