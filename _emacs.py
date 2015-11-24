@@ -8,6 +8,7 @@ except ImportError:
     pass
 
 from dragonfly import *
+from _linux_utils import *
 
 def Exec(command):
     return Key("a-x") + Text(command) + Key("enter")
@@ -35,7 +36,7 @@ class CommandRule(MappingRule):
         "n": 1,
         }
 
-context = AppContext(title = "Emacs editor")
+context = UniversalAppContext(title = "Emacs editor")
 grammar = Grammar("Emacs", context=context)
 grammar.add_rule(CommandRule())
 grammar.load()

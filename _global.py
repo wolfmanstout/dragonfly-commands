@@ -8,6 +8,7 @@ window is changed accidentally in the middle of command execution."""
 import platform
 
 from dragonfly import *
+from _dragonfly_utils import *
 
 #-------------------------------------------------------------------------------
 # Create the main command rule.
@@ -45,6 +46,8 @@ windows = [
     ["work terminal", "work emacs", "work one", "work two", "work three"],
     "putty"
 ]
+windows = load_json("windows.json")
+
 windows_prefix = "go to"
 windows_mapping = {}
 for i, window in enumerate(windows):

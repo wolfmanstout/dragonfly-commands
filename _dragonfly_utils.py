@@ -13,6 +13,7 @@ DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
 CHROME_DRIVER_PATH: Path to chrome driver executable.
 """
 
+import json
 import os
 import os.path
 import tempfile
@@ -140,3 +141,21 @@ class UniversalPaste(ActionBase):
         else:
             Key("c-v").execute()
 
+def byteify(input):
+    """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
+    if isinstance(input, dict):
+        return {byteify(key):byteify(value) for key,value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
+
+def load_json(filename):
+    try:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)) as json_file:
+            return byteify(json.load(json_file))
+    except IOError:
+        print json_file + "not found"
+        return None

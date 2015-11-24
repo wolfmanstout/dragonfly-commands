@@ -31,8 +31,9 @@ import dragonfly.log
 from selenium.webdriver.common.by import By
 
 from _dragonfly_utils import *
-from _text_utils import *
 from _eye_tracker_utils import *
+from _linux_utils import *
+from _text_utils import *
 from _webdriver_utils import *
 
 # Load local hooks if defined.
@@ -575,7 +576,7 @@ class RepeatRule(CompoundRule):
 # work around this limitation, we compile a mutually exclusive top-level rule
 # for each context.
 
-class ContextHelper:
+class ContextHelper(object):
     """Helper to define a context hierarchy in terms of sub-rules but pass it to
     dragonfly as top-level rules."""
 
@@ -640,7 +641,9 @@ shell_command_map = combine_maps({
     "G4 sync": Text("g4 sync "), 
     "G4 D": Text("g4d "),
     "reset terminal": Text("exec bash\n"),
-    "source FS get read-only": Text("srcfs get_readonly\n"), 
+    "source FS get read-only": Text("srcfs get_readonly\n"),
+    "pseudo": Text("sudo "),
+    "apt get": Text("apt-get "), 
 }, dict((command, Text(command + " ")) for command in [
     "grep",
     "ssh",
@@ -915,7 +918,7 @@ emacs_element_map = combine_maps(
     })
 
 emacs_element = RuleRef(rule=create_rule("EmacsKeystrokeRule", emacs_action_map, emacs_element_map))
-emacs_context_helper = ContextHelper("Emacs", AppContext(title = "Emacs editor"), emacs_element)
+emacs_context_helper = ContextHelper("Emacs", UniversalAppContext(title = "Emacs editor"), emacs_element)
 global_context_helper.add_child(emacs_context_helper)
 
 
@@ -926,7 +929,7 @@ emacs_python_action_map = combine_maps(
         "[python] dedent": Key("c-c, langle"),
     })
 emacs_python_element = RuleRef(rule=create_rule("EmacsPythonKeystrokeRule", emacs_python_action_map, emacs_element_map))
-emacs_python_context_helper = ContextHelper("EmacsPython", AppContext(title="- Python -"), emacs_python_element)
+emacs_python_context_helper = ContextHelper("EmacsPython", UniversalAppContext(title="- Python -"), emacs_python_element)
 emacs_context_helper.add_child(emacs_python_context_helper)
 
 
@@ -946,7 +949,7 @@ emacs_org_action_map = combine_maps(
         "open link": Key("c-c, c-o"),
     })
 emacs_org_element = RuleRef(rule=create_rule("EmacsOrgKeystrokeRule", emacs_org_action_map, emacs_element_map))
-emacs_org_context_helper = ContextHelper("EmacsOrg", AppContext(title="- Org -"), emacs_org_element)
+emacs_org_context_helper = ContextHelper("EmacsOrg", UniversalAppContext(title="- Org -"), emacs_org_element)
 emacs_context_helper.add_child(emacs_org_context_helper)
 
 
@@ -958,7 +961,7 @@ emacs_shell_action_map = combine_maps(
         "show output": Key("c-c, c-r"), 
     })
 emacs_shell_element = RuleRef(rule=create_rule("EmacsShellKeystrokeRule", emacs_shell_action_map, emacs_element_map))
-emacs_shell_context_helper = ContextHelper("EmacsShell", AppContext(title="- Shell -"), emacs_shell_element)
+emacs_shell_context_helper = ContextHelper("EmacsShell", UniversalAppContext(title="- Shell -"), emacs_shell_element)
 emacs_context_helper.add_child(emacs_shell_context_helper)
 
 
@@ -996,7 +999,7 @@ shell_element_map = combine_maps(
     })
 
 shell_element = RuleRef(rule=create_rule("ShellKeystrokeRule", shell_action_map, shell_element_map))
-shell_context_helper = ContextHelper("Shell", AppContext(title = "Terminal"), shell_element)
+shell_context_helper = ContextHelper("Shell", UniversalAppContext(title = "Terminal"), shell_element)
 global_context_helper.add_child(shell_context_helper)
 
 
