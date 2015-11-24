@@ -999,7 +999,7 @@ shell_element_map = combine_maps(
     })
 
 shell_element = RuleRef(rule=create_rule("ShellKeystrokeRule", shell_action_map, shell_element_map))
-shell_context_helper = ContextHelper("Shell", UniversalAppContext(title = "Terminal"), shell_element)
+shell_context_helper = ContextHelper("Shell", UniversalAppContext(title = " - Terminal"), shell_element)
 global_context_helper.add_child(shell_context_helper)
 
 
@@ -1266,6 +1266,18 @@ notepad_action_map = combine_maps(
 notepad_element = RuleRef(rule=create_rule("NotepadKeystrokeRule", notepad_action_map, keystroke_element_map))
 notepad_context_helper = ContextHelper("Notepad", AppContext(executable = "notepad"), notepad_element)
 global_context_helper.add_child(notepad_context_helper)
+
+linux_action_map = combine_maps(
+    command_action_map,
+    {
+        "create terminal": Key("ca-t"),
+        "go to Emacs": ActivateLinuxWindow("Emacs editor"),
+        "go to terminal": ActivateLinuxWindow(" - Terminal"),
+    })
+
+linux_element = RuleRef(rule=create_rule("LinuxKeystrokeRule", linux_action_map, keystroke_element_map))
+linux_context_helper = ContextHelper("Linux", AppContext(title="Oracle VM VirtualBox"), linux_element)
+global_context_helper.add_child(linux_context_helper)
 
 #-------------------------------------------------------------------------------
 # Populate and load the grammar.
