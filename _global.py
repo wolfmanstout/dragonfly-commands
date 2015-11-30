@@ -46,7 +46,9 @@ windows = [
     ["work terminal", "work emacs", "work one", "work two", "work three"],
     "putty"
 ]
-windows = load_json("windows.json")
+json_windows = load_json("windows.json")
+if json_windows:
+    windows = json_windows
 
 windows_prefix = "go to"
 windows_mapping = {}
