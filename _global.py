@@ -34,17 +34,12 @@ class CommandRule(MappingRule):
 # Create commands to jump to a specific window.
 
 # Ordered list of pinned taskbar items. Sublists refer to windows within a specific application.
-# TODO: Extract these to a per-user configuration file.
 windows = [
     "explorer",
     ["dragonbar", "dragon [messages]", "dragonpad"],
     "home chrome",
     "home terminal",
     "home emacs",
-    ["(work chrome|spotify)", "mapreduces", "oncall"],
-    "no machine",
-    ["work terminal", "work emacs", "work one", "work two", "work three"],
-    "putty"
 ]
 json_windows = load_json("windows.json")
 if json_windows:

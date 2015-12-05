@@ -1276,7 +1276,8 @@ linux_action_map = combine_maps(
     })
 
 linux_element = RuleRef(rule=create_rule("LinuxKeystrokeRule", linux_action_map, keystroke_element_map))
-linux_context_helper = ContextHelper("Linux", AppContext(title="Oracle VM VirtualBox"), linux_element)
+linux_context_helper = ContextHelper("Linux", (AppContext(title="Oracle VM VirtualBox") |
+                                               AppContext(title="Chrome Remote Desktop")), linux_element)
 global_context_helper.add_child(linux_context_helper)
 
 #-------------------------------------------------------------------------------
