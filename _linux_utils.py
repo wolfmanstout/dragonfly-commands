@@ -5,6 +5,7 @@
 """Functions and classes to help with manipulating a remote Linux instance."""
 
 import xmlrpclib
+import sys
 import time
 
 from dragonfly import *
@@ -19,6 +20,9 @@ class LinuxHelper(object):
         if (not self.last_update) or now - self.last_update > 0.05:
             try:
                 self.remote_title = self.server.GetActiveWindowTitle()
+                duration = time.clock() - now
+                if duration > 0.05:
+                    print("Slow duration: %f" % duration)
             except:
                 self.remote_title = ""
             self.last_update = now
@@ -37,7 +41,7 @@ class UniversalAppContext(AppContext):
         if AppContext.matches(self, executable, title, handle):
             return True
         # Only check Linux if it is active.
-        if title.find("Oracle VM VirtualBox") != -1 or title.find("Chrome Remote Desktop") != -1:
+        if title.find("Oracle VM VirtualBox") != -1 or title.find(" - Chrome Remote Desktop") != -1:
             remote_title = linux_helper.GetActiveWindowTitle().lower()
             found = remote_title.find(self._title) != -1
             if self._exclude != found:

@@ -722,6 +722,7 @@ emacs_action_map = combine_maps(
         "redo": Key("c-question"),
         "split fub": Key("c-x, 3"),
         "clote fub": Key("c-x, 0"),
+        "done fub": Key("c-x, hash"), 
         "only fub": Key("c-x, 1"), 
         "other fub": Key("c-x, o"),
         "die fub": Key("c-x, k"),
@@ -1094,7 +1095,7 @@ chrome_element_map = combine_maps(
 
 chrome_element = RuleRef(rule=create_rule("ChromeKeystrokeRule", chrome_action_map, chrome_element_map))
 chrome_terminal_element = RuleRef(rule=create_rule("ChromeTerminalRule", chrome_terminal_action_map, chrome_element_map))
-chrome_context_helper = ContextHelper("Chrome", AppContext(executable="chrome"),
+chrome_context_helper = ContextHelper("Chrome", AppContext(title=" - Google Chrome"),
                                       chrome_element, chrome_terminal_element)
 global_context_helper.add_child(chrome_context_helper)
 
@@ -1277,7 +1278,8 @@ linux_action_map = combine_maps(
 
 linux_element = RuleRef(rule=create_rule("LinuxKeystrokeRule", linux_action_map, keystroke_element_map))
 linux_context_helper = ContextHelper("Linux", (AppContext(title="Oracle VM VirtualBox") |
-                                               AppContext(title="Chrome Remote Desktop")), linux_element)
+                                               AppContext(title=" - Chrome Remote Desktop")),
+                                     linux_element)
 global_context_helper.add_child(linux_context_helper)
 
 #-------------------------------------------------------------------------------
