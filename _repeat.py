@@ -608,17 +608,6 @@ class ContextHelper(object):
 global_context_helper = ContextHelper("Global", None, single_action)
 
 shell_command_map = combine_maps({
-    "five sync": Text("5 sync "),
-    "five merge": Text("5 merge "),
-    "five diff": Text("5 diff "),
-    "five mail": Text("5 mail -m "),
-    "five lint": Text("5 lint "),
-    "five submit": Text("5 submit "),
-    "five cleanup": Text("5 c "),
-    "five pending": Text("5 p "),
-    "five export": Text("5 e "), 
-    "five fix": Text("5 fix "), 
-    "five tap": Text("5tap "), 
     "git commit": Text("git commit -am "),
     "git commit done": Text("git commit -am done "),
     "git checkout new": Text("git checkout -b "),
@@ -637,11 +626,7 @@ shell_command_map = combine_maps({
     "CD": Text("cd "),
     "LS": Text("ls "),
     "PS": Text("ps "),
-    "G4": Text("g4 "), 
-    "G4 sync": Text("g4 sync "), 
-    "G4 D": Text("g4d "),
     "reset terminal": Text("exec bash\n"),
-    "source FS get read-only": Text("srcfs get_readonly\n"),
     "pseudo": Text("sudo "),
     "apt get": Text("apt-get "), 
 }, dict((command, Text(command + " ")) for command in [
@@ -660,6 +645,7 @@ shell_command_map = combine_maps({
     "git push",
     "git pull",
 ]))
+RunLocalHook("AddShellCommands", shell_command_map)
 
 
 def Exec(command):
@@ -1280,6 +1266,7 @@ linux_action_map = combine_maps(
         "go to Emacs": ActivateLinuxWindow("Emacs editor"),
         "go to terminal": ActivateLinuxWindow(" - Terminal"),
     })
+RunLocalHook("AddLinuxCommands", linux_action_map)
 
 linux_element = RuleRef(rule=create_rule("LinuxKeystrokeRule", linux_action_map, keystroke_element_map))
 linux_context_helper = ContextHelper("Linux", (AppContext(title="Oracle VM VirtualBox") |
