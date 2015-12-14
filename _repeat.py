@@ -938,8 +938,10 @@ emacs_org_action_map = combine_maps(
     emacs_action_map,
     {
         "[new] heading": Key("a-enter"),
+        "subheading": Key("a-enter, a-right"), 
         "toggle heading": Key("c-c, asterisk"),
         "[new] to do": Key("as-enter"),
+        "sub to do": Key("as-enter, a-right"), 
         "toggle to do": Key("c-c, c-t"),
         "indent tree": Key("as-right"),
         "indent": Key("a-right"),
@@ -948,6 +950,9 @@ emacs_org_action_map = combine_maps(
         "move tree down": Key("as-down"),
         "move tree up": Key("as-up"),
         "open link": Key("c-c, c-o"),
+        "show to do's": Key("c-c, slash, t"),
+        "archive": Key("c-c, c-x, c-a"),
+        "done": Key("c-2, c-c, c-t"),
     })
 emacs_org_element = RuleRef(rule=create_rule("EmacsOrgKeystrokeRule", emacs_org_action_map, emacs_element_map))
 emacs_org_context_helper = ContextHelper("EmacsOrg", UniversalAppContext(title="- Org -"), emacs_org_element)
