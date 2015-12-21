@@ -144,7 +144,7 @@ class UniversalPaste(ActionBase):
 def byteify(input):
     """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
     if isinstance(input, dict):
-        return {byteify(key):byteify(value) for key,value in input.iteritems()}
+        return dict((byteify(key), byteify(value)) for key,value in input.iteritems())
     elif isinstance(input, list):
         return [byteify(element) for element in input]
     elif isinstance(input, unicode):

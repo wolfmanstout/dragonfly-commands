@@ -18,8 +18,11 @@ except:
     print("Tracker not loaded.")
 
 def connect():
-    result = tracker_dll.connect()
-    print("connect: %d" % result)
+    try:
+        result = tracker_dll.connect()
+        print("connect: %d" % result)
+    except:
+        print("Could not connect to tracker.")
 
 def disconnect():
     result = tracker_dll.disconnect()

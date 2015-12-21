@@ -1291,6 +1291,7 @@ grammar.load()
 callbacks = Queue.Queue()
 
 def RunCallbacks():
+    global callbacks
     while not callbacks.empty():
         callbacks.get_nowait()()
 
