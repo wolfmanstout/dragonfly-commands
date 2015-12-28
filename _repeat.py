@@ -939,6 +939,8 @@ emacs_org_action_map = combine_maps(
         "show to do's": Key("c-c, slash, t"),
         "archive": Key("c-c, c-x, c-a"),
         "done": Key("c-2, c-c, c-t"),
+        "remove to do": Key("c-3, c-c, c-t"),
+        "org West": Key("c-c, c, c-a"), 
     })
 emacs_org_element = RuleRef(rule=create_rule("EmacsOrgKeystrokeRule", emacs_org_action_map, emacs_element_map))
 emacs_org_context_helper = ContextHelper("EmacsOrg", UniversalAppContext(title="- Org -"), emacs_org_element)
