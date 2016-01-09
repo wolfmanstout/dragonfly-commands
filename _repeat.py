@@ -25,6 +25,8 @@ import socket
 import threading
 import time
 import urllib
+import webbrowser
+import win32clipboard
 
 from dragonfly import *
 import dragonfly.log
@@ -658,6 +660,14 @@ def FastExec(command):
 def jump_to_line(line_string):
     return Key("c-u") + Text(line_string) + Key("c-c, c, g")
 
+class OpenClipboardUrlAction(ActionBase):
+    def _execute(self, data=None):
+        win32clipboard.OpenClipboard()
+        data = win32clipboard.GetClipboardData()
+        win32clipboard.CloseClipboard()
+        print "Opening link: %s" % data
+        webbrowser.open(data)
+
 class MarkLinesAction(ActionBase):
     def __init__(self, tight=False):
         super(MarkLinesAction, self).__init__()
@@ -859,7 +869,7 @@ emacs_action_map = combine_maps(
         "show diff": Key("c-x, v, equals"),
         "recompile": Exec("recompile"),
         "customize": Exec("customize-apropos"),
-        "open link": Exec("browse-url-at-point"), 
+        "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
         "copy import": Key("f5"),
         "paste import": Key("f6"), 
     })
@@ -935,7 +945,7 @@ emacs_org_action_map = combine_maps(
         "dedent": Key("a-left"),
         "move tree down": Key("as-down"),
         "move tree up": Key("as-up"),
-        "open link": Key("c-c, c-o"),
+        "open org link": Key("c-c, c-o"),
         "show to do's": Key("c-c, slash, t"),
         "archive": Key("c-c, c-x, c-a"),
         "done": Key("c-2, c-c, c-t"),
