@@ -1271,26 +1271,25 @@ notepad_element = RuleRef(rule=create_rule("NotepadKeystrokeRule", notepad_actio
 notepad_context_helper = ContextHelper("Notepad", AppContext(executable = "notepad"), notepad_element)
 global_context_helper.add_child(notepad_context_helper)
 
+# TODO Figure out either how to integrate this with the repeating rule or move out.
 linux_action_map = combine_maps(
-    command_action_map,
     {
         "create terminal": Key("ca-t"),
         "go to Emacs": ActivateLinuxWindow("Emacs editor"),
         "go to terminal": ActivateLinuxWindow(" - Terminal"),
     })
 RunLocalHook("AddLinuxCommands", linux_action_map)
-
-linux_element = RuleRef(rule=create_rule("LinuxKeystrokeRule", linux_action_map, keystroke_element_map))
-linux_context_helper = ContextHelper("Linux", (AppContext(title="Oracle VM VirtualBox") |
-                                               AppContext(title=" - Chrome Remote Desktop")),
-                                     linux_element)
-global_context_helper.add_child(linux_context_helper)
+linux_rule = create_rule("LinuxRule", linux_action_map, {}, True,
+                         (AppContext(title="Oracle VM VirtualBox") |
+                          AppContext(title=" - Chrome Remote Desktop")))
 
 #-------------------------------------------------------------------------------
 # Populate and load the grammar.
 
 grammar = Grammar("repeat")   # Create this module's grammar.
 global_context_helper.add_rules(grammar, None)
+# TODO Figure out either how to integrate this with the repeating rule or move out.
+grammar.add_rule(linux_rule)
 grammar.load()
 
 #-------------------------------------------------------------------------------

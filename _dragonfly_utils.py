@@ -87,13 +87,14 @@ def element_map_to_defaults(element_map):
                  for (name, element) in element_map.items()
                  if isinstance(element, tuple)])
 
-def create_rule(name, action_map, element_map, exported=False):
+def create_rule(name, action_map, element_map, exported=False, context=None):
     """Creates a rule with the given name, binding the given element map to the action map."""
     return MappingRule(name,
                        action_map,
                        element_map_to_extras(element_map),
                        element_map_to_defaults(element_map),
-                       exported)
+                       exported,
+                       context=context)
 
 def combine_contexts(context1, context2):
     """Combine two contexts using "&", treating None as equivalent to a context that
