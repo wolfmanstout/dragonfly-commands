@@ -934,8 +934,8 @@ emacs_context_helper.add_child(emacs_python_context_helper)
 emacs_org_action_map = combine_maps(
     emacs_action_map,
     {
-        "[new] heading": Key("c-e, c-enter"),
-        "subheading": Key("c-e, c-enter, a-right"), 
+        "[new] heading": Key("c-e, a-enter"),
+        "subheading": Key("c-e, a-enter, a-right"), 
         "toggle heading": Key("c-c, asterisk"),
         "to do": Key("c-1, c-c, c-t"),
         "done": Key("c-2, c-c, c-t"),
