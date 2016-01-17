@@ -39,7 +39,8 @@ def combine_maps(*maps):
     """Merge the contents of multiple maps, giving precedence to later maps."""
     result = {}
     for map in maps:
-        result.update(map)
+        if map:
+            result.update(map)
     return result
 
 def text_map_to_action_map(text_map):

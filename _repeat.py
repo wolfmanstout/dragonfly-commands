@@ -75,7 +75,7 @@ symbol_map = {
     "greater than": " > ",
     "less than": " < ",
     "greater equals": " >= ",
-    "less equals": " <= ", 
+    "less equals": " <= ",
     "dot": ".",
     "leap": "(",
     "reap": ")",
@@ -84,7 +84,7 @@ symbol_map = {
     "lobe": "[",
     "robe": "]",
     "luke": "<",
-    "dub luke": " << ", 
+    "dub luke": " << ",
     "ruke": ">",
     "quote": "\"",
     "dash": "-",
@@ -92,9 +92,9 @@ symbol_map = {
     "bang": "!",
     "percent": "%",
     "star": "*",
-    "backslash": "\\", 
+    "backslash": "\\",
     "slash": "/",
-    "tilde": "~", 
+    "tilde": "~",
     "underscore": "_",
     "sick quote": "'",
     "dollar": "$",
@@ -159,31 +159,31 @@ short_letters_map = {
 }
 
 quick_letters_map = {
-    "arch": "a", 
-    "brov": "b", 
+    "arch": "a",
+    "brov": "b",
     "chair": "c",
-    "dell": "d", 
-    "etch": "e", 
-    "fomp": "f", 
-    "goof": "g", 
-    "hark": "h", 
-    "ice": "i", 
-    "jinks": "j", 
-    "koop": "k", 
-    "lug": "l", 
-    "mowsh": "m", 
-    "nerb": "n", 
-    "ork": "o", 
-    "pooch": "p", 
-    "quash": "q", 
-    "rosh": "r", 
-    "souk": "s", 
-    "teek": "t", 
-    "unks": "u", 
-    "verge": "v", 
-    "womp": "w", 
-    "trex": "x", 
-    "yang": "y", 
+    "dell": "d",
+    "etch": "e",
+    "fomp": "f",
+    "goof": "g",
+    "hark": "h",
+    "ice": "i",
+    "jinks": "j",
+    "koop": "k",
+    "lug": "l",
+    "mowsh": "m",
+    "nerb": "n",
+    "ork": "o",
+    "pooch": "p",
+    "quash": "q",
+    "rosh": "r",
+    "souk": "s",
+    "teek": "t",
+    "unks": "u",
+    "verge": "v",
+    "womp": "w",
+    "trex": "x",
+    "yang": "y",
     "zooch": "z",
 }
 
@@ -283,12 +283,12 @@ key_action_map = {
     "snap [<n>]":                  release + Key("backspace/5:%(n)d"),
     "pop up":                           release + Key("apps"),
     "cancel|escape":                             release + Key("escape"),
-    "(volume|audio|turn it) up": Key("volumeup"), 
-    "(volume|audio|turn it) down": Key("volumedown"), 
+    "(volume|audio|turn it) up": Key("volumeup"),
+    "(volume|audio|turn it) down": Key("volumedown"),
     "(volume|audio) mute": Key("volumemute"),
     "next track": Key("tracknext"),
     "prev track": Key("trackprev"),
-    "play pause|pause play": Key("playpause"), 
+    "play pause|pause play": Key("playpause"),
 
     "paste":                            release + Key("c-v"),
     "copy":                             release + Key("c-c"),
@@ -480,7 +480,7 @@ character_rule = create_rule(
         "chars": chars_element,
     }
 )
-    
+
 #-------------------------------------------------------------------------------
 # Elements that are composed of rules. Note that the value of these elements are
 # actions which will have to be triggered manually.
@@ -500,9 +500,9 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=format_rule),
     RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
-    RuleRef(rule=create_rule("GlobalKeystrokeRule",
+    RuleRef(rule=create_rule("DictationKeystrokeRule",
                              global_action_map,
-                             keystroke_element_map)), 
+                             keystroke_element_map)),
     RuleRef(rule=single_character_rule),
 ]))
 
@@ -524,21 +524,21 @@ class RepeatRule(CompoundRule):
         # recognition problems occur with repeated dictation commands.
         spec     = "[<sequence>] [<nested_repetitions>] ([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) [[[and] repeat [that]] <n> times]"
         extras   = [
-            Repetition(command, min=1, max = 5, name="sequence"), 
+            Repetition(command, min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
-            Repetition(dictation_element, min = 1, max = 5, name = "dictation_sequence"), 
-            ElementWrapper("dictation", dictation_element), 
+            Repetition(dictation_element, min = 1, max = 5, name = "dictation_sequence"),
+            ElementWrapper("dictation", dictation_element),
             ElementWrapper("terminal_command", terminal_command),
             IntegerRef("n", 1, 100),  # Times to repeat the sequence.
         ]
         defaults = {
             "n": 1,                   # Default repeat count.
-            "sequence": [], 
-            "nested_repetitions": None, 
+            "sequence": [],
+            "nested_repetitions": None,
             "dictation_sequence": [],
-            "dictation": None, 
-            "terminal_command": None, 
+            "dictation": None,
+            "terminal_command": None,
         }
 
         CompoundRule.__init__(self, name=name, spec=spec,
@@ -578,42 +578,66 @@ class RepeatRule(CompoundRule):
 # work around this limitation, we compile a mutually exclusive top-level rule
 # for each context.
 
-class ContextHelper(object):
-    """Helper to define a context hierarchy in terms of sub-rules but pass it to
-    dragonfly as top-level rules."""
+class Environment(object):
+    """Environment where voice commands can be spoken. Combines grammar and
+    context and adds hierarchy. When installed, will produce a top-level rule
+    for each environment."""
 
-    def __init__(self, name, context, element, terminal_element=Empty()):
-        """Associate the provided context with the element to be repeated."""
+    def __init__(self,
+                 name,
+                 parent=None,
+                 context=None,
+                 action_map=None,
+                 terminal_action_map=None,
+                 element_map=None):
         self.name = name
-        self.context = context
-        self.element = element
         self.children = []
-        self.terminal_element = terminal_element
+        if parent:
+            parent.add_child(self)
+            self.context = combine_contexts(parent.context, context)
+            self.action_map = combine_maps(parent.action_map, action_map)
+            self.terminal_action_map = combine_maps(parent.terminal_action_map, terminal_action_map)
+            self.element_map = combine_maps(parent.element_map, element_map)
+        else:
+            self.context = context
+            self.action_map = action_map if action_map else {}
+            self.terminal_action_map = terminal_action_map if terminal_action_map else {}
+            self.element_map = element_map if element_map else {}
 
     def add_child(self, child):
-        """Add child ContextHelper."""
         self.children.append(child)
 
-    def add_rules(self, grammar, parent_context):
-        """Walk the ContextHelper tree and add exclusive top-level rules to the
-        grammar."""
-        full_context = combine_contexts(parent_context, self.context)
-        exclusive_context = full_context
+    def install(self, grammar):
+        exclusive_context = self.context
         for child in self.children:
-            child.add_rules(grammar, full_context)
+            child.install(grammar)
             exclusive_context = combine_contexts(exclusive_context, ~child.context)
+        if self.action_map:
+            element = RuleRef(rule=create_rule(self.name + "KeystrokeRule",
+                                               self.action_map,
+                                               self.element_map))
+        else:
+            element = Empty()
+        if self.terminal_action_map:
+            terminal_element = RuleRef(rule=create_rule(self.name + "TerminalRule",
+                                                        self.terminal_action_map,
+                                                        self.element_map))
+        else:
+            terminal_element = Empty()
         grammar.add_rule(RepeatRule(self.name + "RepeatRule",
-                                    self.element,
-                                    self.terminal_element,
+                                    element,
+                                    terminal_element,
                                     exclusive_context))
 
-global_context_helper = ContextHelper("Global", None, single_action)
+global_environment = Environment(name="Global",
+                                 action_map=command_action_map,
+                                 element_map=keystroke_element_map)
 
 shell_command_map = combine_maps({
     "git commit": Text("git commit -am "),
     "git commit done": Text("git commit -am done "),
     "git checkout new": Text("git checkout -b "),
-    "git reset hard head": Text("git reset --hard HEAD "), 
+    "git reset hard head": Text("git reset --hard HEAD "),
     "(soft|sym) link": Text("ln -s "),
     "list": Text("ls -l "),
     "make dir": Text("mkdir "),
@@ -630,7 +654,7 @@ shell_command_map = combine_maps({
     "PS": Text("ps "),
     "reset terminal": Text("exec bash\n"),
     "pseudo": Text("sudo "),
-    "apt get": Text("apt-get "), 
+    "apt get": Text("apt-get "),
 }, dict((command, Text(command + " ")) for command in [
     "grep",
     "ssh",
@@ -672,7 +696,7 @@ class MarkLinesAction(ActionBase):
     def __init__(self, tight=False):
         super(MarkLinesAction, self).__init__()
         self.tight = tight
-    
+
     def _execute(self, data=None):
         jump_to_line("%(n1)d" % data).execute()
         if self.tight:
@@ -703,200 +727,198 @@ class UseLinesAction(ActionBase):
             Key("c-a").execute()
         self.post_action.execute(data)
 
-emacs_action_map = combine_maps(
-    command_action_map,
-    {
-        "up [<n>]": Key("c-u") + Text("%(n)s") + Key("up"),
-        "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
-        "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
-        "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
-        "select everything": Key("c-x, h"), 
-        "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
-        "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
-        "(shuck|undo)": Key("c-slash"),
-        "scratch": Key("c-x, r, U, U"),  
-        "redo": Key("c-question"),
-        "split fub": Key("c-x, 3"),
-        "clote fub": Key("c-x, 0"),
-        "done fub": Key("c-x, hash"), 
-        "only fub": Key("c-x, 1"), 
-        "other fub": Key("c-x, o"),
-        "die fub": Key("c-x, k"),
-        "even fub": Key("c-x, plus"), 
-        "open bookmark": Key("c-x, r, b"),
-        "(save|set) bookmark": Key("c-x, r, m"),
-        "list bookmarks": Key("c-x, r, l"),
-        "indent region": Key("ca-backslash"), 
-        "comment region": Key("a-semicolon"), 
-        "project file": Key("c-c, p, f"),
-        "simulator file": Key("c-c, c, p, s"),
-        "switch project": Key("c-c, p, p"),
-        "swap project": Key("c-c, s"), 
-        "build file": Key("c-c/10, c-g"),
-        "test file": Key("c-c, c-t"),
-        "helm": Key("c-x, c"),
-        "helm resume": Key("c-x, c, b"), 
-        "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
-        "line <n1>": jump_to_line("%(n1)s"),
-        "open line <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
-        "re-center": Key("c-l"),
-        "set mark": Key("c-backtick"), 
-        "jump mark": Key("c-langle"),
-        "jump symbol": Key("a-i"), 
-        "select region": Key("c-x, c-x"),
-        "swap mark": Key("c-c, c-x"),
-        "slap above": Key("a-enter"),
-        "slap below": Key("c-enter"), 
-        "move (line|lines) up [<n>]": Key("c-u") + Text("%(n)d") + Key("a-up"),
-        "move (line|lines) down [<n>]": Key("c-u") + Text("%(n)d") + Key("a-down"),
-        "copy (line|lines) up [<n>]": Key("c-u") + Text("%(n)d") + Key("as-up"),
-        "copy (line|lines) down [<n>]": Key("c-u") + Text("%(n)d") + Key("as-down"),
-        "clear line": Key("c-a, c-c, c, k"), 
-        "join (line|lines)": Key("as-6"), 
-        "white": Key("a-m"),
-        "buff": Key("c-x, b"),
-        "oaf": Key("c-x, c-f"),
-        "no ido": Key("c-f"),
-        "dear red": Key("c-d"),
-        "furred [<n>]": Key("a-f/5:%(n)d"),
-        "bird [<n>]": Key("a-b/5:%(n)d"),
-        "kurd [<n>]": Key("a-d/5:%(n)d"),
-        "nope": Key("c-g"),
-        "no way": Key("c-g/5:3"),
-        "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
-        "next [<n>]": Key("c-s/5:%(n)d"),
-        "edit search": Key("a-e"),
-        "word search": Key("a-s, w"),
-        "symbol search": Key("a-s, underscore"),
-        "regex search": Key("ca-s"),
-        "occur": Key("a-s, o"),
-        "replace": Key("as-5"),
-        "regex replace": Key("cas-5"),
-        "replace symbol": Key("a-apostrophe"),
-        "narrow region": Key("c-x, n, n"),
-        "widen buffer": Key("c-x, n, w"),
-        "(prev|preev) symbol": Key("a-s, dot, c-r, c-r"), 
-        "(next|neck) symbol": Key("a-s, dot, c-s"),
-        "jump before <context_word>": Key("c-r") + Text("%(context_word)s") + Key("enter"),
-        "jump after <context_word>": Key("c-s") + Text("%(context_word)s") + Key("enter"),
-        "next result": Key("a-comma"),
-        "preev error": Key("f11"), 
-        "next error": Key("f12"),
-        "cut": Key("c-w"),
-        "copy": Key("a-w"),
-        "yank": Key("c-y"),
-        "yank <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y")),
-        "yank tight <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y"), True),
-        "grab <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y")),
-        "grab tight <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y"), True),
-        "sank": Key("a-y"), 
-        "Mark": Key("c-space"),
-        "Mark <n1> [(through|to) <n2>]": MarkLinesAction(),
-        "Mark tight <n1> [(through|to) <n2>]": MarkLinesAction(True),
-        "nasper": Key("ca-f"),
-        "pesper": Key("ca-b"),
-        "moosper": Key("cas-2"),
-        "kisper": Key("ca-k"),
-        "dowsper": Key("ca-d"),
-        "usper": Key("ca-u"),
-        "fopper": Key("c-c, c, c-f"),
-        "bapper": Key("c-c, c, c-b"), 
-        "exec": Key("a-x"),
-        "preelin": Key("a-p"),
-        "nollin": Key("a-n"),
-        "before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
-        "after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
-        "before next <char>": Key("c-c, c, s") + Text("%(char)s"),
-        "after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
-        "surround parens": Key("a-lparen"),
-        "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"), 
-        "open (snippet|template) <template>": Key("c-c, ampersand, c-v") + Text("%(template)s") + Key("enter"),
-        "open (snippet|template)": Key("c-c, ampersand, c-v"), 
-        "new (snippet|template)": Key("c-c, ampersand, c-n"),
-        "reload (snippets|templates)": Exec("yas-reload-all"), 
-        "prefix": Key("c-u"), 
-        "quit": Key("q"),
-        "save": Key("c-x, c-s"),
-        "save as": Key("c-x, c-w"), 
-        "open (definition|def)": Key("c-backtick, c-c, comma, d"),
-        "toggle (definition|def)": Key("c-c, comma, D"),
-        "open cross (references|ref)": Key("c-c, comma, x"),
-        "open tag": Key("a-dot, enter"), 
-        "clang format": Key("ca-q"),
-        "format comment": Key("a-q"),
-        "other top": Key("c-minus, ca-v"),
-        "other pown": Key("ca-v"),
-        "close tag": Key("c-c, c-e"),
-        "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: type_position("%d\n%d\n")),
-        "R grep": Exec("rgrep"),
-        "code search": Exec("cs"),
-        "code search car": Exec("csc"),
-        "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
-        "save mark <char>": Key("c-c, c, m, %(char)s"),
-        "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
-        "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
-        "save copy <char>": Key("c-c, c, w, %(char)s"),
-        "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
-        "expand diff": Key("a-4"),
-        "expand region": Key("c-equals"),
-        "contract region": Key("c-plus"),
-        "refresh": Key("g"),
-        "JavaScript mode": Exec("js-mode"),
-        "HTML mode": Exec("html-mode"),
-        "toggle details": Exec("dired-hide-details-mode"),
-        "up fub": Exec("windmove-up"), 
-        "down fub": Exec("windmove-down"), 
-        "left fub": Exec("windmove-left"), 
-        "right fub": Exec("windmove-right"),
-        "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
-        "header": Key("c-x, c-h"),
-        "create shell": Exec("shell"),
-        "durr shell": Key("c-c, c, dollar"),
-        "hello world": FastExec("hello-world"),
-        "kill emacs server": Exec("ws-stop-all"), 
-        "closure compile": Key("c-c, c-k"),
-        "closure namespace": Key("c-c, a-n"),
-        "pie flakes": Key("c-c, c-v"),
-        "help variable": Key("c-h, v"), 
-        "help function": Key("c-h, f"), 
-        "help key": Key("c-h, k"),
-        "help mode": Key("c-h, m"), 
-        "help back": Key("c-c, c-b"), 
-        "eval defun": Key("ca-x"),
-        "eval region": Exec("eval-region"),
-        "magit status": Key("c-c, m"),
-        "submit comment": Key("c-c, c-c"),
-        "show diff": Key("c-x, v, equals"),
-        "recompile": Exec("recompile"),
-        "customize": Exec("customize-apropos"),
-        "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
-        "copy import": Key("f5"),
-        "paste import": Key("f6"), 
-    })
+emacs_action_map = {
+    "up [<n>]": Key("c-u") + Text("%(n)s") + Key("up"),
+    "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
+    "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
+    "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
+    "select everything": Key("c-x, h"),
+    "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
+    "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
+    "(shuck|undo)": Key("c-slash"),
+    "scratch": Key("c-x, r, U, U"),
+    "redo": Key("c-question"),
+    "split fub": Key("c-x, 3"),
+    "clote fub": Key("c-x, 0"),
+    "done fub": Key("c-x, hash"),
+    "only fub": Key("c-x, 1"),
+    "other fub": Key("c-x, o"),
+    "die fub": Key("c-x, k"),
+    "even fub": Key("c-x, plus"),
+    "open bookmark": Key("c-x, r, b"),
+    "(save|set) bookmark": Key("c-x, r, m"),
+    "list bookmarks": Key("c-x, r, l"),
+    "indent region": Key("ca-backslash"),
+    "comment region": Key("a-semicolon"),
+    "project file": Key("c-c, p, f"),
+    "simulator file": Key("c-c, c, p, s"),
+    "switch project": Key("c-c, p, p"),
+    "swap project": Key("c-c, s"),
+    "build file": Key("c-c/10, c-g"),
+    "test file": Key("c-c, c-t"),
+    "helm": Key("c-x, c"),
+    "helm resume": Key("c-x, c, b"),
+    "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
+    "line <n1>": jump_to_line("%(n1)s"),
+    "open line <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
+    "re-center": Key("c-l"),
+    "set mark": Key("c-backtick"),
+    "jump mark": Key("c-langle"),
+    "jump symbol": Key("a-i"),
+    "select region": Key("c-x, c-x"),
+    "swap mark": Key("c-c, c-x"),
+    "slap above": Key("a-enter"),
+    "slap below": Key("c-enter"),
+    "move (line|lines) up [<n>]": Key("c-u") + Text("%(n)d") + Key("a-up"),
+    "move (line|lines) down [<n>]": Key("c-u") + Text("%(n)d") + Key("a-down"),
+    "copy (line|lines) up [<n>]": Key("c-u") + Text("%(n)d") + Key("as-up"),
+    "copy (line|lines) down [<n>]": Key("c-u") + Text("%(n)d") + Key("as-down"),
+    "clear line": Key("c-a, c-c, c, k"),
+    "join (line|lines)": Key("as-6"),
+    "white": Key("a-m"),
+    "buff": Key("c-x, b"),
+    "oaf": Key("c-x, c-f"),
+    "no ido": Key("c-f"),
+    "dear red": Key("c-d"),
+    "furred [<n>]": Key("a-f/5:%(n)d"),
+    "bird [<n>]": Key("a-b/5:%(n)d"),
+    "kurd [<n>]": Key("a-d/5:%(n)d"),
+    "nope": Key("c-g"),
+    "no way": Key("c-g/5:3"),
+    "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
+    "next [<n>]": Key("c-s/5:%(n)d"),
+    "edit search": Key("a-e"),
+    "word search": Key("a-s, w"),
+    "symbol search": Key("a-s, underscore"),
+    "regex search": Key("ca-s"),
+    "occur": Key("a-s, o"),
+    "replace": Key("as-5"),
+    "regex replace": Key("cas-5"),
+    "replace symbol": Key("a-apostrophe"),
+    "narrow region": Key("c-x, n, n"),
+    "widen buffer": Key("c-x, n, w"),
+    "(prev|preev) symbol": Key("a-s, dot, c-r, c-r"),
+    "(next|neck) symbol": Key("a-s, dot, c-s"),
+    "jump before <context_word>": Key("c-r") + Text("%(context_word)s") + Key("enter"),
+    "jump after <context_word>": Key("c-s") + Text("%(context_word)s") + Key("enter"),
+    "next result": Key("a-comma"),
+    "preev error": Key("f11"),
+    "next error": Key("f12"),
+    "cut": Key("c-w"),
+    "copy": Key("a-w"),
+    "yank": Key("c-y"),
+    "yank <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y")),
+    "yank tight <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y"), True),
+    "grab <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y")),
+    "grab tight <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y"), True),
+    "sank": Key("a-y"),
+    "Mark": Key("c-space"),
+    "Mark <n1> [(through|to) <n2>]": MarkLinesAction(),
+    "Mark tight <n1> [(through|to) <n2>]": MarkLinesAction(True),
+    "nasper": Key("ca-f"),
+    "pesper": Key("ca-b"),
+    "moosper": Key("cas-2"),
+    "kisper": Key("ca-k"),
+    "dowsper": Key("ca-d"),
+    "usper": Key("ca-u"),
+    "fopper": Key("c-c, c, c-f"),
+    "bapper": Key("c-c, c, c-b"),
+    "exec": Key("a-x"),
+    "preelin": Key("a-p"),
+    "nollin": Key("a-n"),
+    "before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
+    "after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
+    "before next <char>": Key("c-c, c, s") + Text("%(char)s"),
+    "after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
+    "surround parens": Key("a-lparen"),
+    "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"),
+    "open (snippet|template) <template>": Key("c-c, ampersand, c-v") + Text("%(template)s") + Key("enter"),
+    "open (snippet|template)": Key("c-c, ampersand, c-v"),
+    "new (snippet|template)": Key("c-c, ampersand, c-n"),
+    "reload (snippets|templates)": Exec("yas-reload-all"),
+    "prefix": Key("c-u"),
+    "quit": Key("q"),
+    "save": Key("c-x, c-s"),
+    "save as": Key("c-x, c-w"),
+    "open (definition|def)": Key("c-backtick, c-c, comma, d"),
+    "toggle (definition|def)": Key("c-c, comma, D"),
+    "open cross (references|ref)": Key("c-c, comma, x"),
+    "open tag": Key("a-dot, enter"),
+    "clang format": Key("ca-q"),
+    "format comment": Key("a-q"),
+    "other top": Key("c-minus, ca-v"),
+    "other pown": Key("ca-v"),
+    "close tag": Key("c-c, c-e"),
+    "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: type_position("%d\n%d\n")),
+    "R grep": Exec("rgrep"),
+    "code search": Exec("cs"),
+    "code search car": Exec("csc"),
+    "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
+    "save mark <char>": Key("c-c, c, m, %(char)s"),
+    "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
+    "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
+    "save copy <char>": Key("c-c, c, w, %(char)s"),
+    "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
+    "expand diff": Key("a-4"),
+    "expand region": Key("c-equals"),
+    "contract region": Key("c-plus"),
+    "refresh": Key("g"),
+    "JavaScript mode": Exec("js-mode"),
+    "HTML mode": Exec("html-mode"),
+    "toggle details": Exec("dired-hide-details-mode"),
+    "up fub": Exec("windmove-up"),
+    "down fub": Exec("windmove-down"),
+    "left fub": Exec("windmove-left"),
+    "right fub": Exec("windmove-right"),
+    "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+    "header": Key("c-x, c-h"),
+    "create shell": Exec("shell"),
+    "durr shell": Key("c-c, c, dollar"),
+    "hello world": FastExec("hello-world"),
+    "kill emacs server": Exec("ws-stop-all"),
+    "closure compile": Key("c-c, c-k"),
+    "closure namespace": Key("c-c, a-n"),
+    "pie flakes": Key("c-c, c-v"),
+    "help variable": Key("c-h, v"),
+    "help function": Key("c-h, f"),
+    "help key": Key("c-h, k"),
+    "help mode": Key("c-h, m"),
+    "help back": Key("c-c, c-b"),
+    "eval defun": Key("ca-x"),
+    "eval region": Exec("eval-region"),
+    "magit status": Key("c-c, m"),
+    "submit comment": Key("c-c, c-c"),
+    "show diff": Key("c-x, v, equals"),
+    "recompile": Exec("recompile"),
+    "customize": Exec("customize-apropos"),
+    "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
+    "copy import": Key("f5"),
+    "paste import": Key("f6"),
+}
 
 templates = {
     "beginend": "beginend",
     "car": "car",
     "class": "class",
-    "const ref": "const_ref", 
-    "const pointer": "const_pointer", 
+    "const ref": "const_ref",
+    "const pointer": "const_pointer",
     "def": "function",
     "each": "each",
     "else": "else",
     "entry": "entry",
-    "error": "error", 
+    "error": "error",
     "eval": "eval",
-    "fatal": "fatal", 
+    "fatal": "fatal",
     "for": "for",
     "fun declaration": "fun_declaration",
     "function": "function",
     "if": "if",
-    "info": "info", 
+    "info": "info",
     "inverse if": "inverse_if",
     "key": "key",
-    "method": "method", 
+    "method": "method",
     "ref": "ref",
-    "ternary": "ternary", 
+    "ternary": "ternary",
     "text": "text",
     "to do": "todo",
     "unique pointer": "unique_pointer",
@@ -905,87 +927,83 @@ templates = {
     "while": "while",
 }
 template_dict_list = DictList("template_dict_list", templates)
-emacs_element_map = combine_maps(
-    keystroke_element_map,
-    {
-        "n1": IntegerRef(None, 0, 100),
-        "n2": IntegerRef(None, 0, 100), 
-        "line": IntegerRef(None, 1, 10000),
-        "template": DictListRef(None, template_dict_list),
-        "context_word": ListRef(None, context_word_list),
-    })
+emacs_element_map = {
+    "n1": IntegerRef(None, 0, 100),
+    "n2": IntegerRef(None, 0, 100),
+    "line": IntegerRef(None, 1, 10000),
+    "template": DictListRef(None, template_dict_list),
+    "context_word": ListRef(None, context_word_list),
+}
 
-emacs_element = RuleRef(rule=create_rule("EmacsKeystrokeRule", emacs_action_map, emacs_element_map))
-emacs_context_helper = ContextHelper("Emacs", UniversalAppContext(title = "Emacs editor"), emacs_element)
-global_context_helper.add_child(emacs_context_helper)
+emacs_environment = Environment(name="Emacs",
+                                parent=global_environment,
+                                context=UniversalAppContext(title = "Emacs editor"),
+                                action_map=emacs_action_map,
+                                element_map=emacs_element_map)
 
-
-emacs_python_action_map = combine_maps(
-    emacs_action_map,
-    {
-        "[python] indent": Key("c-c, rangle"),
-        "[python] dedent": Key("c-c, langle"),
-    })
-emacs_python_element = RuleRef(rule=create_rule("EmacsPythonKeystrokeRule", emacs_python_action_map, emacs_element_map))
-emacs_python_context_helper = ContextHelper("EmacsPython", UniversalAppContext(title="- Python -"), emacs_python_element)
-emacs_context_helper.add_child(emacs_python_context_helper)
+emacs_python_action_map = {
+    "[python] indent": Key("c-c, rangle"),
+    "[python] dedent": Key("c-c, langle"),
+}
+emacs_python_environment = Environment(name="EmacsPython",
+                                       parent=emacs_environment,
+                                       context=UniversalAppContext(title="- Python -"),
+                                       action_map=emacs_python_action_map)
 
 
-emacs_org_action_map = combine_maps(
-    emacs_action_map,
-    {
-        "[new] heading": Key("c-e, a-enter"),
-        "subheading": Key("c-e, a-enter, a-right"), 
-        "toggle heading": Key("c-c, asterisk"),
-        "to do": Key("c-1, c-c, c-t"),
-        "done": Key("c-2, c-c, c-t"),
-        "clear to do": Key("c-3, c-c, c-t"),
-        "indent tree": Key("as-right"),
-        "indent": Key("a-right"),
-        "dedent tree": Key("as-left"),
-        "dedent": Key("a-left"),
-        "move tree down": Key("as-down"),
-        "move tree up": Key("as-up"),
-        "open org link": Key("c-c, c-o"),
-        "show to do's": Key("c-c, slash, t"),
-        "archive": Key("c-c, c-x, c-a"),
-        "org (West|white)": Key("c-c, c, c-a"), 
-    })
-emacs_org_element = RuleRef(rule=create_rule("EmacsOrgKeystrokeRule", emacs_org_action_map, emacs_element_map))
-emacs_org_context_helper = ContextHelper("EmacsOrg", UniversalAppContext(title="- Org -"), emacs_org_element)
-emacs_context_helper.add_child(emacs_org_context_helper)
+emacs_org_action_map = {
+    "[new] heading": Key("c-e, a-enter"),
+    "subheading": Key("c-e, a-enter, a-right"),
+    "toggle heading": Key("c-c, asterisk"),
+    "to do": Key("c-1, c-c, c-t"),
+    "done": Key("c-2, c-c, c-t"),
+    "clear to do": Key("c-3, c-c, c-t"),
+    "indent tree": Key("as-right"),
+    "indent": Key("a-right"),
+    "dedent tree": Key("as-left"),
+    "dedent": Key("a-left"),
+    "move tree down": Key("as-down"),
+    "move tree up": Key("as-up"),
+    "open org link": Key("c-c, c-o"),
+    "show to do's": Key("c-c, slash, t"),
+    "archive": Key("c-c, c-x, c-a"),
+    "org (West|white)": Key("c-c, c, c-a"),
+}
+emacs_org_environment = Environment(name="EmacsOrg",
+                                    parent=emacs_environment,
+                                    context=UniversalAppContext(title="- Org -"),
+                                    action_map=emacs_org_action_map)
 
 
 emacs_shell_action_map = combine_maps(
-    emacs_action_map,
     shell_command_map,
     {
         "shell (preev|back)": Key("a-r"),
-        "show output": Key("c-c, c-r"), 
+        "show output": Key("c-c, c-r"),
     })
-emacs_shell_element = RuleRef(rule=create_rule("EmacsShellKeystrokeRule", emacs_shell_action_map, emacs_element_map))
-emacs_shell_context_helper = ContextHelper("EmacsShell", UniversalAppContext(title="- Shell -"), emacs_shell_element)
-emacs_context_helper.add_child(emacs_shell_context_helper)
+emacs_shell_environment = Environment(name="EmacsShell",
+                                      parent=emacs_environment,
+                                      context=UniversalAppContext(title="- Shell -"),
+                                      action_map=emacs_shell_action_map)
 
 
 shell_action_map = combine_maps(
-    command_action_map,
     shell_command_map,
     {
-        "copy": Key("cs-c"), 
-        "paste": Key("cs-v"), 
-        "cut": Key("cs-x"), 
-        "top [<n>]": Key("s-pgup/5:%(n)d"), 
-        "pown [<n>]": Key("s-pgdown/5:%(n)d"), 
+        "copy": Key("cs-c"),
+        "paste": Key("cs-v"),
+        "cut": Key("cs-x"),
+        "top [<n>]": Key("s-pgup/5:%(n)d"),
+        "pown [<n>]": Key("s-pgdown/5:%(n)d"),
         "crack [<n>]": Key("c-d/5:%(n)d"),
         "pret [<n>]": Key("cs-left/5:%(n)d"),
         "net [<n>]": Key("cs-right/5:%(n)d"),
-        "move tab left [<n>]": Key("cs-pgup/5:%(n)d"), 
-        "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"), 
+        "move tab left [<n>]": Key("cs-pgup/5:%(n)d"),
+        "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"),
         "shot <tab_n>": Key("a-%(tab_n)d"),
         "shot last": Key("a-1, cs-left"),
         "(prev|preev|back)": Key("c-r"),
-        "(next|frack)": Key("c-s"), 
+        "(next|frack)": Key("c-s"),
         "(nope|no way)": Key("c-g"),
         "new tab": Key("cs-t"),
         "clote": Key("cs-w"),
@@ -995,82 +1013,81 @@ shell_action_map = combine_maps(
         "kill process": Key("c-c"),
     })
 
-shell_element_map = combine_maps(
-    keystroke_element_map,
-    {
-        "tab_n": IntegerRef(None, 1, 10),
-    })
+shell_element_map = {
+    "tab_n": IntegerRef(None, 1, 10),
+}
 
-shell_element = RuleRef(rule=create_rule("ShellKeystrokeRule", shell_action_map, shell_element_map))
-shell_context_helper = ContextHelper("Shell", UniversalAppContext(title = " - Terminal"), shell_element)
-global_context_helper.add_child(shell_context_helper)
+shell_environment = Environment(name="Shell",
+                                parent=global_environment,
+                                context=UniversalAppContext(title = " - Terminal"),
+                                action_map=shell_action_map,
+                                element_map=shell_element_map)
 
 
-chrome_action_map = combine_maps(
-    command_action_map,
-    {
-        "link": Key("c-comma"),
-        "new link": Key("c-dot"),
-        "background links": Key("a-f"), 
-        "new tab":            Key("c-t"),
-        "new incognito":            Key("cs-n"),
-        "new window": Key("c-n"),
-        "clote":          Key("c-w"),
-        "address bar":        Key("c-l"),
-        "back [<n>]":               Key("a-left/15:%(n)d"),
-        "Frak [<n>]":            Key("a-right/15:%(n)d"),
-        "reload": Key("c-r"),
-        "shot <tab_n>": Key("c-%(tab_n)d"),
-        "shot last": Key("c-9"), 
-        "net [<n>]":           Key("c-tab:%(n)d"),
-        "pret [<n>]":           Key("cs-tab:%(n)d"),
-        "move tab left [<n>]": Key("cs-pgup/5:%(n)d"), 
-        "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"),
-        "move tab <tab_n>": Key("cs-%(tab_n)d"),
-        "move tab last": Key("cs-9"), 
-        "reote":         Key("cs-t"),
-        "duplicate tab": Key("c-l/15, a-enter"), 
-        "find":               Key("c-f"),
-        "<link>":          Text("%(link)s"), 
-        "(caret|carrot) browsing": Key("f7"),
-        "moma": Key("c-l/15") + Text("moma") + Key("tab"),
-        "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
-        "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
-        "code search": Key("c-l/15") + Text("cs") + Key("tab"),
-        "go to calendar": Key("c-l/15") + Text("calendar.google.com") + Key("enter"),
-        "go to critique": Key("c-l/15") + Text("cr/") + Key("enter"),
-        "go to (buganizer|bugs)": Key("c-l/15") + Text("b/") + Key("enter"),
-        "go to presubmits": Key("c-l/15, b, tab") + Text("One shot") + Key("enter:2"), 
-        "go to postsubmits": Key("c-l/15, b, tab") + Text("Continuous") + Key("enter:2"), 
-        "go to latest test results": Key("c-l/15, b, tab") + Text("latest test results") + Key("enter:2"), 
-        "go to docs": Key("c-l/15") + Text("docs.google.com") + Key("enter"),
-        "go to slides": Key("c-l/15") + Text("slides.google.com") + Key("enter"),
-        "go to sheets": Key("c-l/15") + Text("sheets.google.com") + Key("enter"),
-        "go to new doc": Key("c-l/15") + Text("go/newdoc") + Key("enter"),
-        "go to new slides": Key("c-l/15") + Text("go/newslides") + Key("enter"),
-        "go to new sheet": Key("c-l/15") + Text("go/newsheet") + Key("enter"),
-        "go to drive": Key("c-l/15") + Text("drive.google.com") + Key("enter"),
-        "go to amazon": Key("c-l/15") + Text("smile.amazon.com") + Key("enter"),
-        "(new|insert) row": Key("a-i/15, r"),
-        "delete row": Key("a-e/15, d"),
-        "strikethrough": Key("as-5"),
-        "bullets": Key("cs-8"),
-        "bold": Key("c-b"),
-        "create link": Key("c-k"),
-        "text box": Key("a-i/15, t"),
-        "paste raw": Key("cs-v"),
-        "next match": Key("c-g"),
-        "preev match": Key("cs-g"),
-        "(go to|open) bookmark": Key("c-semicolon"),
-        "new bookmark": Key("c-apostrophe"),
-        "save bookmark": Key("c-d"), 
-        "next frame": Key("c-lbracket"),
-        "developer tools": Key("cs-j"),
-        "test driver": Function(test_driver),
-        "search bar": ClickElementAction(By.NAME, "q"),
-        "amazon bar": ClickElementAction(By.NAME, "field-keywords"), 
-        "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
-    })
+chrome_action_map = {
+    "link": Key("c-comma"),
+    "new link": Key("c-dot"),
+    "background links": Key("a-f"),
+    "new tab":            Key("c-t"),
+    "new incognito":            Key("cs-n"),
+    "new window": Key("c-n"),
+    "clote":          Key("c-w"),
+    "address bar":        Key("c-l"),
+    "back [<n>]":               Key("a-left/15:%(n)d"),
+    "Frak [<n>]":            Key("a-right/15:%(n)d"),
+    "reload": Key("c-r"),
+    "shot <tab_n>": Key("c-%(tab_n)d"),
+    "shot last": Key("c-9"),
+    "net [<n>]":           Key("c-tab:%(n)d"),
+    "pret [<n>]":           Key("cs-tab:%(n)d"),
+    "move tab left [<n>]": Key("cs-pgup/5:%(n)d"),
+    "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"),
+    "move tab <tab_n>": Key("cs-%(tab_n)d"),
+    "move tab last": Key("cs-9"),
+    "reote":         Key("cs-t"),
+    "duplicate tab": Key("c-l/15, a-enter"),
+    "find":               Key("c-f"),
+    "<link>":          Text("%(link)s"),
+    "(caret|carrot) browsing": Key("f7"),
+    "moma": Key("c-l/15") + Text("moma") + Key("tab"),
+    "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
+    "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
+    "code search": Key("c-l/15") + Text("cs") + Key("tab"),
+    "go to calendar": Key("c-l/15") + Text("calendar.google.com") + Key("enter"),
+    "go to critique": Key("c-l/15") + Text("cr/") + Key("enter"),
+    "go to (buganizer|bugs)": Key("c-l/15") + Text("b/") + Key("enter"),
+    "go to presubmits": Key("c-l/15, b, tab") + Text("One shot") + Key("enter:2"),
+    "go to postsubmits": Key("c-l/15, b, tab") + Text("Continuous") + Key("enter:2"),
+    "go to latest test results": Key("c-l/15, b, tab") + Text("latest test results") + Key("enter:2"),
+    "go to docs": Key("c-l/15") + Text("docs.google.com") + Key("enter"),
+    "go to slides": Key("c-l/15") + Text("slides.google.com") + Key("enter"),
+    "go to sheets": Key("c-l/15") + Text("sheets.google.com") + Key("enter"),
+    "go to new doc": Key("c-l/15") + Text("go/newdoc") + Key("enter"),
+    "go to new slides": Key("c-l/15") + Text("go/newslides") + Key("enter"),
+    "go to new sheet": Key("c-l/15") + Text("go/newsheet") + Key("enter"),
+    "go to drive": Key("c-l/15") + Text("drive.google.com") + Key("enter"),
+    "go to amazon": Key("c-l/15") + Text("smile.amazon.com") + Key("enter"),
+    "(new|insert) row": Key("a-i/15, r"),
+    "delete row": Key("a-e/15, d"),
+    "strikethrough": Key("as-5"),
+    "bullets": Key("cs-8"),
+    "bold": Key("c-b"),
+    "create link": Key("c-k"),
+    "text box": Key("a-i/15, t"),
+    "paste raw": Key("cs-v"),
+    "next match": Key("c-g"),
+    "preev match": Key("cs-g"),
+    "(go to|open) bookmark": Key("c-semicolon"),
+    "new bookmark": Key("c-apostrophe"),
+    "save bookmark": Key("c-d"),
+    "next frame": Key("c-lbracket"),
+    "developer tools": Key("cs-j"),
+    "test driver": Function(test_driver),
+    "search bar": ClickElementAction(By.NAME, "q"),
+    "amazon bar": ClickElementAction(By.NAME, "field-keywords"),
+    "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
+}
+
 chrome_terminal_action_map = {
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
 }
@@ -1088,187 +1105,164 @@ link_char_map = {
     "nine": "9",
 }
 link_char_dict_list  = DictList("link_char_dict_list", link_char_map)
-chrome_element_map = combine_maps(
-    keystroke_element_map,
-    {
-        "tab_n": IntegerRef(None, 1, 9),
-        "link": JoinedRepetition("", DictListRef(None, link_char_dict_list), min = 0, max = 5),
-    })
+chrome_element_map = {
+    "tab_n": IntegerRef(None, 1, 9),
+    "link": JoinedRepetition("", DictListRef(None, link_char_dict_list), min = 0, max = 5),
+}
 
-chrome_element = RuleRef(rule=create_rule("ChromeKeystrokeRule", chrome_action_map, chrome_element_map))
-chrome_terminal_element = RuleRef(rule=create_rule("ChromeTerminalRule", chrome_terminal_action_map, chrome_element_map))
-chrome_context_helper = ContextHelper("Chrome", AppContext(title=" - Google Chrome"),
-                                      chrome_element, chrome_terminal_element)
-global_context_helper.add_child(chrome_context_helper)
+chrome_environment = Environment(name="Chrome",
+                                 parent=global_environment,
+                                 context=AppContext(title=" - Google Chrome"),
+                                 action_map=chrome_action_map,
+                                 terminal_action_map=chrome_terminal_action_map,
+                                 element_map=chrome_element_map)
 
-critique_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "preev": Key("p"), 
-        "next": Key("n"),
-        "preev file": Key("k"),
-        "next file": Key("j"),
-        "open": Key("o"),
-        "list": Key("u"),
-        "comment": Key("c"),
-        "resolve": Key("c-j"), 
-        "done": Key("d"),
-        "save": Key("c-s"),
-        "expand|collapse": Key("e"),
-        "reply": Key("r"),
-        "comment <line_n>": DoubleClickElementAction(By.XPATH,
-                                                     ("//span[contains(@class, 'stx-line') and "
-                                                      "starts-with(@id, 'c') and "
-                                                      "substring-after(@id, '_') = '%(line_n)s']")), 
-    })
-critique_element_map = combine_maps(
-    chrome_element_map,
-    {
-        "line_n": IntegerRef(None, 1, 10000),
-    })
-critique_element = RuleRef(rule=create_rule("CritiqueKeystrokeRule", critique_action_map, critique_element_map))
-critique_context_helper = ContextHelper("Critique", AppContext(title = "<critique.corp.google.com>"),
-                                        critique_element, chrome_terminal_element)
-chrome_context_helper.add_child(critique_context_helper)
+critique_action_map = {
+    "preev": Key("p"),
+    "next": Key("n"),
+    "preev file": Key("k"),
+    "next file": Key("j"),
+    "open": Key("o"),
+    "list": Key("u"),
+    "comment": Key("c"),
+    "resolve": Key("c-j"),
+    "done": Key("d"),
+    "save": Key("c-s"),
+    "expand|collapse": Key("e"),
+    "reply": Key("r"),
+    "comment <line_n>": DoubleClickElementAction(By.XPATH,
+                                                 ("//span[contains(@class, 'stx-line') and "
+                                                  "starts-with(@id, 'c') and "
+                                                  "substring-after(@id, '_') = '%(line_n)s']")),
+}
+critique_element_map = {
+    "line_n": IntegerRef(None, 1, 10000),
+}
+critique_environment = Environment(name="Critique",
+                                   parent=chrome_environment,
+                                   context=AppContext(title = "<critique.corp.google.com>"),
+                                   action_map=critique_action_map,
+                                   element_map=critique_element_map)
 
-calendar_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "click <name>": ClickElementAction(By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
-        "today": Key("t"),
-        "preev": Key("k"),
-        "next": Key("j"),
-        "day": Key("d"),
-        "week": Key("w"),
-        "month": Key("m"),
-    })
+calendar_action_map = {
+    "click <name>": ClickElementAction(By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
+    "today": Key("t"),
+    "preev": Key("k"),
+    "next": Key("j"),
+    "day": Key("d"),
+    "week": Key("w"),
+    "month": Key("m"),
+}
 names_dict_list = DictList(
     "name_dict_list",
     {
         "Sonica": "Sonica"
     })
-calendar_element_map = combine_maps(
-    chrome_element_map,
-    {
-        "name": DictListRef(None, names_dict_list),
-    })
-calendar_element = RuleRef(rule=create_rule("CalendarKeystrokeRule", calendar_action_map, calendar_element_map))
-calendar_context_helper = ContextHelper("Calendar", AppContext(title = "Google Calendar") | AppContext(title = "Google.com - Calendar"),
-                                        calendar_element, chrome_terminal_element)
-chrome_context_helper.add_child(calendar_context_helper)
+calendar_element_map = {
+    "name": DictListRef(None, names_dict_list),
+}
+calendar_environment = Environment(name="Calendar",
+                                   parent=chrome_environment,
+                                   context=(AppContext(title = "Google Calendar") |
+                                            AppContext(title = "Google.com - Calendar")),
+                                   action_map=calendar_action_map,
+                                   element_map=calendar_element_map)
 
-code_search_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "header": Key("r/25, h"),
-        "source": Key("r/25, c"), 
-    })
-code_search_element = RuleRef(rule=create_rule("CodeSearchKeystrokeRule", code_search_action_map, chrome_element_map))
-code_search_context_helper = ContextHelper("CodeSearch", AppContext(title = "<cs.corp.google.com>"),
-                                           code_search_element, chrome_terminal_element)
-chrome_context_helper.add_child(code_search_context_helper)
+code_search_action_map = {
+    "header": Key("r/25, h"),
+    "source": Key("r/25, c"),
+}
+code_search_environment = Environment(name="CodeSearch",
+                                      parent=chrome_environment,
+                                      context=AppContext(title = "<cs.corp.google.com>"),
+                                      action_map=code_search_action_map)
 
-gmail_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "open": Key("o"),
-        "(archive|done)": Text("{"),
-        "mark unread": Text("_"),
-        "list": Key("u"),
-        "preev": Key("k"),
-        "next": Key("j"),
-        "preev message": Key("p"),
-        "next message": Key("n"),
-        "compose": Key("c"),
-        "reply": Key("r"),
-        "reply all": Key("a"),
-        "forward": Key("f"),
-        "important": Key("plus"),
-        "mark starred": Key("s"),
-        "next section": Key("backtick"),
-        "preev section": Key("tilde"),
-        "not important|don't care": Key("minus"),
-        "label waiting": Key("l/50") + Text("waiting") + Key("enter"),
-        "select": Key("x"),
-        "select next <n>": Key("x, j") * Repeat(extra="n"), 
-        "new messages": Key("N"),
-        "go to inbox": Key("g, i"), 
-        "go to starred": Key("g, s"), 
-        "go to sent": Key("g, t"),
-        "go to drafts": Key("g, d"),
-        "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
-        "click to": ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
-        "click cc": Key("cs-c"),
-        "open chat": Key("q"),
-    })
-gmail_terminal_action_map = combine_maps(
-    chrome_terminal_action_map,
-    {
-        "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
-    })
+gmail_action_map = {
+    "open": Key("o"),
+    "(archive|done)": Text("{"),
+    "mark unread": Text("_"),
+    "list": Key("u"),
+    "preev": Key("k"),
+    "next": Key("j"),
+    "preev message": Key("p"),
+    "next message": Key("n"),
+    "compose": Key("c"),
+    "reply": Key("r"),
+    "reply all": Key("a"),
+    "forward": Key("f"),
+    "important": Key("plus"),
+    "mark starred": Key("s"),
+    "next section": Key("backtick"),
+    "preev section": Key("tilde"),
+    "not important|don't care": Key("minus"),
+    "label waiting": Key("l/50") + Text("waiting") + Key("enter"),
+    "select": Key("x"),
+    "select next <n>": Key("x, j") * Repeat(extra="n"),
+    "new messages": Key("N"),
+    "go to inbox": Key("g, i"),
+    "go to starred": Key("g, s"),
+    "go to sent": Key("g, t"),
+    "go to drafts": Key("g, d"),
+    "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
+    "click to": ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
+    "click cc": Key("cs-c"),
+    "open chat": Key("q"),
+}
+gmail_terminal_action_map = {
+    "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
+}
 
-gmail_element = RuleRef(rule=create_rule("GmailKeystrokeRule", gmail_action_map, chrome_element_map))
-gmail_terminal_element = RuleRef(rule=create_rule("GmailTerminalRule", gmail_terminal_action_map, chrome_element_map))
-gmail_context_helper = ContextHelper("Gmail",
-                                     (AppContext(title = "Gmail") |
-                                      AppContext(title = "Google.com Mail") |
-                                      AppContext(title = "<mail.google.com>") |
-                                      AppContext(title = "<inbox.google.com>")),
-                                     gmail_element, gmail_terminal_element)
-chrome_context_helper.add_child(gmail_context_helper)
+gmail_environment = Environment(name="Gmail",
+                                parent=chrome_environment,
+                                context=(AppContext(title = "Gmail") |
+                                         AppContext(title = "Google.com Mail") |
+                                         AppContext(title = "<mail.google.com>") |
+                                         AppContext(title = "<inbox.google.com>")),
+                                action_map=gmail_action_map,
+                                terminal_action_map=gmail_terminal_action_map)
 
-docs_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "select column": Key("c-space"), 
-        "select row": Key("s-space"),
-        "row up": Key("a-e/15, k"), 
-        "row down": Key("a-e/15, j"),
-        "column left": Key("a-e/15, m"), 
-        "column right": Key("a-e/15, m"),
-        "add comment": Key("ca-m"), 
-    })
-docs_element = RuleRef(rule=create_rule("DocsKeystrokeRule", docs_action_map, chrome_element_map))
-docs_context_helper = ContextHelper("Docs",
-                                    AppContext(title = "<docs.google.com>"),
-                                    docs_element, chrome_terminal_element)
-chrome_context_helper.add_child(docs_context_helper)
+docs_action_map = {
+    "select column": Key("c-space"),
+    "select row": Key("s-space"),
+    "row up": Key("a-e/15, k"),
+    "row down": Key("a-e/15, j"),
+    "column left": Key("a-e/15, m"),
+    "column right": Key("a-e/15, m"),
+    "add comment": Key("ca-m"),
+}
+docs_environment = Environment(name="Docs",
+                               parent=chrome_environment,
+                               context=AppContext(title = "<docs.google.com>"),
+                               action_map=docs_action_map)
 
-buganizer_action_map = combine_maps(
-    chrome_action_map,
-    {})
+buganizer_action_map = {}
 RunLocalHook("AddBuganizerCommands", buganizer_action_map)
-buganizer_element = RuleRef(rule=create_rule("BuganizerKeystrokeRule", buganizer_action_map, chrome_element_map))
-buganizer_context_helper = ContextHelper("Buganizer",
-                                         AppContext(title = "Buganizer V2") |
-                                         AppContext(title = "<b.corp.google.com>") |
-                                         AppContext(title = "<buganizer.corp.google.com>") |
-                                         AppContext(title = "<b2.corp.google.com>"),
-                                         buganizer_element, chrome_terminal_element)
-chrome_context_helper.add_child(buganizer_context_helper)
+buganizer_environment = Environment(name="Buganizer",
+                                    parent=chrome_environment,
+                                    context=(AppContext(title = "Buganizer V2") |
+                                             AppContext(title = "<b.corp.google.com>") |
+                                             AppContext(title = "<buganizer.corp.google.com>") |
+                                             AppContext(title = "<b2.corp.google.com>")),
+                                    action_map=buganizer_action_map)
 
-analog_action_map = combine_maps(
-    chrome_action_map,
-    {
-        "next": Key("n"),
-        "preev": Key("p"),
-    })
-analog_element = RuleRef(rule=create_rule("AnalogKeystrokeRule", analog_action_map, chrome_element_map))
-analog_context_helper = ContextHelper("Analog",
-                                      AppContext(title = "<analog.corp.google.com>"),
-                                      analog_element, chrome_terminal_element)
-chrome_context_helper.add_child(analog_context_helper)
+analog_action_map = {
+    "next": Key("n"),
+    "preev": Key("p"),
+}
+analog_environment = Environment(name="Analog",
+                                 parent=chrome_environment,
+                                 context=AppContext(title = "<analog.corp.google.com>"),
+                                 action_map=analog_action_map)
 
-notepad_action_map = combine_maps(
-    command_action_map,
-    {
-        "dumbbell [<n>]": Key("shift:down, c-left/5:%(n)d, backspace, shift:up"),
-        "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
-    })
+notepad_action_map = {
+    "dumbbell [<n>]": Key("shift:down, c-left/5:%(n)d, backspace, shift:up"),
+    "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
+}
 
-notepad_element = RuleRef(rule=create_rule("NotepadKeystrokeRule", notepad_action_map, keystroke_element_map))
-notepad_context_helper = ContextHelper("Notepad", AppContext(executable = "notepad"), notepad_element)
-global_context_helper.add_child(notepad_context_helper)
+notepad_environment = Environment(name="Notepad",
+                                  parent=global_environment,
+                                  context=AppContext(executable = "notepad"),
+                                  action_map=notepad_action_map)
 
 # TODO Figure out either how to integrate this with the repeating rule or move out.
 linux_action_map = combine_maps(
@@ -1286,7 +1280,7 @@ linux_rule = create_rule("LinuxRule", linux_action_map, {}, True,
 # Populate and load the grammar.
 
 grammar = Grammar("repeat")   # Create this module's grammar.
-global_context_helper.add_rules(grammar, None)
+global_environment.install(grammar)
 # TODO Figure out either how to integrate this with the repeating rule or move out.
 grammar.add_rule(linux_rule)
 grammar.load()
