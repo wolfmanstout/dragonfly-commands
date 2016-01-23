@@ -1065,6 +1065,7 @@ chrome_action_map = {
     "go to new doc": Key("c-l/15") + Text("go/newdoc") + Key("enter"),
     "go to new slides": Key("c-l/15") + Text("go/newslides") + Key("enter"),
     "go to new sheet": Key("c-l/15") + Text("go/newsheet") + Key("enter"),
+    "go to new script": Key("c-l/15") + Text("go/newscript") + Key("enter"),
     "go to drive": Key("c-l/15") + Text("drive.google.com") + Key("enter"),
     "go to amazon": Key("c-l/15") + Text("smile.amazon.com") + Key("enter"),
     "(new|insert) row": Key("a-i/15, r"),
