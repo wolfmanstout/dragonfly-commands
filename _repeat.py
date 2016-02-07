@@ -24,7 +24,6 @@ import Queue
 import socket
 import threading
 import time
-import urllib
 import webbrowser
 import win32clipboard
 
@@ -677,10 +676,6 @@ RunLocalHook("AddShellCommands", shell_command_map)
 def Exec(command):
     return Key("c-c, a-x") + Text(command) + Key("enter")
 
-# Work in progress.
-def FastExec(command):
-    return Function(lambda: urllib.urlopen("http://127.0.0.1:9091/" + command).close())
-
 def jump_to_line(line_string):
     return Key("c-u") + Text(line_string) + Key("c-c, c, g")
 
@@ -728,6 +723,7 @@ class UseLinesAction(ActionBase):
         self.post_action.execute(data)
 
 emacs_action_map = {
+    # Overrides
     "up [<n>]": Key("c-u") + Text("%(n)s") + Key("up"),
     "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
     "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
@@ -735,9 +731,34 @@ emacs_action_map = {
     "select everything": Key("c-x, h"),
     "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
     "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
+
+    # General
+    "exec": Key("a-x"),
+    "helm": Key("c-x, c"),
+    "helm resume": Key("c-x, c, b"),
+    "preelin": Key("a-p"),
+    "nollin": Key("a-n"),
+    "prefix": Key("c-u"),
+    "quit": Key("q"),
+    "refresh": Key("g"),
+    "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
+
+    # Emacs
+    "help variable": Key("c-h, v"),
+    "help function": Key("c-h, f"),
+    "help key": Key("c-h, k"),
+    "help mode": Key("c-h, m"),
+    "help back": Key("c-c, c-b"),
+    "customize": Exec("customize-apropos"),
+    "kill emacs server": Exec("ws-stop-all"),
+
+    # Undo
+    "nope": Key("c-g"),
+    "no way": Key("c-g/5:3"),
     "(shuck|undo)": Key("c-slash"),
-    "scratch": Key("c-x, r, U, U"),
     "redo": Key("c-question"),
+
+    # Window manipulation
     "split fub": Key("c-x, 3"),
     "clote fub": Key("c-x, 0"),
     "done fub": Key("c-x, hash"),
@@ -745,28 +766,72 @@ emacs_action_map = {
     "other fub": Key("c-x, o"),
     "die fub": Key("c-x, k"),
     "even fub": Key("c-x, plus"),
-    "open bookmark": Key("c-x, r, b"),
-    "(save|set) bookmark": Key("c-x, r, m"),
-    "list bookmarks": Key("c-x, r, l"),
-    "indent region": Key("ca-backslash"),
-    "comment region": Key("a-semicolon"),
+    "up fub": Exec("windmove-up"),
+    "down fub": Exec("windmove-down"),
+    "left fub": Exec("windmove-left"),
+    "right fub": Exec("windmove-right"),
+    "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+
+    # Filesystem
+    "save": Key("c-x, c-s"),
+    "save as": Key("c-x, c-w"),
+    "buff": Key("c-x, b"),
+    "oaf": Key("c-x, c-f"),
+    "no ido": Key("c-f"),
+    "dear red": Key("c-d"),
     "project file": Key("c-c, p, f"),
     "simulator file": Key("c-c, c, p, s"),
     "switch project": Key("c-c, p, p"),
     "swap project": Key("c-c, s"),
-    "build file": Key("c-c/10, c-g"),
-    "test file": Key("c-c, c-t"),
-    "helm": Key("c-x, c"),
-    "helm resume": Key("c-x, c, b"),
+    "next result": Key("a-comma"),
+    "open (definition|def)": Key("c-backtick, c-c, comma, d"),
+    "toggle (definition|def)": Key("c-c, comma, D"),
+    "open cross (references|ref)": Key("c-c, comma, x"),
+    "open tag": Key("a-dot, enter"),
+    "R grep": Exec("rgrep"),
+    "code search": Exec("cs"),
+    "code search car": Exec("csc"),
+
+    # Bookmarks
+    "open bookmark": Key("c-x, r, b"),
+    "(save|set) bookmark": Key("c-x, r, m"),
+    "list bookmarks": Key("c-x, r, l"),
+
+    # Movement
+    "furred [<n>]": Key("a-f/5:%(n)d"),
+    "bird [<n>]": Key("a-b/5:%(n)d"),
+    "nasper": Key("ca-f"),
+    "pesper": Key("ca-b"),
+    "dowsper": Key("ca-d"),
+    "usper": Key("ca-u"),
+    "fopper": Key("c-c, c, c-f"),
+    "bapper": Key("c-c, c, c-b"),
+    "white": Key("a-m"),
     "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
     "line <n1>": jump_to_line("%(n1)s"),
-    "open line <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
     "re-center": Key("c-l"),
     "set mark": Key("c-backtick"),
     "jump mark": Key("c-langle"),
     "jump symbol": Key("a-i"),
-    "select region": Key("c-x, c-x"),
     "swap mark": Key("c-c, c-x"),
+    "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
+    "next [<n>]": Key("c-s/5:%(n)d"),
+    "edit search": Key("a-e"),
+    "word search": Key("a-s, w"),
+    "symbol search": Key("a-s, underscore"),
+    "regex search": Key("ca-s"),
+    "occur": Key("a-s, o"),
+    "(prev|preev) symbol": Key("a-s, dot, c-r, c-r"),
+    "(next|neck) symbol": Key("a-s, dot, c-s"),
+    "before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
+    "after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
+    "before next <char>": Key("c-c, c, s") + Text("%(char)s"),
+    "after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
+    "other top": Key("c-minus, ca-v"),
+    "other pown": Key("ca-v"),
+    "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: type_position("%d\n%d\n")),
+
+    # Editing
     "slap above": Key("a-enter"),
     "slap below": Key("c-enter"),
     "move (line|lines) up [<n>]": Key("c-u") + Text("%(n)d") + Key("a-up"),
@@ -775,35 +840,18 @@ emacs_action_map = {
     "copy (line|lines) down [<n>]": Key("c-u") + Text("%(n)d") + Key("as-down"),
     "clear line": Key("c-a, c-c, c, k"),
     "join (line|lines)": Key("as-6"),
-    "white": Key("a-m"),
-    "buff": Key("c-x, b"),
-    "oaf": Key("c-x, c-f"),
-    "no ido": Key("c-f"),
-    "dear red": Key("c-d"),
-    "furred [<n>]": Key("a-f/5:%(n)d"),
-    "bird [<n>]": Key("a-b/5:%(n)d"),
+    "open line <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
+    "select region": Key("c-x, c-x"),
+    "indent region": Key("ca-backslash"),
+    "comment region": Key("a-semicolon"),
+    "clang format": Key("ca-q"),
+    "format comment": Key("a-q"),
     "kurd [<n>]": Key("a-d/5:%(n)d"),
-    "nope": Key("c-g"),
-    "no way": Key("c-g/5:3"),
-    "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
-    "next [<n>]": Key("c-s/5:%(n)d"),
-    "edit search": Key("a-e"),
-    "word search": Key("a-s, w"),
-    "symbol search": Key("a-s, underscore"),
-    "regex search": Key("ca-s"),
-    "occur": Key("a-s, o"),
     "replace": Key("as-5"),
     "regex replace": Key("cas-5"),
     "replace symbol": Key("a-apostrophe"),
     "narrow region": Key("c-x, n, n"),
     "widen buffer": Key("c-x, n, w"),
-    "(prev|preev) symbol": Key("a-s, dot, c-r, c-r"),
-    "(next|neck) symbol": Key("a-s, dot, c-s"),
-    "jump before <context_word>": Key("c-r") + Text("%(context_word)s") + Key("enter"),
-    "jump after <context_word>": Key("c-s") + Text("%(context_word)s") + Key("enter"),
-    "next result": Key("a-comma"),
-    "preev error": Key("f11"),
-    "next error": Key("f12"),
     "cut": Key("c-w"),
     "copy": Key("a-w"),
     "yank": Key("c-y"),
@@ -815,85 +863,74 @@ emacs_action_map = {
     "Mark": Key("c-space"),
     "Mark <n1> [(through|to) <n2>]": MarkLinesAction(),
     "Mark tight <n1> [(through|to) <n2>]": MarkLinesAction(True),
-    "nasper": Key("ca-f"),
-    "pesper": Key("ca-b"),
     "moosper": Key("cas-2"),
     "kisper": Key("ca-k"),
-    "dowsper": Key("ca-d"),
-    "usper": Key("ca-u"),
-    "fopper": Key("c-c, c, c-f"),
-    "bapper": Key("c-c, c, c-b"),
-    "exec": Key("a-x"),
-    "preelin": Key("a-p"),
-    "nollin": Key("a-n"),
-    "before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
-    "after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
-    "before next <char>": Key("c-c, c, s") + Text("%(char)s"),
-    "after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
+    "expand region": Key("c-equals"),
+    "contract region": Key("c-plus"),
     "surround parens": Key("a-lparen"),
-    "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"),
-    "open (snippet|template) <template>": Key("c-c, ampersand, c-v") + Text("%(template)s") + Key("enter"),
-    "open (snippet|template)": Key("c-c, ampersand, c-v"),
-    "new (snippet|template)": Key("c-c, ampersand, c-n"),
-    "reload (snippets|templates)": Exec("yas-reload-all"),
-    "prefix": Key("c-u"),
-    "quit": Key("q"),
-    "save": Key("c-x, c-s"),
-    "save as": Key("c-x, c-w"),
-    "open (definition|def)": Key("c-backtick, c-c, comma, d"),
-    "toggle (definition|def)": Key("c-c, comma, D"),
-    "open cross (references|ref)": Key("c-c, comma, x"),
-    "open tag": Key("a-dot, enter"),
-    "clang format": Key("ca-q"),
-    "format comment": Key("a-q"),
-    "other top": Key("c-minus, ca-v"),
-    "other pown": Key("ca-v"),
     "close tag": Key("c-c, c-e"),
-    "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: type_position("%d\n%d\n")),
-    "R grep": Exec("rgrep"),
-    "code search": Exec("cs"),
-    "code search car": Exec("csc"),
+
+    # Registers
     "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
     "save mark <char>": Key("c-c, c, m, %(char)s"),
     "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
     "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
     "save copy <char>": Key("c-c, c, w, %(char)s"),
     "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
-    "expand diff": Key("a-4"),
-    "expand region": Key("c-equals"),
-    "contract region": Key("c-plus"),
-    "refresh": Key("g"),
+
+    # Templates
+    "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"),
+    "open (snippet|template) <template>": Key("c-c, ampersand, c-v") + Text("%(template)s") + Key("enter"),
+    "open (snippet|template)": Key("c-c, ampersand, c-v"),
+    "new (snippet|template)": Key("c-c, ampersand, c-n"),
+    "reload (snippets|templates)": Exec("yas-reload-all"),
+
+    # Compilation
+    "build file": Key("c-c/10, c-g"),
+    "test file": Key("c-c, c-t"),
+    "preev error": Key("f11"),
+    "next error": Key("f12"),
+    "recompile": Exec("recompile"),
+
+    # Dired
+    "toggle details": Exec("dired-hide-details-mode"),
+
+    # Web editing
     "JavaScript mode": Exec("js-mode"),
     "HTML mode": Exec("html-mode"),
-    "toggle details": Exec("dired-hide-details-mode"),
-    "up fub": Exec("windmove-up"),
-    "down fub": Exec("windmove-down"),
-    "left fub": Exec("windmove-left"),
-    "right fub": Exec("windmove-right"),
-    "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+
+    # C++
     "header": Key("c-x, c-h"),
-    "create shell": Exec("shell"),
-    "durr shell": Key("c-c, c, dollar"),
-    "hello world": FastExec("hello-world"),
-    "kill emacs server": Exec("ws-stop-all"),
-    "closure compile": Key("c-c, c-k"),
-    "closure namespace": Key("c-c, a-n"),
-    "pie flakes": Key("c-c, c-v"),
-    "help variable": Key("c-h, v"),
-    "help function": Key("c-h, f"),
-    "help key": Key("c-h, k"),
-    "help mode": Key("c-h, m"),
-    "help back": Key("c-c, c-b"),
-    "eval defun": Key("ca-x"),
-    "eval region": Exec("eval-region"),
-    "magit status": Key("c-c, m"),
-    "submit comment": Key("c-c, c-c"),
-    "show diff": Key("c-x, v, equals"),
-    "recompile": Exec("recompile"),
-    "customize": Exec("customize-apropos"),
-    "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
     "copy import": Key("f5"),
     "paste import": Key("f6"),
+
+    # Python
+    "pie flakes": Key("c-c, c-v"),
+
+    # Shell
+    "create shell": Exec("shell"),
+    "durr shell": Key("c-c, c, dollar"),
+
+    # Clojure
+    "closure compile": Key("c-c, c-k"),
+    "closure namespace": Key("c-c, a-n"),
+
+    # Lisp
+    "eval defun": Key("ca-x"),
+    "eval region": Exec("eval-region"),
+
+    # Version control
+    "magit status": Key("c-c, m"),
+    "expand diff": Key("a-4"),
+    "submit comment": Key("c-c, c-c"),
+    "show diff": Key("c-x, v, equals"),
+}
+
+emacs_terminal_action_map = {
+    "boof <text>": Key("c-r") + LowercaseText("%(text)s") + Key("enter"),
+    "ooft <text>": Key("c-r") + LowercaseText("%(text)s") + Key("c-s, enter"),
+    "baif <text>": Key("c-s") + LowercaseText("%(text)s") + Key("c-r, enter"),
+    "aift <text>": Key("c-s") + LowercaseText("%(text)s") + Key("enter"),
 }
 
 templates = {
@@ -932,13 +969,13 @@ emacs_element_map = {
     "n2": IntegerRef(None, 0, 100),
     "line": IntegerRef(None, 1, 10000),
     "template": DictListRef(None, template_dict_list),
-    "context_word": ListRef(None, context_word_list),
 }
 
 emacs_environment = Environment(name="Emacs",
                                 parent=global_environment,
                                 context=UniversalAppContext(title = "Emacs editor"),
                                 action_map=emacs_action_map,
+                                terminal_action_map=emacs_terminal_action_map,
                                 element_map=emacs_element_map)
 
 emacs_python_action_map = {
@@ -1184,6 +1221,7 @@ gmail_action_map = {
     "open": Key("o"),
     "(archive|done)": Text("{"),
     "mark unread": Text("_"),
+    "undo": Key("z"),
     "list": Key("u"),
     "preev": Key("k"),
     "next": Key("j"),

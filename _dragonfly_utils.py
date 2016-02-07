@@ -143,6 +143,20 @@ class UniversalPaste(ActionBase):
         else:
             Key("c-v").execute()
 
+class FormattedText(DynStrActionBase):
+    def __init__(self, spec, formatter):
+        DynStrActionBase.__init__(self, spec)
+        self.formatter = formatter
+
+    def _parse_spec(self, spec):
+        return spec
+
+    def _execute_events(self, events):
+        Text(self.formatter(events)).execute()
+
+def LowercaseText(spec):
+    return FormattedText(spec, lambda text: text.lower())
+
 def byteify(input):
     """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
     if isinstance(input, dict):
