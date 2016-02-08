@@ -989,8 +989,10 @@ emacs_python_environment = Environment(name="EmacsPython",
 
 
 emacs_org_action_map = {
+    "new heading above": Key("c-a, a-enter"),
     "new heading": Key("c-e, a-enter"),
     "subheading": Key("c-e, a-enter, a-right"),
+    "new to do above": Key("c-a, as-enter"),
     "new to do": Key("c-e, as-enter"),
     "sub to do": Key("c-e, as-enter, a-right"),
     "toggle heading": Key("c-c, asterisk"),
