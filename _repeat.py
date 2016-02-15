@@ -246,7 +246,7 @@ except:
 # Key actions which may be used anywhere in any command.
 global_key_action_map = {
     "slap [<n>]": Key("enter/5:%(n)d"),
-    "pat [<n>]": Key("space/5:%(n)d"),
+    "spooce [<n>]": Key("space/5:%(n)d"),
     "tab [<n>]": Key("tab/5:%(n)d"),
 }
 
@@ -775,6 +775,8 @@ emacs_action_map = {
     # Filesystem
     "save": Key("c-x, c-s"),
     "save as": Key("c-x, c-w"),
+    "save all": Key("c-x, s"),
+    "save all now": Key("c-u, c-x, s"),
     "buff": Key("c-x, b"),
     "oaf": Key("c-x, c-f"),
     "no ido": Key("c-f"),
@@ -812,6 +814,7 @@ emacs_action_map = {
     "re-center": Key("c-l"),
     "set mark": Key("c-backtick"),
     "jump mark": Key("c-langle"),
+    "jump change": Key("c-c, c, c"),
     "jump symbol": Key("a-i"),
     "swap mark": Key("c-c, c-x"),
     "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
@@ -859,6 +862,10 @@ emacs_action_map = {
     "yank tight <n1> [(through|to) <n2>]": UseLinesAction(Key("a-w"), Key("c-y"), True),
     "grab <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y")),
     "grab tight <n1> [(through|to) <n2>]": UseLinesAction(Key("c-w"), Key("c-y"), True),
+    "copy <n1> [(through|to) <n2>]": MarkLinesAction() + Key("a-w"),
+    "copy tight <n1> [(through|to) <n2>]": MarkLinesAction(True) + Key("c-w"),
+    "cut <n1> [(through|to) <n2>]": MarkLinesAction() + Key("c-w"),
+    "cut tight <n1> [(through|to) <n2>]": MarkLinesAction(True) + Key("c-w"),
     "sank": Key("a-y"),
     "Mark": Key("c-space"),
     "Mark <n1> [(through|to) <n2>]": MarkLinesAction(),
@@ -991,10 +998,16 @@ emacs_python_environment = Environment(name="EmacsPython",
 emacs_org_action_map = {
     "new heading above": Key("c-a, a-enter"),
     "new heading": Key("c-e, a-enter"),
+    "brand new heading": Key("c-e, a-enter, c-c, c, a-left"),
+    "new heading below": Key("c-e, c-enter"),
     "subheading": Key("c-e, a-enter, a-right"),
+    "split heading": Key("a-enter"),
     "new to do above": Key("c-a, as-enter"),
     "new to do": Key("c-e, as-enter"),
+    "brand new to do": Key("c-e, as-enter, c-c, c, a-left"),
+    "new to do below": Key("c-e, cs-enter"),
     "sub to do": Key("c-e, as-enter, a-right"),
+    "split to do": Key("as-enter"),
     "toggle heading": Key("c-c, asterisk"),
     "to do": Key("c-1, c-c, c-t"),
     "done": Key("c-2, c-c, c-t"),
