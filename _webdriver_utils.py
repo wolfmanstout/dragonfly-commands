@@ -7,7 +7,7 @@
 import json
 import urllib2
 
-from dragonfly import *
+from dragonfly import (DynStrActionBase)
 import _dragonfly_local as local
 
 from selenium import webdriver
@@ -25,11 +25,13 @@ def create_driver():
     chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
     driver = webdriver.Chrome(local.CHROME_DRIVER_PATH, chrome_options=chrome_options)
 
+
 def quit_driver():
     global driver
     if driver:
         driver.quit()
     driver = None
+
 
 def switch_to_active_tab():
     tabs = json.load(urllib2.urlopen("http://127.0.0.1:9222/json"))
@@ -46,11 +48,14 @@ def switch_to_active_tab():
             print "Switched to: " + driver.title.encode('ascii', 'backslashreplace')
             return
 
+
 def test_driver():
     switch_to_active_tab()
     driver.get('http://www.google.com/xhtml');
 
+
 class ElementAction(DynStrActionBase):
+
     def __init__(self, by, spec):
         DynStrActionBase.__init__(self, spec)
         self.by = by
@@ -63,15 +68,21 @@ class ElementAction(DynStrActionBase):
         element = driver.find_element(self.by, events)
         self._execute_on_element(element)
 
+
 class ClickElementAction(ElementAction):
+
     def _execute_on_element(self, element):
         element.click()
 
+
 class DoubleClickElementAction(ElementAction):
+
     def _execute_on_element(self, element):
         ActionChains(driver).double_click(element).perform()
 
+
 class ClickElementOffsetAction(ElementAction):
+
     def __init__(self, by, spec, xoffset, yoffset):
         super(ClickElementOffsetAction, self).__init__(by, spec)
         self.xoffset = xoffset

@@ -7,8 +7,14 @@ window is changed accidentally in the middle of command execution."""
 
 import platform
 
-from dragonfly import *
-from _dragonfly_utils import *
+from dragonfly import (
+    Grammar,
+    IntegerRef,
+    Key,
+    MappingRule,
+    Mimic,
+)
+import _dragonfly_utils as utils
 
 #-------------------------------------------------------------------------------
 # Create the main command rule.
@@ -18,6 +24,7 @@ if platform.release() == "8":
     swap_action = Mimic("press", "alt", "tab")
 else:
     swap_action = Key("alt:down, tab:%(n)d/25, alt:up")
+
 
 class CommandRule(MappingRule):
     mapping = {
@@ -30,6 +37,7 @@ class CommandRule(MappingRule):
         "n": 1,
         }
 
+
 #-------------------------------------------------------------------------------
 # Create commands to jump to a specific window.
 
@@ -41,7 +49,7 @@ windows = [
     "home terminal",
     "home emacs",
 ]
-json_windows = load_json("windows.json")
+json_windows = utils.load_json("windows.json")
 if json_windows:
     windows = json_windows
 
@@ -53,8 +61,10 @@ for i, window in enumerate(windows):
     for j, words in enumerate(window):
         windows_mapping[windows_prefix + " " + words] = Key("win:down, %d:%d/10, win:up" % (i + 1, j + 1))
 
+
 class WindowsRule(MappingRule):
     mapping = windows_mapping
+
 
 #-------------------------------------------------------------------------------
 # Global grammar.
@@ -63,6 +73,7 @@ grammar = Grammar("global")
 grammar.add_rule(CommandRule())
 grammar.add_rule(WindowsRule())
 grammar.load()
+
 
 # Unload function which will be called by natlink at unload time.
 def unload():

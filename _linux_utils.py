@@ -5,12 +5,17 @@
 """Functions and classes to help with manipulating a remote Linux instance."""
 
 import xmlrpclib
-import sys
 import time
 
-from dragonfly import *
+from dragonfly import (
+    ActionBase,
+    AppContext,
+)
+
 
 class LinuxHelper(object):
+    """Helper to access Linux."""
+
     def __init__(self):
         self.server = xmlrpclib.ServerProxy("http://127.0.0.1:12400", allow_none=True)
         self.last_update = None
@@ -34,9 +39,13 @@ class LinuxHelper(object):
         except:
             pass
 
+
 linux_helper = LinuxHelper()
 
+
 class UniversalAppContext(AppContext):
+    """Context that works on both remote Linux and local Windows."""
+
     def matches(self, executable, title, handle):
         if AppContext.matches(self, executable, title, handle):
             return True
@@ -47,6 +56,7 @@ class UniversalAppContext(AppContext):
             if self._exclude != found:
                 return True
         return False
+
 
 class ActivateLinuxWindow(ActionBase):
     """Activate the provided window within Linux."""

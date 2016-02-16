@@ -5,12 +5,10 @@
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 #
 
-"""
-This contains all commands which may be spoken continuously or repeated.
+"""This contains all commands which may be spoken continuously or repeated.
 
 This is heavily modified from _multiedit.py, found here:
-https://code.google.com/p/dragonfly-modules/
-
+https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedit.py
 """
 
 try:
@@ -27,20 +25,46 @@ import time
 import webbrowser
 import win32clipboard
 
-from dragonfly import *
+from dragonfly import (
+    ActionBase,
+    Alternative,
+    AppContext,
+    CompoundRule,
+    Config,
+    DictList,
+    DictListRef,
+    Dictation,
+    Empty,
+    Function,
+    Grammar,
+    IntegerRef,
+    Key,
+    List,
+    ListRef,
+    Mimic,
+    Mouse,
+    Optional,
+    Pause,
+    Repeat,
+    Repetition,
+    RuleRef,
+    RuleWrap,
+    Text,
+    get_engine,
+)
 import dragonfly.log
 from selenium.webdriver.common.by import By
 
-from _dragonfly_utils import *
-from _eye_tracker_utils import *
-from _linux_utils import *
-from _text_utils import *
-from _webdriver_utils import *
+import _dragonfly_utils as utils
+import _eye_tracker_utils as eye_tracker
+import _linux_utils as linux
+import _text_utils as text
+import _webdriver_utils as webdriver
 
 # Load local hooks if defined.
 try:
     import _dragonfly_local_hooks as local_hooks
-    def RunLocalHook(name, *args, **kwargs):
+    def run_local_hook(name, *args, **kwargs):
         """Function to run local hook if defined."""
         try:
             hook = getattr(local_hooks, name)
@@ -49,7 +73,7 @@ try:
             pass
 except:
     print("Local hooks not loaded.")
-    def RunLocalHook(name, *args, **kwargs):
+    def run_local_hook(name, *args, **kwargs):
         pass
 
 # Make sure dragonfly errors show up in NatLink messages.
@@ -225,20 +249,21 @@ suffixes = [
     "bytes",
 ]
 
-letters_map = combine_maps(quick_letters_map, long_letters_map)
+letters_map = utils.combine_maps(quick_letters_map, long_letters_map)
 
-char_map = dict((k, v.strip()) for (k, v) in combine_maps(letters_map, numbers_map, symbol_map).iteritems())
+char_map = dict((k, v.strip())
+                for (k, v) in utils.combine_maps(letters_map, numbers_map, symbol_map).iteritems())
 
 # Load commonly misrecognized words saved to a file.
 saved_words = []
 try:
-    with open(WORDS_PATH) as file:
+    with open(text.WORDS_PATH) as file:
         for line in file:
             word = line.strip()
             if len(word) > 2 and word not in letters_map:
                 saved_words.append(line.strip())
 except:
-    print("Unable to open: " + WORDS_PATH)
+    print("Unable to open: " + text.WORDS_PATH)
 
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
@@ -293,10 +318,10 @@ key_action_map = {
     "copy":                             release + Key("c-c"),
     "cut":                              release + Key("c-x"),
     "select everything":                       release + Key("c-a"),
-    "edit text": RunApp("notepad"),
-    "edit emacs": RunEmacs(".txt"),
-    "edit everything": Key("c-a, c-x") + RunApp("notepad") + Key("c-v"),
-    "edit region": Key("c-x") + RunApp("notepad") + Key("c-v"),
+    "edit text": utils.RunApp("notepad"),
+    "edit emacs": utils.RunEmacs(".txt"),
+    "edit everything": Key("c-a, c-x") + utils.RunApp("notepad") + Key("c-v"),
+    "edit region": Key("c-x") + utils.RunApp("notepad") + Key("c-v"),
     "[hold] shift":                     Key("shift:down"),
     "release shift":                    Key("shift:up"),
     "[hold] control":                   Key("ctrl:down"),
@@ -305,19 +330,19 @@ key_action_map = {
     "release (meta|alt)":                  Key("alt:up"),
     "release [all]":                    release,
 
-    "(I|eye) connect": Function(connect),
-    "(I|eye) disconnect": Function(disconnect),
-    "(I|eye) print position": Function(print_position),
-    "(I|eye) move": Function(move_to_position),
-    "(I|eye) click": Function(move_to_position) + Mouse("left"),
-    "(I|eye) act": Function(activate_position),
-    "(I|eye) pan": Function(panning_step_position),
-    "(I|eye) right click": Function(move_to_position) + Mouse("right"),
-    "(I|eye) middle click": Function(move_to_position) + Mouse("middle"),
-    "(I|eye) double click": Function(move_to_position) + Mouse("left:2"),
-    "(I|eye) triple click": Function(move_to_position) + Mouse("left:3"),
-    "(I|eye) start drag": Function(move_to_position) + Mouse("left:down"),
-    "(I|eye) stop drag": Function(move_to_position) + Mouse("left:up"),
+    "(I|eye) connect": Function(eye_tracker.connect),
+    "(I|eye) disconnect": Function(eye_tracker.disconnect),
+    "(I|eye) print position": Function(eye_tracker.print_position),
+    "(I|eye) move": Function(eye_tracker.move_to_position),
+    "(I|eye) click": Function(eye_tracker.move_to_position) + Mouse("left"),
+    "(I|eye) act": Function(eye_tracker.activate_position),
+    "(I|eye) pan": Function(eye_tracker.panning_step_position),
+    "(I|eye) right click": Function(eye_tracker.move_to_position) + Mouse("right"),
+    "(I|eye) middle click": Function(eye_tracker.move_to_position) + Mouse("middle"),
+    "(I|eye) double click": Function(eye_tracker.move_to_position) + Mouse("left:2"),
+    "(I|eye) triple click": Function(eye_tracker.move_to_position) + Mouse("left:3"),
+    "(I|eye) start drag": Function(eye_tracker.move_to_position) + Mouse("left:down"),
+    "(I|eye) stop drag": Function(eye_tracker.move_to_position) + Mouse("left:up"),
     "do click": Mouse("left"),
     "do right click": Mouse("right"),
     "do middle click": Mouse("middle"),
@@ -326,8 +351,8 @@ key_action_map = {
     "do start drag": Mouse("left:down"),
     "do stop drag": Mouse("left:up"),
 
-    "create driver": Function(create_driver),
-    "quit driver": Function(quit_driver),
+    "create driver": Function(webdriver.create_driver),
+    "quit driver": Function(webdriver.quit_driver),
 }
 
 # Actions for speaking out sequences of characters.
@@ -339,12 +364,12 @@ character_action_map = {
 }
 
 # Actions that can be used anywhere in any command.
-global_action_map = combine_maps(global_key_action_map,
-                                 text_map_to_action_map(symbol_map))
+global_action_map = utils.combine_maps(global_key_action_map,
+                                       utils.text_map_to_action_map(symbol_map))
 
 # Actions that can be used anywhere except after a command with arbitrary
 # dictation.
-command_action_map = combine_maps(global_action_map, key_action_map)
+command_action_map = utils.combine_maps(global_action_map, key_action_map)
 
 # Here we prepare the action map of formatting functions from the config file.
 # Retrieve text-formatting functions from this module's config file. Each of
@@ -387,23 +412,27 @@ custom_dictation = RuleWrap(None, Alternative([
 ]))
 
 # Either arbitrary dictation or letters.
-mixed_dictation = RuleWrap(None, JoinedSequence(" ", [
+mixed_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
         Dictation(),
         DictListRef(None, letters_dict_list),
         ListRef(None, saved_word_list),
     ]),
-    Optional(ListRef(None, suffix_list))]))
+    Optional(ListRef(None, suffix_list)),
+]))
 
 # A sequence of either short letters or long letters.
-letters_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, letters_dict_list), min = 1, max = 10))
+letters_element = RuleWrap(None, utils.JoinedRepetition(
+    "", DictListRef(None, letters_dict_list), min=1, max=10))
 
 # A sequence of numbers.
-numbers_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, numbers_dict_list), min = 0, max = 10))
+numbers_element = RuleWrap(None, utils.JoinedRepetition(
+    "", DictListRef(None, numbers_dict_list), min=0, max=10))
 
 # A sequence of characters.
-chars_element = RuleWrap(None, JoinedRepetition("", DictListRef(None, char_dict_list), min = 0, max = 10))
+chars_element = RuleWrap(None, utils.JoinedRepetition(
+    "", DictListRef(None, char_dict_list), min=0, max=10))
 
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
@@ -416,14 +445,14 @@ keystroke_element_map = {
 # Rules which we will refer to within other rules.
 
 # Rule for formatting mixed_dictation elements.
-format_rule = create_rule(
+format_rule = utils.create_rule(
     "FormatRule",
     format_functions,
     {"dictation": mixed_dictation}
 )
 
 # Rule for formatting pure dictation elements.
-pure_format_rule = create_rule(
+pure_format_rule = utils.create_rule(
     "PureFormatRule",
     dict([("pure " + k, v)
           for (k, v) in format_functions.items()]),
@@ -431,7 +460,7 @@ pure_format_rule = create_rule(
 )
 
 # Rule for formatting custom_dictation elements.
-custom_format_rule = create_rule(
+custom_format_rule = utils.create_rule(
     "CustomFormatRule",
     dict([("my " + k, v)
           for (k, v) in format_functions.items()]),
@@ -439,7 +468,7 @@ custom_format_rule = create_rule(
 )
 
 # Rule for handling raw dictation.
-dictation_rule = create_rule(
+dictation_rule = utils.create_rule(
     "DictationRule",
     {
         "mimic text <text>": release + Text("%(text)s"),
@@ -451,7 +480,7 @@ dictation_rule = create_rule(
 )
 
 # Rule for printing single characters.
-single_character_rule = create_rule(
+single_character_rule = utils.create_rule(
     "SingleCharacterRule",
     character_action_map,
     {
@@ -462,7 +491,7 @@ single_character_rule = create_rule(
 )
 
 # Rule for spelling a word letter by letter and formatting it.
-spell_format_rule = create_rule(
+spell_format_rule = utils.create_rule(
     "SpellFormatRule",
     dict([("spell " + k, v)
           for (k, v) in format_functions.items()]),
@@ -470,7 +499,7 @@ spell_format_rule = create_rule(
 )
 
 # Rule for printing a sequence of characters.
-character_rule = create_rule(
+character_rule = utils.create_rule(
     "CharacterRule",
     character_action_map,
     {
@@ -486,9 +515,9 @@ character_rule = create_rule(
 
 # Element matching simple commands.
 # For efficiency, this should not contain any repeating elements.
-single_action = RuleRef(rule=create_rule("CommandKeystrokeRule",
-                                         command_action_map,
-                                         keystroke_element_map))
+single_action = RuleRef(rule=utils.create_rule("CommandKeystrokeRule",
+                                               command_action_map,
+                                               keystroke_element_map))
 
 # Element matching dictation and commands allowed at the end of an utterance.
 # For efficiency, this should not contain any repeating elements. For accuracy,
@@ -499,9 +528,9 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=format_rule),
     RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
-    RuleRef(rule=create_rule("DictationKeystrokeRule",
-                             global_action_map,
-                             keystroke_element_map)),
+    RuleRef(rule=utils.create_rule("DictationKeystrokeRule",
+                                   global_action_map,
+                                   keystroke_element_map)),
     RuleRef(rule=single_character_rule),
 ]))
 
@@ -515,6 +544,7 @@ dictation_element = RuleWrap(None, Alternative([
 #  recognition in the "extras" argument: the sequence of
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
+
     def __init__(self, name, command, terminal_command, context):
         # Here we define this rule's spoken-form and special elements. Note that
         # nested_repetitions is the only one that contains Repetitions, and it
@@ -526,9 +556,9 @@ class RepeatRule(CompoundRule):
             Repetition(command, min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
-            Repetition(dictation_element, min = 1, max = 5, name = "dictation_sequence"),
-            ElementWrapper("dictation", dictation_element),
-            ElementWrapper("terminal_command", terminal_command),
+            Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
+            utils.ElementWrapper("dictation", dictation_element),
+            utils.ElementWrapper("terminal_command", terminal_command),
             IntegerRef("n", 1, 100),  # Times to repeat the sequence.
         ]
         defaults = {
@@ -571,6 +601,7 @@ class RepeatRule(CompoundRule):
                 terminal_command.execute()
         release.execute()
 
+
 #-------------------------------------------------------------------------------
 # Define top-level rules for different contexts. Note that Dragon only allows
 # top-level rules to be context-specific, but we want control over sub-rules. To
@@ -578,9 +609,10 @@ class RepeatRule(CompoundRule):
 # for each context.
 
 class Environment(object):
-    """Environment where voice commands can be spoken. Combines grammar and
-    context and adds hierarchy. When installed, will produce a top-level rule
-    for each environment."""
+    """Environment where voice commands can be spoken. Combines grammar and context
+    and adds hierarchy. When installed, will produce a top-level rule for each
+    environment.
+    """
 
     def __init__(self,
                  name,
@@ -593,10 +625,11 @@ class Environment(object):
         self.children = []
         if parent:
             parent.add_child(self)
-            self.context = combine_contexts(parent.context, context)
-            self.action_map = combine_maps(parent.action_map, action_map)
-            self.terminal_action_map = combine_maps(parent.terminal_action_map, terminal_action_map)
-            self.element_map = combine_maps(parent.element_map, element_map)
+            self.context = utils.combine_contexts(parent.context, context)
+            self.action_map = utils.combine_maps(parent.action_map, action_map)
+            self.terminal_action_map = utils.combine_maps(
+                parent.terminal_action_map, terminal_action_map)
+            self.element_map = utils.combine_maps(parent.element_map, element_map)
         else:
             self.context = context
             self.action_map = action_map if action_map else {}
@@ -610,17 +643,18 @@ class Environment(object):
         exclusive_context = self.context
         for child in self.children:
             child.install(grammar)
-            exclusive_context = combine_contexts(exclusive_context, ~child.context)
+            exclusive_context = utils.combine_contexts(exclusive_context, ~child.context)
         if self.action_map:
-            element = RuleRef(rule=create_rule(self.name + "KeystrokeRule",
-                                               self.action_map,
-                                               self.element_map))
+            element = RuleRef(rule=utils.create_rule(self.name + "KeystrokeRule",
+                                                     self.action_map,
+                                                     self.element_map))
         else:
             element = Empty()
         if self.terminal_action_map:
-            terminal_element = RuleRef(rule=create_rule(self.name + "TerminalRule",
-                                                        self.terminal_action_map,
-                                                        self.element_map))
+            terminal_element = RuleRef(
+                rule=utils.create_rule(self.name + "TerminalRule",
+                                       self.terminal_action_map,
+                                       self.element_map))
         else:
             terminal_element = Empty()
         grammar.add_rule(RepeatRule(self.name + "RepeatRule",
@@ -628,11 +662,17 @@ class Environment(object):
                                     terminal_element,
                                     exclusive_context))
 
+
+### Global
+
 global_environment = Environment(name="Global",
                                  action_map=command_action_map,
                                  element_map=keystroke_element_map)
 
-shell_command_map = combine_maps({
+
+### Shell commands
+
+shell_command_map = utils.combine_maps({
     "git commit": Text("git commit -am "),
     "git commit done": Text("git commit -am done "),
     "git checkout new": Text("git checkout -b "),
@@ -670,16 +710,22 @@ shell_command_map = combine_maps({
     "git push",
     "git pull",
 ]))
-RunLocalHook("AddShellCommands", shell_command_map)
+run_local_hook("AddShellCommands", shell_command_map)
 
+
+### Emacs
 
 def Exec(command):
     return Key("c-c, a-x") + Text(command) + Key("enter")
 
+
 def jump_to_line(line_string):
     return Key("c-u") + Text(line_string) + Key("c-c, c, g")
 
+
 class OpenClipboardUrlAction(ActionBase):
+    """Open a URL in the clipboard in the default browser."""
+
     def _execute(self, data=None):
         win32clipboard.OpenClipboard()
         data = win32clipboard.GetClipboardData()
@@ -687,7 +733,10 @@ class OpenClipboardUrlAction(ActionBase):
         print "Opening link: %s" % data
         webbrowser.open(data)
 
+
 class MarkLinesAction(ActionBase):
+    """Mark several lines within a range."""
+
     def __init__(self, tight=False):
         super(MarkLinesAction, self).__init__()
         self.tight = tight
@@ -704,7 +753,10 @@ class MarkLinesAction(ActionBase):
         else:
             Key("down").execute()
 
+
 class UseLinesAction(ActionBase):
+    """Make use of lines within a range."""
+
     def __init__(self, pre_action, post_action, tight=False):
         super(UseLinesAction, self).__init__()
         self.pre_action = pre_action
@@ -722,6 +774,7 @@ class UseLinesAction(ActionBase):
             Key("c-a").execute()
         self.post_action.execute(data)
 
+
 emacs_action_map = {
     # Overrides
     "up [<n>]": Key("c-u") + Text("%(n)s") + Key("up"),
@@ -729,8 +782,8 @@ emacs_action_map = {
     "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
     "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
     "select everything": Key("c-x, h"),
-    "edit everything": Key("c-x, h, c-w") + RunApp("notepad") + Key("c-v"),
-    "edit region": Key("c-w") + RunApp("notepad") + Key("c-v"),
+    "edit everything": Key("c-x, h, c-w") + utils.RunApp("notepad") + Key("c-v"),
+    "edit region": Key("c-w") + utils.RunApp("notepad") + Key("c-v"),
 
     # General
     "exec": Key("a-x"),
@@ -832,7 +885,7 @@ emacs_action_map = {
     "after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
     "other top": Key("c-minus, ca-v"),
     "other pown": Key("ca-v"),
-    "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: type_position("%d\n%d\n")),
+    "I jump <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
 
     # Editing
     "slap above": Key("a-enter"),
@@ -934,10 +987,10 @@ emacs_action_map = {
 }
 
 emacs_terminal_action_map = {
-    "boof <text>": Key("c-r") + LowercaseText("%(text)s") + Key("enter"),
-    "ooft <text>": Key("c-r") + LowercaseText("%(text)s") + Key("c-s, enter"),
-    "baif <text>": Key("c-s") + LowercaseText("%(text)s") + Key("c-r, enter"),
-    "aift <text>": Key("c-s") + LowercaseText("%(text)s") + Key("enter"),
+    "boof <text>": Key("c-r") + utils.lowercase_text_action("%(text)s") + Key("enter"),
+    "ooft <text>": Key("c-r") + utils.lowercase_text_action("%(text)s") + Key("c-s, enter"),
+    "baif <text>": Key("c-s") + utils.lowercase_text_action("%(text)s") + Key("c-r, enter"),
+    "aift <text>": Key("c-s") + utils.lowercase_text_action("%(text)s") + Key("enter"),
 }
 
 templates = {
@@ -980,10 +1033,13 @@ emacs_element_map = {
 
 emacs_environment = Environment(name="Emacs",
                                 parent=global_environment,
-                                context=UniversalAppContext(title = "Emacs editor"),
+                                context=linux.UniversalAppContext(title = "Emacs editor"),
                                 action_map=emacs_action_map,
                                 terminal_action_map=emacs_terminal_action_map,
                                 element_map=emacs_element_map)
+
+
+### Emacs: Python
 
 emacs_python_action_map = {
     "[python] indent": Key("c-c, rangle"),
@@ -991,9 +1047,11 @@ emacs_python_action_map = {
 }
 emacs_python_environment = Environment(name="EmacsPython",
                                        parent=emacs_environment,
-                                       context=UniversalAppContext(title="- Python -"),
+                                       context=linux.UniversalAppContext(title="- Python -"),
                                        action_map=emacs_python_action_map)
 
+
+### Emacs: Org-Mode
 
 emacs_org_action_map = {
     "new heading above": Key("c-a, a-enter"),
@@ -1025,11 +1083,13 @@ emacs_org_action_map = {
 }
 emacs_org_environment = Environment(name="EmacsOrg",
                                     parent=emacs_environment,
-                                    context=UniversalAppContext(title="- Org -"),
+                                    context=linux.UniversalAppContext(title="- Org -"),
                                     action_map=emacs_org_action_map)
 
 
-emacs_shell_action_map = combine_maps(
+### Emacs: Shell
+
+emacs_shell_action_map = utils.combine_maps(
     shell_command_map,
     {
         "shell (preev|back)": Key("a-r"),
@@ -1037,11 +1097,13 @@ emacs_shell_action_map = combine_maps(
     })
 emacs_shell_environment = Environment(name="EmacsShell",
                                       parent=emacs_environment,
-                                      context=UniversalAppContext(title="- Shell -"),
+                                      context=linux.UniversalAppContext(title="- Shell -"),
                                       action_map=emacs_shell_action_map)
 
 
-shell_action_map = combine_maps(
+### Shell
+
+shell_action_map = utils.combine_maps(
     shell_command_map,
     {
         "copy": Key("cs-c"),
@@ -1073,10 +1135,12 @@ shell_element_map = {
 
 shell_environment = Environment(name="Shell",
                                 parent=global_environment,
-                                context=UniversalAppContext(title = " - Terminal"),
+                                context=linux.UniversalAppContext(title=" - Terminal"),
                                 action_map=shell_action_map,
                                 element_map=shell_element_map)
 
+
+### Chrome
 
 chrome_action_map = {
     "link": Key("c-comma"),
@@ -1137,10 +1201,10 @@ chrome_action_map = {
     "save bookmark": Key("c-d"),
     "next frame": Key("c-lbracket"),
     "developer tools": Key("cs-j"),
-    "test driver": Function(test_driver),
-    "search bar": ClickElementAction(By.NAME, "q"),
-    "amazon bar": ClickElementAction(By.NAME, "field-keywords"),
-    "add bill": ClickElementAction(By.LINK_TEXT, "Add a bill"),
+    "test driver": Function(webdriver.test_driver),
+    "search bar": webdriver.ClickElementAction(By.NAME, "q"),
+    "amazon bar": webdriver.ClickElementAction(By.NAME, "field-keywords"),
+    "add bill": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
 }
 
 chrome_terminal_action_map = {
@@ -1162,7 +1226,8 @@ link_char_map = {
 link_char_dict_list  = DictList("link_char_dict_list", link_char_map)
 chrome_element_map = {
     "tab_n": IntegerRef(None, 1, 9),
-    "link": JoinedRepetition("", DictListRef(None, link_char_dict_list), min = 0, max = 5),
+    "link": utils.JoinedRepetition(
+        "", DictListRef(None, link_char_dict_list), min=0, max=5),
 }
 
 chrome_environment = Environment(name="Chrome",
@@ -1171,6 +1236,9 @@ chrome_environment = Environment(name="Chrome",
                                  action_map=chrome_action_map,
                                  terminal_action_map=chrome_terminal_action_map,
                                  element_map=chrome_element_map)
+
+
+### Chrome: Critique
 
 critique_action_map = {
     "preev": Key("p"),
@@ -1185,22 +1253,26 @@ critique_action_map = {
     "save": Key("c-s"),
     "expand|collapse": Key("e"),
     "reply": Key("r"),
-    "comment <line_n>": DoubleClickElementAction(By.XPATH,
-                                                 ("//span[contains(@class, 'stx-line') and "
-                                                  "starts-with(@id, 'c') and "
-                                                  "substring-after(@id, '_') = '%(line_n)s']")),
+    "comment <line_n>": webdriver.DoubleClickElementAction(
+        By.XPATH, ("//span[contains(@class, 'stx-line') and "
+                   "starts-with(@id, 'c') and "
+                   "substring-after(@id, '_') = '%(line_n)s']")),
 }
 critique_element_map = {
     "line_n": IntegerRef(None, 1, 10000),
 }
 critique_environment = Environment(name="Critique",
                                    parent=chrome_environment,
-                                   context=AppContext(title = "<critique.corp.google.com>"),
+                                   context=AppContext(title="<critique.corp.google.com>"),
                                    action_map=critique_action_map,
                                    element_map=critique_element_map)
 
+
+### Chrome: Calendar
+
 calendar_action_map = {
-    "click <name>": ClickElementAction(By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
+    "click <name>": webdriver.ClickElementAction(
+        By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
     "today": Key("t"),
     "preev": Key("k"),
     "next": Key("j"),
@@ -1218,10 +1290,13 @@ calendar_element_map = {
 }
 calendar_environment = Environment(name="Calendar",
                                    parent=chrome_environment,
-                                   context=(AppContext(title = "Google Calendar") |
-                                            AppContext(title = "Google.com - Calendar")),
+                                   context=(AppContext(title="Google Calendar") |
+                                            AppContext(title="Google.com - Calendar")),
                                    action_map=calendar_action_map,
                                    element_map=calendar_element_map)
+
+
+### Chrome: Code search
 
 code_search_action_map = {
     "header": Key("r/25, h"),
@@ -1229,8 +1304,11 @@ code_search_action_map = {
 }
 code_search_environment = Environment(name="CodeSearch",
                                       parent=chrome_environment,
-                                      context=AppContext(title = "<cs.corp.google.com>"),
+                                      context=AppContext(title="<cs.corp.google.com>"),
                                       action_map=code_search_action_map)
+
+
+### Chrome: Gmail
 
 gmail_action_map = {
     "open": Key("o"),
@@ -1259,8 +1337,8 @@ gmail_action_map = {
     "go to starred": Key("g, s"),
     "go to sent": Key("g, t"),
     "go to drafts": Key("g, d"),
-    "expand all": ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
-    "click to": ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
+    "expand all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
+    "click to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
     "click cc": Key("cs-c"),
     "open chat": Key("q"),
 }
@@ -1270,12 +1348,15 @@ gmail_terminal_action_map = {
 
 gmail_environment = Environment(name="Gmail",
                                 parent=chrome_environment,
-                                context=(AppContext(title = "Gmail") |
-                                         AppContext(title = "Google.com Mail") |
-                                         AppContext(title = "<mail.google.com>") |
-                                         AppContext(title = "<inbox.google.com>")),
+                                context=(AppContext(title="Gmail") |
+                                         AppContext(title="Google.com Mail") |
+                                         AppContext(title="<mail.google.com>") |
+                                         AppContext(title="<inbox.google.com>")),
                                 action_map=gmail_action_map,
                                 terminal_action_map=gmail_terminal_action_map)
+
+
+### Chrome: docs
 
 docs_action_map = {
     "select column": Key("c-space"),
@@ -1288,18 +1369,24 @@ docs_action_map = {
 }
 docs_environment = Environment(name="Docs",
                                parent=chrome_environment,
-                               context=AppContext(title = "<docs.google.com>"),
+                               context=AppContext(title="<docs.google.com>"),
                                action_map=docs_action_map)
 
+
+### Chrome: Buganizer
+
 buganizer_action_map = {}
-RunLocalHook("AddBuganizerCommands", buganizer_action_map)
+run_local_hook("AddBuganizerCommands", buganizer_action_map)
 buganizer_environment = Environment(name="Buganizer",
                                     parent=chrome_environment,
-                                    context=(AppContext(title = "Buganizer V2") |
-                                             AppContext(title = "<b.corp.google.com>") |
-                                             AppContext(title = "<buganizer.corp.google.com>") |
-                                             AppContext(title = "<b2.corp.google.com>")),
+                                    context=(AppContext(title="Buganizer V2") |
+                                             AppContext(title="<b.corp.google.com>") |
+                                             AppContext(title="<buganizer.corp.google.com>") |
+                                             AppContext(title="<b2.corp.google.com>")),
                                     action_map=buganizer_action_map)
+
+
+### Chrome: Analog
 
 analog_action_map = {
     "next": Key("n"),
@@ -1307,12 +1394,15 @@ analog_action_map = {
 }
 analog_environment = Environment(name="Analog",
                                  parent=chrome_environment,
-                                 context=AppContext(title = "<analog.corp.google.com>"),
+                                 context=AppContext(title="<analog.corp.google.com>"),
                                  action_map=analog_action_map)
+
+
+### Notepad
 
 notepad_action_map = {
     "dumbbell [<n>]": Key("shift:down, c-left/5:%(n)d, backspace, shift:up"),
-    "transfer out": Key("c-a, c-x, a-f4") + UniversalPaste(),
+    "transfer out": Key("c-a, c-x, a-f4") + utils.UniversalPaste(),
 }
 
 notepad_environment = Environment(name="Notepad",
@@ -1320,17 +1410,21 @@ notepad_environment = Environment(name="Notepad",
                                   context=AppContext(executable = "notepad"),
                                   action_map=notepad_action_map)
 
+
+### Linux
+
 # TODO Figure out either how to integrate this with the repeating rule or move out.
-linux_action_map = combine_maps(
+linux_action_map = utils.combine_maps(
     {
         "create terminal": Key("ca-t"),
-        "go to Emacs": ActivateLinuxWindow("Emacs editor"),
-        "go to terminal": ActivateLinuxWindow(" - Terminal"),
+        "go to Emacs": linux.ActivateLinuxWindow("Emacs editor"),
+        "go to terminal": linux.ActivateLinuxWindow(" - Terminal"),
     })
-RunLocalHook("AddLinuxCommands", linux_action_map)
-linux_rule = create_rule("LinuxRule", linux_action_map, {}, True,
-                         (AppContext(title="Oracle VM VirtualBox") |
-                          AppContext(title=" - Chrome Remote Desktop")))
+run_local_hook("AddLinuxCommands", linux_action_map)
+linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
+                               (AppContext(title="Oracle VM VirtualBox") |
+                                AppContext(title=" - Chrome Remote Desktop")))
+
 
 #-------------------------------------------------------------------------------
 # Populate and load the grammar.
@@ -1341,6 +1435,7 @@ global_environment.install(grammar)
 grammar.add_rule(linux_rule)
 grammar.load()
 
+
 #-------------------------------------------------------------------------------
 # Start a server which lets Emacs send us nearby text being edited, so we can
 # use it for contextual recognition. Note that the server is only exposed to
@@ -1350,22 +1445,28 @@ grammar.load()
 # Register timer to run arbitrary callbacks added by the server.
 callbacks = Queue.Queue()
 
+
 def RunCallbacks():
     global callbacks
     while not callbacks.empty():
         callbacks.get_nowait()()
 
+
 timer = get_engine().create_timer(RunCallbacks, 0.1)
+
 
 # Update the context words and phrases.
 def UpdateWords(words, phrases):
     context_word_list.set(words)
     context_phrase_list.set(phrases)
 
-# HTTP handler for receiving a block of text. The file type can be provided with
-# header My-File-Type.
-# TODO: Use JSON instead of custom headers and dispatch based on path.
+
 class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    """HTTP handler for receiving a block of text. The file type can be provided
+    with header My-File-Type.
+    TODO: Use JSON instead of custom headers and dispatch based on path.
+    """
+
     def do_POST(self):
     # Uncomment to enable profiling.
     #     cProfile.runctx("self.PostInternal()", globals(), locals())
@@ -1375,8 +1476,8 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         file_type = self.headers.getheader("My-File-Type")
         text = self.rfile.read(int(length)) if length else ""
         # print("received text: %s" % text)
-        words = ExtractWords(text, file_type)
-        phrases = ExtractPhrases(text, file_type)
+        words = text.extract_words(text, file_type)
+        phrases = text.extract_phrases(text, file_type)
         # Asynchronously update word lists available to Dragon.
         callbacks.put_nowait(lambda: UpdateWords(words, phrases))
         self.send_response(204)  # no content
@@ -1391,20 +1492,22 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         self.do_POST()
 
+
 # Start a single-threaded HTTP server in a separate thread. Bind the server to
 # localhost so it cannot be accessed outside the local computer (except by SSH
 # tunneling).
 HOST, PORT = "127.0.0.1", 9090
 server = BaseHTTPServer.HTTPServer((HOST, PORT), TextRequestHandler)
-server_thread = threading.Thread(target = server.serve_forever)
+server_thread = threading.Thread(target=server.serve_forever)
 server_thread.start()
 print("started server")
 
 # Connect to Chrome WebDriver if possible.
-create_driver()
+webdriver.create_driver()
 
 # Connect to eye tracker if possible.
-connect()
+eye_tracker.connect()
+
 
 #-------------------------------------------------------------------------------
 # Unload function which will be called by NatLink.
@@ -1413,8 +1516,8 @@ def unload():
     if grammar:
         grammar.unload()
         grammar = None
-    disconnect()
-    quit_driver()
+    eye_tracker.disconnect()
+    webdriver.quit_driver()
     timer.stop()
     server.shutdown()
     server_thread.join()

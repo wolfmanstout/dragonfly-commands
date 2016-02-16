@@ -5,6 +5,7 @@
 from _text_utils import *
 import unittest
 
+
 class TextUtilsTestCase(unittest.TestCase):
 
     def setUp(self):

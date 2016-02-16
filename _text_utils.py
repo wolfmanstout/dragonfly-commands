@@ -10,7 +10,8 @@ import _dragonfly_local as local
 WORDS_PATH = local.HOME + "/dotfiles/words.txt"
 BLACKLIST_PATH = local.HOME + "/dotfiles/blacklist.txt"
 
-def SplitDictation(dictation):
+
+def split_dictation(dictation):
     """Preprocess dictation to do a better job of word separation. Returns a list of
     words."""
     # Make lowercase.
@@ -48,19 +49,22 @@ def SplitDictation(dictation):
         previous_punctuation = current_punctuation
     return words
 
-def ParseWords(path):
+
+def parse_words(path):
   words = set()
   with open(path) as words_file:
     for line in words_file:
       words.add(line.strip())
   return words
 
-def SaveWords(path, words):
+
+def save_words(path, words):
   with open(path, "w") as words_file:
     for word in sorted(words):
       words_file.write(word + "\n")
 
-def RemovePlaintext(text, file_type = None):
+
+def remove_plaintext(text, file_type=None):
   if file_type == "py":
     text = re.sub(re.compile(r"#.*$", re.MULTILINE), "", text)
   if file_type == "el":
@@ -70,25 +74,29 @@ def RemovePlaintext(text, file_type = None):
   text = re.sub(re.compile(r"\".*?\"", re.MULTILINE), "", text)
   return text
 
-def RemoveBlacklistWords(words):
+
+def remove_blacklist_words(words):
   try:
-    blacklist_words = ParseWords(BLACKLIST_PATH)
+    blacklist_words = parse_words(BLACKLIST_PATH)
   except:
     print("Unable to open: " + BLACKLIST_PATH)
     blacklist_words = set()
   return words - blacklist_words
 
-def GetWords(text):
+
+def get_words(text):
   # Discard "k" which can be a prefix for constants and rarely occurs elsewhere.
   return [word.lower() for word in re.findall(r"([A-Z][a-z]+|[a-z]+|[A-Z]+(?![a-z]))", text)
           if word != "k"]
 
-def ExtractWords(text, file_type = None):
-  text = RemovePlaintext(text, file_type)
-  words = set(GetWords(text))
-  return RemoveBlacklistWords(words)
 
-def ExtractPhrases(text, file_type = None):
-  text = RemovePlaintext(text, file_type)
-  words = set([" ".join(GetWords(phrase)) for phrase in re.findall(r"[A-z_-]+", text)])
-  return RemoveBlacklistWords(words)
+def extract_words(text, file_type=None):
+  text = remove_plaintext(text, file_type)
+  words = set(get_words(text))
+  return remove_blacklist_words(words)
+
+
+def extract_phrases(text, file_type=None):
+  text = remove_plaintext(text, file_type)
+  words = set([" ".join(get_words(phrase)) for phrase in re.findall(r"[A-z_-]+", text)])
+  return remove_blacklist_words(words)
