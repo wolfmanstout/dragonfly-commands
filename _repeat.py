@@ -1257,6 +1257,9 @@ critique_action_map = {
         By.XPATH, ("//span[contains(@class, 'stx-line') and "
                    "starts-with(@id, 'c') and "
                    "substring-after(@id, '_') = '%(line_n)s']")),
+    "click LGTM": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='LGTM']"),
+    "click action required": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Action required']"),
+    "click send": webdriver.ClickElementAction(By.XPATH, "//*[starts-with(@aria-label, 'Send')]"),
 }
 critique_element_map = {
     "line_n": IntegerRef(None, 1, 10000),
