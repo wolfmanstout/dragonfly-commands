@@ -19,6 +19,7 @@ except ImportError:
 
 import BaseHTTPServer
 import Queue
+import platform
 import socket
 import threading
 import time
@@ -535,6 +536,47 @@ dictation_element = RuleWrap(None, Alternative([
 ]))
 
 
+### Final commands that can be used once after everything else. These change the
+### application context so it is important that nothing else gets run after
+### them.
+
+# Ordered list of pinned taskbar items. Sublists refer to windows within a specific application.
+windows = [
+    "explorer",
+    ["dragonbar", "dragon [messages]", "dragonpad"],
+    "home chrome",
+    "home terminal",
+    "home emacs",
+]
+json_windows = utils.load_json("windows.json")
+if json_windows:
+    windows = json_windows
+
+windows_prefix = "go to"
+windows_mapping = {}
+for i, window in enumerate(windows):
+    if isinstance(window, str):
+        window = [window]
+    for j, words in enumerate(window):
+        windows_mapping[windows_prefix + " " + words] = Key("win:down, %d:%d/10, win:up" % (i + 1, j + 1))
+
+# Work around security restrictions in Windows 8.
+if platform.release() == "8":
+    swap_action = Mimic("press", "alt", "tab")
+else:
+    swap_action = Key("alt:down, tab:%(n)d/25, alt:up")
+
+final_action_map = utils.combine_maps(windows_mapping, {
+    "swap [<n>]": swap_action,
+})
+final_element_map = {
+    "n": (IntegerRef(None, 1, 20), 1)
+}
+final_rule = utils.create_rule("FinalRule",
+                               final_action_map,
+                               final_element_map)
+
+
 #---------------------------------------------------------------------------
 # Here we define the top-level rule which the user can say.
 
@@ -551,8 +593,12 @@ class RepeatRule(CompoundRule):
         # is not itself repeated. This is for performance purposes. We also
         # include a special escape command "terminal <dictation>" in case
         # recognition problems occur with repeated dictation commands.
-        spec     = "[<sequence>] [<nested_repetitions>] ([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) [[[and] repeat [that]] <n> times]"
-        extras   = [
+        spec = ("[<sequence>] "
+                "[<nested_repetitions>] "
+                "([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) "
+                "[[[and] repeat [that]] <n> times] "
+                "[<final_command>]")
+        extras = [
             Repetition(command, min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
@@ -560,6 +606,7 @@ class RepeatRule(CompoundRule):
             utils.ElementWrapper("dictation", dictation_element),
             utils.ElementWrapper("terminal_command", terminal_command),
             IntegerRef("n", 1, 100),  # Times to repeat the sequence.
+            RuleRef(rule=final_rule, name="final_command"),
         ]
         defaults = {
             "n": 1,                   # Default repeat count.
@@ -568,6 +615,7 @@ class RepeatRule(CompoundRule):
             "dictation_sequence": [],
             "dictation": None,
             "terminal_command": None,
+            "final_command": None,
         }
 
         CompoundRule.__init__(self, name=name, spec=spec,
@@ -585,6 +633,7 @@ class RepeatRule(CompoundRule):
         dictation_sequence = extras["dictation_sequence"]
         dictation = extras["dictation"]
         terminal_command = extras["terminal_command"]
+        final_command = extras["final_command"]
         count = extras["n"]             # An integer repeat count.
         for i in range(count):
             for action in sequence:
@@ -600,6 +649,8 @@ class RepeatRule(CompoundRule):
             if terminal_command:
                 terminal_command.execute()
         release.execute()
+        if final_command:
+            final_command.execute()
 
 
 #-------------------------------------------------------------------------------
@@ -831,7 +882,7 @@ emacs_action_map = {
     "save all": Key("c-x, s"),
     "save all now": Key("c-u, c-x, s"),
     "buff": Key("c-x, b"),
-    "oaf": Key("c-x, c-f"),
+    "oaf|oafile": Key("c-x, c-f"),
     "no ido": Key("c-f"),
     "dear red": Key("c-d"),
     "project file": Key("c-c, p, f"),
@@ -900,7 +951,8 @@ emacs_action_map = {
     "select region": Key("c-x, c-x"),
     "indent region": Key("ca-backslash"),
     "comment region": Key("a-semicolon"),
-    "clang format": Key("ca-q"),
+    "(clang format|format region)": Key("ca-q"),
+    "format <n1> [(through|to) <n2>]": MarkLinesAction() + Key("ca-q"),
     "format comment": Key("a-q"),
     "kurd [<n>]": Key("a-d/5:%(n)d"),
     "replace": Key("as-5"),
@@ -988,8 +1040,8 @@ emacs_action_map = {
 
 emacs_terminal_action_map = {
     "boof <text>": Key("c-r") + utils.lowercase_text_action("%(text)s") + Key("enter"),
-    "ooft <text>": Key("c-r") + utils.lowercase_text_action("%(text)s") + Key("c-s, enter"),
-    "baif <text>": Key("c-s") + utils.lowercase_text_action("%(text)s") + Key("c-r, enter"),
+    "ooft <text>": Key("left, c-r") + utils.lowercase_text_action("%(text)s") + Key("c-s, enter"),
+    "baif <text>": Key("right, c-s") + utils.lowercase_text_action("%(text)s") + Key("c-r, enter"),
     "aift <text>": Key("c-s") + utils.lowercase_text_action("%(text)s") + Key("enter"),
 }
 
@@ -1203,7 +1255,6 @@ chrome_action_map = {
     "developer tools": Key("cs-j"),
     "test driver": Function(webdriver.test_driver),
     "search bar": webdriver.ClickElementAction(By.NAME, "q"),
-    "amazon bar": webdriver.ClickElementAction(By.NAME, "field-keywords"),
     "add bill": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
 }
 
@@ -1236,6 +1287,18 @@ chrome_environment = Environment(name="Chrome",
                                  action_map=chrome_action_map,
                                  terminal_action_map=chrome_terminal_action_map,
                                  element_map=chrome_element_map)
+
+
+### Chrome: Amazon
+
+amazon_action_map = {
+    "search bar": webdriver.ClickElementAction(By.NAME, "field-keywords"),
+}
+
+amazon_environment = Environment(name="Amazon",
+                                 parent=chrome_environment, 
+                                 context=AppContext(title="<www.amazon.com>"),
+                                 action_map=amazon_action_map)
 
 
 ### Chrome: Critique
@@ -1477,10 +1540,10 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         start_time = time.time()
         length = self.headers.getheader("content-length")
         file_type = self.headers.getheader("My-File-Type")
-        text = self.rfile.read(int(length)) if length else ""
-        # print("received text: %s" % text)
-        words = text.extract_words(text, file_type)
-        phrases = text.extract_phrases(text, file_type)
+        request_text = self.rfile.read(int(length)) if length else ""
+        # print("received text: %s" % request_text)
+        words = text.extract_words(request_text, file_type)
+        phrases = text.extract_phrases(request_text, file_type)
         # Asynchronously update word lists available to Dragon.
         callbacks.put_nowait(lambda: UpdateWords(words, phrases))
         self.send_response(204)  # no content
