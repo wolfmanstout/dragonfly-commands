@@ -1065,8 +1065,10 @@ templates = {
     "info": "info",
     "inverse if": "inverse_if",
     "key": "key",
+    "map": "map",
     "method": "method",
     "ref": "ref",
+    "shared pointer": "shared_pointer",
     "ternary": "ternary",
     "text": "text",
     "to do": "todo",
@@ -1323,6 +1325,7 @@ critique_action_map = {
     "click LGTM": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='LGTM']"),
     "click action required": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Action required']"),
     "click send": webdriver.ClickElementAction(By.XPATH, "//*[starts-with(@aria-label, 'Send')]"),
+    "search bar": Key("slash"),
 }
 critique_element_map = {
     "line_n": IntegerRef(None, 1, 10000),
@@ -1367,6 +1370,7 @@ calendar_environment = Environment(name="Calendar",
 code_search_action_map = {
     "header": Key("r/25, h"),
     "source": Key("r/25, c"),
+    "search bar": Key("slash"),
 }
 code_search_environment = Environment(name="CodeSearch",
                                       parent=chrome_environment,
