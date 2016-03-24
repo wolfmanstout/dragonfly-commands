@@ -440,6 +440,13 @@ keystroke_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
     "char": DictListRef(None, char_dict_list),
+    "custom_text": RuleWrap(None, Alternative([
+        Dictation(),
+        DictListRef(None, char_dict_list),
+        ListRef(None, prefix_list),
+        ListRef(None, suffix_list),
+        ListRef(None, saved_word_list),
+    ])),
 }
 
 #-------------------------------------------------------------------------------
@@ -830,8 +837,9 @@ emacs_action_map = {
     # Overrides
     "up [<n>]": Key("c-u") + Text("%(n)s") + Key("up"),
     "down [<n>]": Key("c-u") + Text("%(n)s") + Key("down"),
-    "crack [<n>]": Key("c-u") + Text("%(n)s") + Key("c-d"),
-    "kimble [<n>]": Key("c-u") + Text("%(n)s") + Key("as-d"),
+    # NX doesn't forward <delete> properly, so we avoid those bindings.
+    "crack [<n>]": Key("c-d:%(n)d"),
+    "kimble [<n>]": Key("as-d:%(n)d"),
     "select everything": Key("c-x, h"),
     "edit everything": Key("c-x, h, c-w") + utils.RunApp("notepad") + Key("c-v"),
     "edit region": Key("c-w") + utils.RunApp("notepad") + Key("c-v"),
@@ -984,10 +992,10 @@ emacs_action_map = {
 
     # Registers
     "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
-    "save mark <char>": Key("c-c, c, m, %(char)s"),
+    "save mark [(reg|rej)] <char>": Key("c-c, c, m, %(char)s"),
     "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
     "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
-    "save copy <char>": Key("c-c, c, w, %(char)s"),
+    "save copy [(reg|rej)] <char>": Key("c-c, c, w, %(char)s"),
     "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
 
     # Templates
@@ -1039,10 +1047,10 @@ emacs_action_map = {
 }
 
 emacs_terminal_action_map = {
-    "boof <text>": Key("c-r") + utils.lowercase_text_action("%(text)s") + Key("enter"),
-    "ooft <text>": Key("left, c-r") + utils.lowercase_text_action("%(text)s") + Key("c-s, enter"),
-    "baif <text>": Key("right, c-s") + utils.lowercase_text_action("%(text)s") + Key("c-r, enter"),
-    "aift <text>": Key("c-s") + utils.lowercase_text_action("%(text)s") + Key("enter"),
+    "boof <custom_text>": Key("c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
+    "ooft <custom_text>": Key("left, c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("c-s, enter"),
+    "baif <custom_text>": Key("right, c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("c-r, enter"),
+    "aift <custom_text>": Key("c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
 }
 
 templates = {
