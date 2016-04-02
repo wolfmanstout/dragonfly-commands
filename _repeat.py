@@ -991,9 +991,9 @@ emacs_action_map = {
     "close tag": Key("c-c, c-e"),
 
     # Registers
-    "mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
+    "set mark (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
     "save mark [(reg|rej)] <char>": Key("c-c, c, m, %(char)s"),
-    "jump (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
+    "jump mark (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
     "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
     "save copy [(reg|rej)] <char>": Key("c-c, c, w, %(char)s"),
     "yank (reg|rej) <char>": Key("c-u, c-x, r, i, %(char)s"),
