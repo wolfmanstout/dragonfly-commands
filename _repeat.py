@@ -674,58 +674,70 @@ class Environment(object):
 
     def __init__(self,
                  name,
-                 parent=None,
+                 environment_map,
                  context=None,
-                 action_map=None,
-                 terminal_action_map=None,
-                 element_map=None):
+                 parent=None):
         self.name = name
         self.children = []
         if parent:
             parent.add_child(self)
             self.context = utils.combine_contexts(parent.context, context)
-            self.action_map = utils.combine_maps(parent.action_map, action_map)
-            self.terminal_action_map = utils.combine_maps(
-                parent.terminal_action_map, terminal_action_map)
-            self.element_map = utils.combine_maps(parent.element_map, element_map)
+            self.environment_map = {}
+            for key in set(environment_map.keys()) | set(parent.environment_map.keys()):
+                action_map, element_map = environment_map.get(key, ({}, {}))
+                parent_action_map, parent_element_map = parent.environment_map.get(key, ({}, {}))
+                self.environment_map[key] = (utils.combine_maps(parent_action_map, action_map),
+                                             utils.combine_maps(parent_element_map, element_map))
         else:
             self.context = context
-            self.action_map = action_map if action_map else {}
-            self.terminal_action_map = terminal_action_map if terminal_action_map else {}
-            self.element_map = element_map if element_map else {}
+            self.environment_map = environment_map
 
     def add_child(self, child):
         self.children.append(child)
 
-    def install(self, grammar):
+    def install(self, grammar, exported_rule_factory):
         exclusive_context = self.context
         for child in self.children:
-            child.install(grammar)
+            child.install(grammar, exported_rule_factory)
             exclusive_context = utils.combine_contexts(exclusive_context, ~child.context)
-        if self.action_map:
-            element = RuleRef(rule=utils.create_rule(self.name + "KeystrokeRule",
-                                                     self.action_map,
-                                                     self.element_map))
-        else:
-            element = Empty()
-        if self.terminal_action_map:
-            terminal_element = RuleRef(
-                rule=utils.create_rule(self.name + "TerminalRule",
-                                       self.terminal_action_map,
-                                       self.element_map))
-        else:
-            terminal_element = Empty()
-        grammar.add_rule(RepeatRule(self.name + "RepeatRule",
-                                    element,
-                                    terminal_element,
-                                    exclusive_context))
+        rule_map = dict([(key, RuleRef(rule=utils.create_rule(self.name + "_" + key, action_map, element_map)) if action_map else Empty())
+                         for (key, (action_map, element_map)) in self.environment_map.items()])
+        grammar.add_rule(exported_rule_factory(self.name + "_exported", exclusive_context, **rule_map))
+
+
+class MyEnvironment(object):
+    """Specialization of Environment for convenience with my exported rule factory
+    (RepeatRule).
+    """
+
+    def __init__(self,
+                 name,
+                 parent=None,
+                 context=None,
+                 action_map=None,
+                 terminal_action_map=None,
+                 element_map=None):
+        self.environment = Environment(
+            name,
+            {"command": (action_map or {}, element_map or {}),
+             "terminal_command": (terminal_action_map or {}, element_map or {})},
+            context,
+            parent.environment if parent else None)
+
+    def add_child(self, child):
+        self.environment.add_child(child.environment)
+
+    def install(self, grammar):
+        def create_exported_rule(name, context, command, terminal_command):
+            return RepeatRule(name, command or Empty(), terminal_command or Empty(), context)
+        self.environment.install(grammar, create_exported_rule)
 
 
 ### Global
 
-global_environment = Environment(name="Global",
-                                 action_map=command_action_map,
-                                 element_map=keystroke_element_map)
+global_environment = MyEnvironment(name="Global",
+                                   action_map=command_action_map,
+                                   element_map=keystroke_element_map)
 
 
 ### Shell commands
@@ -1093,12 +1105,12 @@ emacs_element_map = {
     "template": DictListRef(None, template_dict_list),
 }
 
-emacs_environment = Environment(name="Emacs",
-                                parent=global_environment,
-                                context=linux.UniversalAppContext(title = "Emacs editor"),
-                                action_map=emacs_action_map,
-                                terminal_action_map=emacs_terminal_action_map,
-                                element_map=emacs_element_map)
+emacs_environment = MyEnvironment(name="Emacs",
+                                  parent=global_environment,
+                                  context=linux.UniversalAppContext(title = "Emacs editor"),
+                                  action_map=emacs_action_map,
+                                  terminal_action_map=emacs_terminal_action_map,
+                                  element_map=emacs_element_map)
 
 
 ### Emacs: Python
@@ -1107,10 +1119,10 @@ emacs_python_action_map = {
     "[python] indent": Key("c-c, rangle"),
     "[python] dedent": Key("c-c, langle"),
 }
-emacs_python_environment = Environment(name="EmacsPython",
-                                       parent=emacs_environment,
-                                       context=linux.UniversalAppContext(title="- Python -"),
-                                       action_map=emacs_python_action_map)
+emacs_python_environment = MyEnvironment(name="EmacsPython",
+                                         parent=emacs_environment,
+                                         context=linux.UniversalAppContext(title="- Python -"),
+                                         action_map=emacs_python_action_map)
 
 
 ### Emacs: Org-Mode
@@ -1143,10 +1155,10 @@ emacs_org_action_map = {
     "archive": Key("c-c, c-x, c-a"),
     "org (West|white)": Key("c-c, c, c-a"),
 }
-emacs_org_environment = Environment(name="EmacsOrg",
-                                    parent=emacs_environment,
-                                    context=linux.UniversalAppContext(title="- Org -"),
-                                    action_map=emacs_org_action_map)
+emacs_org_environment = MyEnvironment(name="EmacsOrg",
+                                      parent=emacs_environment,
+                                      context=linux.UniversalAppContext(title="- Org -"),
+                                      action_map=emacs_org_action_map)
 
 
 ### Emacs: Shell
@@ -1157,10 +1169,10 @@ emacs_shell_action_map = utils.combine_maps(
         "shell (preev|back)": Key("a-r"),
         "show output": Key("c-c, c-r"),
     })
-emacs_shell_environment = Environment(name="EmacsShell",
-                                      parent=emacs_environment,
-                                      context=linux.UniversalAppContext(title="- Shell -"),
-                                      action_map=emacs_shell_action_map)
+emacs_shell_environment = MyEnvironment(name="EmacsShell",
+                                        parent=emacs_environment,
+                                        context=linux.UniversalAppContext(title="- Shell -"),
+                                        action_map=emacs_shell_action_map)
 
 
 ### Shell
@@ -1195,11 +1207,11 @@ shell_element_map = {
     "tab_n": IntegerRef(None, 1, 10),
 }
 
-shell_environment = Environment(name="Shell",
-                                parent=global_environment,
-                                context=linux.UniversalAppContext(title=" - Terminal"),
-                                action_map=shell_action_map,
-                                element_map=shell_element_map)
+shell_environment = MyEnvironment(name="Shell",
+                                  parent=global_environment,
+                                  context=linux.UniversalAppContext(title=" - Terminal"),
+                                  action_map=shell_action_map,
+                                  element_map=shell_element_map)
 
 
 ### Chrome
@@ -1291,12 +1303,12 @@ chrome_element_map = {
         "", DictListRef(None, link_char_dict_list), min=0, max=5),
 }
 
-chrome_environment = Environment(name="Chrome",
-                                 parent=global_environment,
-                                 context=AppContext(title=" - Google Chrome"),
-                                 action_map=chrome_action_map,
-                                 terminal_action_map=chrome_terminal_action_map,
-                                 element_map=chrome_element_map)
+chrome_environment = MyEnvironment(name="Chrome",
+                                   parent=global_environment,
+                                   context=AppContext(title=" - Google Chrome"),
+                                   action_map=chrome_action_map,
+                                   terminal_action_map=chrome_terminal_action_map,
+                                   element_map=chrome_element_map)
 
 
 ### Chrome: Amazon
@@ -1305,11 +1317,11 @@ amazon_action_map = {
     "search bar": webdriver.ClickElementAction(By.NAME, "field-keywords"),
 }
 
-amazon_environment = Environment(name="Amazon",
-                                 parent=chrome_environment, 
-                                 context=(AppContext(title="<www.amazon.com>") |
-                                          AppContext(title="<smile.amazon.com>")),
-                                 action_map=amazon_action_map)
+amazon_environment = MyEnvironment(name="Amazon",
+                                   parent=chrome_environment, 
+                                   context=(AppContext(title="<www.amazon.com>") |
+                                            AppContext(title="<smile.amazon.com>")),
+                                   action_map=amazon_action_map)
 
 
 ### Chrome: Critique
@@ -1339,11 +1351,11 @@ critique_action_map = {
 critique_element_map = {
     "line_n": IntegerRef(None, 1, 10000),
 }
-critique_environment = Environment(name="Critique",
-                                   parent=chrome_environment,
-                                   context=AppContext(title="<critique.corp.google.com>"),
-                                   action_map=critique_action_map,
-                                   element_map=critique_element_map)
+critique_environment = MyEnvironment(name="Critique",
+                                     parent=chrome_environment,
+                                     context=AppContext(title="<critique.corp.google.com>"),
+                                     action_map=critique_action_map,
+                                     element_map=critique_element_map)
 
 
 ### Chrome: Calendar
@@ -1366,12 +1378,12 @@ names_dict_list = DictList(
 calendar_element_map = {
     "name": DictListRef(None, names_dict_list),
 }
-calendar_environment = Environment(name="Calendar",
-                                   parent=chrome_environment,
-                                   context=(AppContext(title="Google Calendar") |
-                                            AppContext(title="Google.com - Calendar")),
-                                   action_map=calendar_action_map,
-                                   element_map=calendar_element_map)
+calendar_environment = MyEnvironment(name="Calendar",
+                                     parent=chrome_environment,
+                                     context=(AppContext(title="Google Calendar") |
+                                              AppContext(title="Google.com - Calendar")),
+                                     action_map=calendar_action_map,
+                                     element_map=calendar_element_map)
 
 
 ### Chrome: Code search
@@ -1381,10 +1393,10 @@ code_search_action_map = {
     "source": Key("r/25, c"),
     "search bar": Key("slash"),
 }
-code_search_environment = Environment(name="CodeSearch",
-                                      parent=chrome_environment,
-                                      context=AppContext(title="<cs.corp.google.com>"),
-                                      action_map=code_search_action_map)
+code_search_environment = MyEnvironment(name="CodeSearch",
+                                        parent=chrome_environment,
+                                        context=AppContext(title="<cs.corp.google.com>"),
+                                        action_map=code_search_action_map)
 
 
 ### Chrome: Gmail
@@ -1425,14 +1437,14 @@ gmail_terminal_action_map = {
     "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
 }
 
-gmail_environment = Environment(name="Gmail",
-                                parent=chrome_environment,
-                                context=(AppContext(title="Gmail") |
-                                         AppContext(title="Google.com Mail") |
-                                         AppContext(title="<mail.google.com>") |
-                                         AppContext(title="<inbox.google.com>")),
-                                action_map=gmail_action_map,
-                                terminal_action_map=gmail_terminal_action_map)
+gmail_environment = MyEnvironment(name="Gmail",
+                                  parent=chrome_environment,
+                                  context=(AppContext(title="Gmail") |
+                                           AppContext(title="Google.com Mail") |
+                                           AppContext(title="<mail.google.com>") |
+                                           AppContext(title="<inbox.google.com>")),
+                                  action_map=gmail_action_map,
+                                  terminal_action_map=gmail_terminal_action_map)
 
 
 ### Chrome: docs
@@ -1446,23 +1458,23 @@ docs_action_map = {
     "column right": Key("a-e/15, m"),
     "add comment": Key("ca-m"),
 }
-docs_environment = Environment(name="Docs",
-                               parent=chrome_environment,
-                               context=AppContext(title="<docs.google.com>"),
-                               action_map=docs_action_map)
+docs_environment = MyEnvironment(name="Docs",
+                                 parent=chrome_environment,
+                                 context=AppContext(title="<docs.google.com>"),
+                                 action_map=docs_action_map)
 
 
 ### Chrome: Buganizer
 
 buganizer_action_map = {}
 run_local_hook("AddBuganizerCommands", buganizer_action_map)
-buganizer_environment = Environment(name="Buganizer",
-                                    parent=chrome_environment,
-                                    context=(AppContext(title="Buganizer V2") |
-                                             AppContext(title="<b.corp.google.com>") |
-                                             AppContext(title="<buganizer.corp.google.com>") |
-                                             AppContext(title="<b2.corp.google.com>")),
-                                    action_map=buganizer_action_map)
+buganizer_environment = MyEnvironment(name="Buganizer",
+                                      parent=chrome_environment,
+                                      context=(AppContext(title="Buganizer V2") |
+                                               AppContext(title="<b.corp.google.com>") |
+                                               AppContext(title="<buganizer.corp.google.com>") |
+                                               AppContext(title="<b2.corp.google.com>")),
+                                      action_map=buganizer_action_map)
 
 
 ### Chrome: Analog
@@ -1471,10 +1483,10 @@ analog_action_map = {
     "next": Key("n"),
     "preev": Key("p"),
 }
-analog_environment = Environment(name="Analog",
-                                 parent=chrome_environment,
-                                 context=AppContext(title="<analog.corp.google.com>"),
-                                 action_map=analog_action_map)
+analog_environment = MyEnvironment(name="Analog",
+                                   parent=chrome_environment,
+                                   context=AppContext(title="<analog.corp.google.com>"),
+                                   action_map=analog_action_map)
 
 
 ### Notepad
@@ -1484,10 +1496,10 @@ notepad_action_map = {
     "transfer out": Key("c-a, c-x, a-f4") + utils.UniversalPaste(),
 }
 
-notepad_environment = Environment(name="Notepad",
-                                  parent=global_environment,
-                                  context=AppContext(executable = "notepad"),
-                                  action_map=notepad_action_map)
+notepad_environment = MyEnvironment(name="Notepad",
+                                    parent=global_environment,
+                                    context=AppContext(executable = "notepad"),
+                                    action_map=notepad_action_map)
 
 
 ### Linux
