@@ -1307,7 +1307,8 @@ amazon_action_map = {
 
 amazon_environment = Environment(name="Amazon",
                                  parent=chrome_environment, 
-                                 context=AppContext(title="<www.amazon.com>"),
+                                 context=(AppContext(title="<www.amazon.com>") |
+                                          AppContext(title="<smile.amazon.com>")),
                                  action_map=amazon_action_map)
 
 
