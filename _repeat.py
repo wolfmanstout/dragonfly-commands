@@ -565,7 +565,7 @@ for i, window in enumerate(windows):
     if isinstance(window, str):
         window = [window]
     for j, words in enumerate(window):
-        windows_mapping[windows_prefix + " " + words] = Key("win:down, %d:%d/10, win:up" % (i + 1, j + 1))
+        windows_mapping[windows_prefix + " (" + words + ")"] = Key("win:down, %d:%d/10, win:up" % (i + 1, j + 1))
 
 # Work around security restrictions in Windows 8.
 if platform.release() == "8":
