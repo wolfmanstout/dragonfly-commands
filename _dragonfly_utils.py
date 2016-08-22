@@ -193,6 +193,14 @@ def lowercase_text_action(spec):
     return FormattedText(spec, lambda text: text.lower())
 
 
+def uncapitalize_text_action(spec):
+    return FormattedText(spec, lambda text: text[0].upper() + text[1:])
+
+
+def capitalize_text_action(spec):
+    return FormattedText(spec, lambda text: text.capitalize())
+
+
 def byteify(input):
     """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
     if isinstance(input, dict):

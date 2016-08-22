@@ -479,7 +479,9 @@ custom_format_rule = utils.create_rule(
 dictation_rule = utils.create_rule(
     "DictationRule",
     {
-        "mimic text <text>": release + Text("%(text)s"),
+        "(mim|mimic) text <text>": release + Text("%(text)s"),
+        "mim small <text>": release + utils.uncapitalize_text_action("%(text)s"),
+        "mim big <text>": release + utils.capitalize_text_action("%(text)s"),
         "mimic <text>": release + Mimic(extra="text"),
     },
     {
@@ -565,7 +567,7 @@ for i, window in enumerate(windows):
     if isinstance(window, str):
         window = [window]
     for j, words in enumerate(window):
-        windows_mapping[windows_prefix + " (" + words + ")"] = Key("win:down, %d:%d/10, win:up" % (i + 1, j + 1))
+        windows_mapping[windows_prefix + " (" + words + ")"] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
 
 # Work around security restrictions in Windows 8.
 if platform.release() == "8":
