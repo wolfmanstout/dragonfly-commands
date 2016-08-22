@@ -194,7 +194,7 @@ def lowercase_text_action(spec):
 
 
 def uncapitalize_text_action(spec):
-    return FormattedText(spec, lambda text: text[0].upper() + text[1:])
+    return FormattedText(spec, lambda text: text[0].lower() + text[1:])
 
 
 def capitalize_text_action(spec):
