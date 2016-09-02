@@ -1258,7 +1258,7 @@ chrome_action_map = {
     "go to slides": Key("c-l/15") + Text("slides.google.com") + Key("enter"),
     "go to sheets": Key("c-l/15") + Text("sheets.google.com") + Key("enter"),
     "go to new doc": Key("c-l/15") + Text("go/newdoc") + Key("enter"),
-    "go to new slides": Key("c-l/15") + Text("go/newslides") + Key("enter"),
+    "go to new (slide|slides)": Key("c-l/15") + Text("go/newslide") + Key("enter"),
     "go to new sheet": Key("c-l/15") + Text("go/newsheet") + Key("enter"),
     "go to new script": Key("c-l/15") + Text("go/newscript") + Key("enter"),
     "go to drive": Key("c-l/15") + Text("drive.google.com") + Key("enter"),
