@@ -1518,6 +1518,7 @@ linux_action_map = utils.combine_maps(
         "create terminal": Key("ca-t"),
         "go to Emacs": linux.ActivateLinuxWindow("Emacs editor"),
         "go to terminal": linux.ActivateLinuxWindow(" - Terminal"),
+        "go to Firefox": linux.ActivateLinuxWindow("Mozilla Firefox"),
     })
 run_local_hook("AddLinuxCommands", linux_action_map)
 linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
