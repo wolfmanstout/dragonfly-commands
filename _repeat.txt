@@ -45,6 +45,13 @@ def format_k_studley(dictation):
              for word in re.findall(r"(\W+|\w+)", words)]
     return "k" + "".join(words)
 
+# Format: QSomeWords
+def format_q_studley(dictation):
+    """ Q studley <dictation> """
+    words = [word.capitalize() for words in text.split_dictation(dictation)
+             for word in re.findall(r"(\W+|\w+)", words)]
+    return "Q" + "".join(words)
+
 # Format: somewords
 def format_one_word(dictation):
     """ [all] one word <dictation> """
