@@ -1332,6 +1332,8 @@ amazon_environment = MyEnvironment(name="Amazon",
 critique_action_map = {
     "preev": Key("p"),
     "next": Key("n"),
+    "preev comment": Key("P"),
+    "next comment": Key("N"),
     "preev file": Key("k"),
     "next file": Key("j"),
     "open": Key("o"),
