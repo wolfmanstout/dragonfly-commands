@@ -344,6 +344,8 @@ key_action_map = {
     "(I|eye) triple click": Function(eye_tracker.move_to_position) + Mouse("left:3"),
     "(I|eye) start drag": Function(eye_tracker.move_to_position) + Mouse("left:down"),
     "(I|eye) stop drag": Function(eye_tracker.move_to_position) + Mouse("left:up"),
+    "scrup": Function(eye_tracker.move_to_position) + Mouse("scrollup:8"), 
+    "scrown": Function(eye_tracker.move_to_position) + Mouse("scrolldown:8"), 
     "do click": Mouse("left"),
     "do right click": Mouse("right"),
     "do middle click": Mouse("middle"),
