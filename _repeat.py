@@ -345,7 +345,9 @@ key_action_map = {
     "(I|eye) start drag": Function(eye_tracker.move_to_position) + Mouse("left:down"),
     "(I|eye) stop drag": Function(eye_tracker.move_to_position) + Mouse("left:up"),
     "scrup": Function(eye_tracker.move_to_position) + Mouse("scrollup:8"), 
+    "half scrup": Function(eye_tracker.move_to_position) + Mouse("scrollup:4"), 
     "scrown": Function(eye_tracker.move_to_position) + Mouse("scrolldown:8"), 
+    "half scrown": Function(eye_tracker.move_to_position) + Mouse("scrolldown:4"), 
     "do click": Mouse("left"),
     "do right click": Mouse("right"),
     "do middle click": Mouse("middle"),
@@ -1161,11 +1163,26 @@ emacs_org_action_map = {
     "show to do's": Key("c-c, slash, t"),
     "archive": Key("c-c, c-x, c-a"),
     "org (West|white)": Key("c-c, c, c-a"),
+    "tag <tag>": Key("c-c, c-q") + Text("%(tag)s") + Key("enter"),
+}
+tags = {
+    "new": "new",
+    "Q1": "q1",
+    "Q2": "q2",
+    "Q3": "q3",
+    "Q4": "q4",
+    "low": "low",
+    "high": "high",
+}
+tag_dict_list = DictList("tag_dict_list", tags)
+emacs_org_element_map = {
+    "tag": DictListRef(None, tag_dict_list),
 }
 emacs_org_environment = MyEnvironment(name="EmacsOrg",
                                       parent=emacs_environment,
                                       context=linux.UniversalAppContext(title="- Org -"),
-                                      action_map=emacs_org_action_map)
+                                      action_map=emacs_org_action_map,
+                                      element_map=emacs_org_element_map)
 
 
 ### Emacs: Shell
@@ -1376,6 +1393,7 @@ calendar_action_map = {
     "day": Key("d"),
     "week": Key("w"),
     "month": Key("m"),
+    "agenda": Key("a"), 
 }
 names_dict_list = DictList(
     "name_dict_list",
@@ -1439,6 +1457,7 @@ gmail_action_map = {
     "click to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
     "click cc": Key("cs-c"),
     "open chat": Key("q"),
+    "send mail": Key("c-enter"),
 }
 gmail_terminal_action_map = {
     "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
