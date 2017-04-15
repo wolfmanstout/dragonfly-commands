@@ -46,9 +46,11 @@ def print_position():
     print("(%f, %f)" % get_position())
 
 
-def move_to_position():
+def move_to_position(offset=(0, 0)):
     position = get_position()
-    Mouse("[%d, %d]" % (max(0, int(position[0])), max(0, int(position[1])))).execute()
+    x = max(0, int(position[0]) + offset[0])
+    y = max(0, int(position[1]) + offset[1])
+    Mouse("[%d, %d]" % (x, y)).execute()
 
 
 def type_position(format):
