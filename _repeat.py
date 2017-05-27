@@ -1446,6 +1446,7 @@ gmail_action_map = {
     "preev section": Key("tilde"),
     "not important|don't care": Key("minus"),
     "label waiting": Key("l/50") + Text("waiting") + Key("enter"),
+    "label snooze": Key("l/50") + Text("snooze") + Key("enter"),
     "label candidates": Key("l/50") + Text("candidates") + Key("enter"),
     "check": Key("x"),
     "check next <n>": Key("x, j") * Repeat(extra="n"),
