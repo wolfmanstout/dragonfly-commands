@@ -1428,7 +1428,8 @@ code_search_environment = MyEnvironment(name="CodeSearch",
 
 gmail_action_map = {
     "open": Key("o"),
-    "(archive|done)": Text("{"),
+    "archive": Text("{"),
+    "done": Text("["),
     "mark unread": Text("_"),
     "undo": Key("z"),
     "list": Key("u"),
