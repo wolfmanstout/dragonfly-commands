@@ -1265,7 +1265,6 @@ chrome_action_map = {
     "find":               Key("c-f"),
     "<link>":          Text("%(link)s"),
     "(caret|carrot) browsing": Key("f7"),
-    "moma": Key("c-l/15") + Text("moma") + Key("tab"),
     "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
     "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
     "code search": Key("c-l/15") + Text("cs") + Key("tab"),
@@ -1304,6 +1303,8 @@ chrome_action_map = {
 
 chrome_terminal_action_map = {
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+    "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
+    "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
 }
 
 link_char_map = {
