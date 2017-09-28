@@ -918,7 +918,7 @@ emacs_action_map = {
     "swap project": Key("c-c, s"),
     "next result": Key("a-comma"),
     "(open|toggle) (definition|def)": Key("a-dot"),
-    "open cross (references|ref)": Key("as-slash"),
+    "open cross (references|ref)": Key("as-slash, enter"),
     "jump def": Key("a-comma"),
     "R grep": Exec("rgrep"),
     "code search": Exec("cs"),
