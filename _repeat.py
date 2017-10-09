@@ -312,7 +312,7 @@ key_action_map = {
     "(volume|audio|turn it) down": Key("volumedown"),
     "(volume|audio) mute": Key("volumemute"),
     "next track": Key("tracknext"),
-    "prev track": Key("trackprev"),
+    "preev track": Key("trackprev"),
     "play pause|pause play": Key("playpause"),
 
     "paste":                            release + Key("c-v"),
@@ -755,7 +755,7 @@ shell_command_map = utils.combine_maps({
     "git reset hard head": Text("git reset --hard HEAD "),
     "(soft|sym) link": Text("ln -s "),
     "list": Text("ls -l "),
-    "make dir": Text("mkdir "),
+    "make dear": Text("mkdir "),
     "ps (a UX|aux)": Text("ps aux "),
     "kill command": Text("kill "),
     "pipe": Text(" | "),
@@ -947,14 +947,14 @@ emacs_action_map = {
     "jump change": Key("c-c, c, c"),
     "jump symbol": Key("a-i"),
     "swap mark": Key("c-c, c-x"),
-    "(prev|preev) [<n>]": Key("c-r/5:%(n)d"),
+    "preev [<n>]": Key("c-r/5:%(n)d"),
     "next [<n>]": Key("c-s/5:%(n)d"),
     "edit search": Key("a-e"),
     "word search": Key("a-s, w"),
     "symbol search": Key("a-s, underscore"),
     "regex search": Key("ca-s"),
     "occur": Key("a-s, o"),
-    "(prev|preev) symbol": Key("a-s, dot, c-r, c-r"),
+    "preev symbol": Key("a-s, dot, c-r, c-r"),
     "(next|neck) symbol": Key("a-s, dot, c-s"),
     "before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
     "after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
@@ -1047,7 +1047,7 @@ emacs_action_map = {
 
     # Shell
     "create shell": Exec("shell"),
-    "durr shell": Key("c-c, c, dollar"),
+    "dear shell": Key("c-c, c, dollar"),
 
     # Clojure
     "closure compile": Key("c-c, c-k"),
@@ -1215,7 +1215,7 @@ shell_action_map = utils.combine_maps(
         "move tab right [<n>]": Key("cs-pgdown/5:%(n)d"),
         "shot <tab_n>": Key("a-%(tab_n)d"),
         "shot last": Key("a-1, cs-left"),
-        "(prev|preev|back)": Key("c-r"),
+        "(preev|back)": Key("c-r"),
         "(next|frack)": Key("c-s"),
         "(nope|no way)": Key("c-g"),
         "new tab": Key("cs-t"),
