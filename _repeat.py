@@ -1630,13 +1630,14 @@ HOST, PORT = "127.0.0.1", 9090
 server = BaseHTTPServer.HTTPServer((HOST, PORT), TextRequestHandler)
 server_thread = threading.Thread(target=server.serve_forever)
 server_thread.start()
-print("started server")
 
 # Connect to Chrome WebDriver if possible.
 webdriver.create_driver()
 
 # Connect to eye tracker if possible.
 eye_tracker.connect()
+
+print("Loaded _repeat.py")
 
 
 #-------------------------------------------------------------------------------
@@ -1651,4 +1652,5 @@ def unload():
     timer.stop()
     server.shutdown()
     server_thread.join()
-    print("shutdown server")
+    server.server_close()
+    print("Unloaded _repeat.py")
