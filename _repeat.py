@@ -573,14 +573,8 @@ for i, window in enumerate(windows):
     for j, words in enumerate(window):
         windows_mapping[windows_prefix + " (" + words + ")"] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
 
-# Work around security restrictions in Windows 8.
-if platform.release() == "8":
-    swap_action = Mimic("press", "alt", "tab")
-else:
-    swap_action = Key("alt:down, tab:%(n)d/25, alt:up")
-
 final_action_map = utils.combine_maps(windows_mapping, {
-    "swap [<n>]": swap_action,
+    "swap [<n>]": utils.SwitchWindows("%(n)d"),
 })
 final_element_map = {
     "n": (IntegerRef(None, 1, 20), 1)

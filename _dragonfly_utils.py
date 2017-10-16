@@ -23,6 +23,7 @@ from dragonfly import (
     DynStrActionBase,
     Key,
     MappingRule,
+    Pause,
     Repetition,
     Sequence,
     StartApp,
@@ -133,6 +134,23 @@ def combine_contexts(context1, context2):
     if not context2:
         return context1
     return context1 & context2
+
+
+class SwitchWindows(DynStrActionBase):
+    """Simulates the effects of alt-tab. The constructor argument should be a string
+    representing the number of times to effectively press the "tab" button if
+    alt-tab were actually being used.
+    """
+
+    def _parse_spec(self, spec):
+        return int(spec)
+
+    def _execute_events(self, repeat):
+        # Work around security restrictions in Windows 8.
+        # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
+        os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
+        Pause("10").execute()
+        Key("tab:%d/25, enter" % (repeat - 1)).execute()
 
 
 class RunApp(ActionBase):
