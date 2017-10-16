@@ -147,13 +147,14 @@ class SwitchWindows(DynStrActionBase):
         return int(spec)
 
     def _execute_events(self, repeat):
-        # Work around security restrictions in Windows 8.
-        # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
-        os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
-        Pause("10").execute()
         if platform.release() >= "8":
-            repeat -= 1
-        Key("tab:%d/25, enter" % repeat).execute()
+            # Work around security restrictions in Windows 8.
+            # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
+            os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
+            Pause("10").execute()
+            Key("tab:%d/25, enter" % (repeat - 1)).execute()
+        else:
+            Key("alt:down, tab:%d/25, alt:up" % repeat).execute()
 
 
 class RunApp(ActionBase):
