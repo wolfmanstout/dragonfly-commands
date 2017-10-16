@@ -19,7 +19,6 @@ except ImportError:
 
 import BaseHTTPServer
 import Queue
-import platform
 import socket
 import threading
 import time
