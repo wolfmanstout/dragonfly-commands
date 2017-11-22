@@ -935,7 +935,7 @@ emacs_action_map = {
     "white": Key("a-m"),
     "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
     "line <n1>": jump_to_line("%(n1)s"),
-    "re-center": Key("c-l"),
+    "re-center|recenter": Key("c-l"),
     "set mark": Key("c-backtick"),
     "jump mark": Key("c-langle"),
     "jump change": Key("c-c, c, c"),
@@ -1240,7 +1240,7 @@ chrome_action_map = {
     "new tab":            Key("c-t"),
     "new incognito":            Key("cs-n"),
     "new window": Key("c-n"),
-    "clote":          Key("c-w"),
+    "clote|close tab":          Key("c-w"),
     "address bar":        Key("c-l"),
     "back [<n>]":               Key("a-left/15:%(n)d"),
     "Frak [<n>]":            Key("a-right/15:%(n)d"),
@@ -1321,7 +1321,7 @@ chrome_element_map = {
 
 chrome_environment = MyEnvironment(name="Chrome",
                                    parent=global_environment,
-                                   context=AppContext(title=" - Google Chrome"),
+                                   context=(AppContext(title=" - Google Chrome") | AppContext(executable="firefox.exe")),
                                    action_map=chrome_action_map,
                                    terminal_action_map=chrome_terminal_action_map,
                                    element_map=chrome_element_map)
