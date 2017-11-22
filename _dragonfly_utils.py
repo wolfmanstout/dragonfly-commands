@@ -16,6 +16,7 @@ CHROME_DRIVER_PATH: Path to chrome driver executable.
 import json
 import os
 import os.path
+import platform
 import tempfile
 
 from dragonfly import (
@@ -146,11 +147,14 @@ class SwitchWindows(DynStrActionBase):
         return int(spec)
 
     def _execute_events(self, repeat):
-        # Work around security restrictions in Windows 8.
-        # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
-        os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
-        Pause("10").execute()
-        Key("tab:%d/25, enter" % (repeat - 1)).execute()
+        if platform.release() >= "8":
+            # Work around security restrictions in Windows 8.
+            # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
+            os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
+            Pause("10").execute()
+            Key("tab:%d/25, enter" % (repeat - 1)).execute()
+        else:
+            Key("alt:down, tab:%d/25, alt:up" % repeat).execute()
 
 
 class RunApp(ActionBase):
