@@ -152,7 +152,10 @@ class SwitchWindows(DynStrActionBase):
             # Credit: https://autohotkey.com/board/topic/84771-alttab-mapping-isnt-working-anymore-in-windows-8/
             os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
             Pause("10").execute()
-            Key("tab:%d/25, enter" % (repeat - 1)).execute()
+            if platform.release() == "8":
+                Key("tab:%d/25, enter" % (repeat - 1)).execute()
+            else:
+                Key("right:%d/25, enter" % repeat).execute()
         else:
             Key("alt:down, tab:%d/25, alt:up" % repeat).execute()
 
