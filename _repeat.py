@@ -593,7 +593,7 @@ final_rule = utils.create_rule("FinalRule",
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
 
-    def __init__(self, name, command, terminal_command, context):
+    def __init__(self, name, command, terminal_command):
         # Here we define this rule's spoken-form and special elements. Note that
         # nested_repetitions is the only one that contains Repetitions, and it
         # is not itself repeated. This is for performance purposes. We also
@@ -625,7 +625,7 @@ class RepeatRule(CompoundRule):
         }
 
         CompoundRule.__init__(self, name=name, spec=spec,
-                              extras=extras, defaults=defaults, exported=True, context=context)
+                              extras=extras, defaults=defaults, exported=True)
 
     # This method gets called when this rule is recognized.
     # Arguments:
@@ -667,8 +667,9 @@ class RepeatRule(CompoundRule):
 
 class Environment(object):
     """Environment where voice commands can be spoken. Combines grammar and context
-    and adds hierarchy. When installed, will produce a top-level rule for each
-    environment.
+    and adds hierarchy. When installed, will produce a mutually-exclusive
+    top-level grammar for each environment.
+
     """
 
     def __init__(self,
@@ -694,14 +695,19 @@ class Environment(object):
     def add_child(self, child):
         self.children.append(child)
 
-    def install(self, grammar, exported_rule_factory):
+    def install(self, exported_rule_factory):
+        grammars = []
         exclusive_context = self.context
         for child in self.children:
-            child.install(grammar, exported_rule_factory)
+            grammars.extend(child.install(exported_rule_factory))
             exclusive_context = utils.combine_contexts(exclusive_context, ~child.context)
         rule_map = dict([(key, RuleRef(rule=utils.create_rule(self.name + "_" + key, action_map, element_map)) if action_map else Empty())
                          for (key, (action_map, element_map)) in self.environment_map.items()])
-        grammar.add_rule(exported_rule_factory(self.name + "_exported", exclusive_context, **rule_map))
+        grammar = Grammar(self.name, context=exclusive_context)
+        grammar.add_rule(exported_rule_factory(self.name + "_exported", **rule_map))
+        grammar.load()
+        grammars.append(grammar)
+        return grammars
 
 
 class MyEnvironment(object):
@@ -726,10 +732,10 @@ class MyEnvironment(object):
     def add_child(self, child):
         self.environment.add_child(child.environment)
 
-    def install(self, grammar):
-        def create_exported_rule(name, context, command, terminal_command):
-            return RepeatRule(name, command or Empty(), terminal_command or Empty(), context)
-        self.environment.install(grammar, create_exported_rule)
+    def install(self):
+        def create_exported_rule(name, command, terminal_command):
+            return RepeatRule(name, command or Empty(), terminal_command or Empty())
+        return self.environment.install(create_exported_rule)
 
 
 ### Global
@@ -1549,13 +1555,15 @@ linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
 
 
 #-------------------------------------------------------------------------------
-# Populate and load the grammar.
+# Populate and load the grammars.
 
-grammar = Grammar("repeat")   # Create this module's grammar.
-global_environment.install(grammar)
+grammars = global_environment.install()
+
 # TODO Figure out either how to integrate this with the repeating rule or move out.
-grammar.add_rule(linux_rule)
-grammar.load()
+linux_grammar = Grammar("linux")   # Create this module's grammar.
+linux_grammar.add_rule(linux_rule)
+linux_grammar.load()
+grammars.append(linux_grammar)
 
 
 #-------------------------------------------------------------------------------
@@ -1635,10 +1643,9 @@ print("Loaded _repeat.py")
 #-------------------------------------------------------------------------------
 # Unload function which will be called by NatLink.
 def unload():
-    global grammar, server, server_thread, timer
-    if grammar:
+    global grammars, server, server_thread, timer
+    for grammar in grammars:
         grammar.unload()
-        grammar = None
     eye_tracker.disconnect()
     webdriver.quit_driver()
     timer.stop()

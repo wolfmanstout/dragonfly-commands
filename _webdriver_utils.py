@@ -16,6 +16,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 def create_driver():
     global driver
+    driver = None
     try:
         urllib2.urlopen("http://127.0.0.1:9222/json")
     except urllib2.URLError:
