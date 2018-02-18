@@ -19,6 +19,7 @@ except ImportError:
 
 import BaseHTTPServer
 import Queue
+import re
 import socket
 import threading
 import time
@@ -1590,6 +1591,9 @@ def UpdateWords(words, phrases):
     context_word_list.set(words)
     context_phrase_list.set(phrases)
 
+def IsValidIp(ip):
+    m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+    return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
 
 class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     """HTTP handler for receiving a block of text. The file type can be provided
@@ -1602,6 +1606,12 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     #     cProfile.runctx("self.PostInternal()", globals(), locals())
     # def PostInternal(self):
         start_time = time.time()
+        # Check host in case of DNS rebinding attack.
+        host = self.headers.getheader("Host")
+        host = host.split(":")[0]
+        if not (host == "localhost" or host == "localhost." or IsValidIp(host)):
+            print "Host header rejected: " + host
+            return
         length = self.headers.getheader("content-length")
         file_type = self.headers.getheader("My-File-Type")
         request_text = self.rfile.read(int(length)) if length else ""
