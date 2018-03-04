@@ -5,13 +5,16 @@
 """Eye tracker functions."""
 
 from ctypes import (byref, c_double, CDLL)
-import win32gui
 
-from dragonfly import (Mouse, Text)
+from aenea.lax import (
+    Mouse,
+    Text,
+)
 import _dragonfly_local as local
 
 # Attempt to load eye tracker DLLs.
 try:
+    import win32gui
     eyex_dll = CDLL(local.DLL_DIRECTORY + "/Tobii.EyeX.Client.dll")
     tracker_dll = CDLL(local.DLL_DIRECTORY + "/Tracker.dll")
 except:
@@ -27,8 +30,11 @@ def connect():
 
 
 def disconnect():
-    result = tracker_dll.disconnect()
-    print("disconnect: %d" % result)
+    try:
+        result = tracker_dll.disconnect()
+        print("disconnect: %d" % result)
+    except:
+        print("Could not disconnect from tracker.")
 
 
 def get_position():

@@ -11,8 +11,10 @@ from dragonfly import (
     Dictation,
     Grammar,
     IntegerRef,
-    Key,
     MappingRule,
+)
+from aenea.lax import (
+    Key,
     Text,
 )
 import _linux_utils as linux

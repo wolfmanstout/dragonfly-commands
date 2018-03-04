@@ -24,7 +24,7 @@ import socket
 import threading
 import time
 import webbrowser
-import win32clipboard
+# import win32clipboard
 
 from dragonfly import (
     ActionBase,
@@ -39,19 +39,21 @@ from dragonfly import (
     Function,
     Grammar,
     IntegerRef,
-    Key,
     List,
     ListRef,
     Mimic,
-    Mouse,
     Optional,
     Pause,
     Repeat,
     Repetition,
     RuleRef,
     RuleWrap,
-    Text,
     get_engine,
+)
+from aenea.lax import (
+    Key,
+    Mouse,
+    Text,
 )
 import dragonfly.log
 from selenium.webdriver.common.by import By
@@ -344,10 +346,10 @@ key_action_map = {
     "(I|eye) triple click": Function(eye_tracker.move_to_position) + Mouse("left:3"),
     "(I|eye) start drag": Function(eye_tracker.move_to_position) + Mouse("left:down"),
     "(I|eye) stop drag": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-    "scrup": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
-    "half scrup": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
-    "scrown": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
-    "half scrown": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
+    "scrup": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("wheelup:8"), 
+    "half scrup": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("wheelup:4"), 
+    "scrown": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("wheeldown:8"), 
+    "half scrown": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("wheeldown:4"), 
     "do click": Mouse("left"),
     "do right click": Mouse("right"),
     "do middle click": Mouse("middle"),
@@ -804,11 +806,12 @@ class OpenClipboardUrlAction(ActionBase):
     """Open a URL in the clipboard in the default browser."""
 
     def _execute(self, data=None):
-        win32clipboard.OpenClipboard()
-        data = win32clipboard.GetClipboardData()
-        win32clipboard.CloseClipboard()
-        print "Opening link: %s" % data
-        webbrowser.open(data)
+        pass
+        # win32clipboard.OpenClipboard()
+        # data = win32clipboard.GetClipboardData()
+        # win32clipboard.CloseClipboard()
+        # print "Opening link: %s" % data
+        # webbrowser.open(data)
 
 
 class MarkLinesAction(ActionBase):

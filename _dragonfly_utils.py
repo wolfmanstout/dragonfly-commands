@@ -22,16 +22,18 @@ import tempfile
 from dragonfly import (
     ActionBase,
     DynStrActionBase,
-    Key,
     MappingRule,
     Pause,
     Repetition,
     Sequence,
-    StartApp,
-    Text,
-    WaitWindow,
+#    StartApp,
+#    WaitWindow,
 )
-from dragonfly.windows.window import Window
+from aenea.lax import (
+    Key,
+    Text,
+)
+# from dragonfly.windows.window import Window
 
 import _dragonfly_local as local
 
@@ -168,8 +170,9 @@ class RunApp(ActionBase):
         self.args = args
 
     def _execute(self, data=None):
-        StartApp(*self.args).execute()
-        WaitWindow(None, os.path.basename(self.args[0]), 3).execute()
+        pass
+        #StartApp(*self.args).execute()
+        #WaitWindow(None, os.path.basename(self.args[0]), 3).execute()
 
 
 class RunEmacs(ActionBase):
@@ -193,11 +196,12 @@ class UniversalPaste(ActionBase):
     """Paste action that works everywhere, including Emacs."""
 
     def _execute(self, data=None):
-        foreground = Window.get_foreground()
-        if foreground.title.find("Emacs editor") != -1:
-            Key("c-y").execute()
-        else:
-            Key("c-v").execute()
+        Key("c-v").execute()
+        # foreground = Window.get_foreground()
+        # if foreground.title.find("Emacs editor") != -1:
+        #     Key("c-y").execute()
+        # else:
+        #     Key("c-v").execute()
 
 
 class FormattedText(DynStrActionBase):
