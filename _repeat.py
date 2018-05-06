@@ -1242,8 +1242,8 @@ shell_environment = MyEnvironment(name="Shell",
 cmder_action_map = utils.combine_maps(
     shell_command_map,
     {
-        "pret [<n>]": Key("c-tab/5:%(n)d"),
-        "net [<n>]": Key("cs-tab/5:%(n)d"),
+        "pret [<n>]": Key("cs-tab/5:%(n)d"),
+        "net [<n>]": Key("c-tab/5:%(n)d"),
         "(preev|back)": Key("c-r"),
         "(next|frack)": Key("c-s"),
         "(nope|no way)": Key("c-g"),
