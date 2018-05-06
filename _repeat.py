@@ -1237,6 +1237,36 @@ shell_environment = MyEnvironment(name="Shell",
                                   element_map=shell_element_map)
 
 
+### Cmder
+
+cmder_action_map = utils.combine_maps(
+    shell_command_map,
+    {
+        "pret [<n>]": Key("c-tab/5:%(n)d"),
+        "net [<n>]": Key("cs-tab/5:%(n)d"),
+        "(preev|back)": Key("c-r"),
+        "(next|frack)": Key("c-s"),
+        "(nope|no way)": Key("c-g"),
+        "new tab": Key("as-5"),
+        "new dos tab": Key("as-2"),
+        "clote": Key("c-w"),
+        "forward": Key("f"),
+        "backward": Key("b"),
+        "quit": Key("q"),
+        "kill process": Key("c-c"),
+    })
+
+cmder_element_map = {
+    "tab_n": IntegerRef(None, 1, 10),
+}
+
+cmder_environment = MyEnvironment(name="Cmder",
+                                  parent=global_environment,
+                                  context=AppContext(title="Cmder"),
+                                  action_map=cmder_action_map,
+                                  element_map=cmder_element_map)
+
+
 ### Chrome
 
 chrome_action_map = {
