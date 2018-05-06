@@ -1360,7 +1360,7 @@ chrome_element_map = {
 
 chrome_environment = MyEnvironment(name="Chrome",
                                    parent=global_environment,
-                                   context=(AppContext(title=" - Google Chrome") | AppContext(executable="firefox.exe")),
+                                   context=(AppContext(title=" - Google Chrome") | AppContext(executable="firefox.exe") | AppContext(title="Mozilla Firefox")),
                                    action_map=chrome_action_map,
                                    terminal_action_map=chrome_terminal_action_map,
                                    element_map=chrome_element_map)
