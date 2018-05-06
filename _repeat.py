@@ -29,6 +29,7 @@ import webbrowser
 from dragonfly import (
     ActionBase,
     Alternative,
+    AppContext,
     CompoundRule,
     Config,
     DictList,
@@ -50,7 +51,6 @@ from dragonfly import (
     get_engine,
 )
 from aenea.lax import (
-    AppContext,
     Key,
     Mouse,
     Text,

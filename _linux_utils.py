@@ -9,10 +9,9 @@ import time
 
 from dragonfly import (
     ActionBase,
-)
-from aenea.lax import (
     AppContext,
 )
+
 
 class LinuxHelper(object):
     """Helper to access Linux."""
