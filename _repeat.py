@@ -845,7 +845,7 @@ class UseLinesAction(ActionBase):
 
     def _execute(self, data=None):
         # Set mark without activating.
-        Key("c-backtick").execute()
+        Key("c-backslash").execute()
         MarkLinesAction(self.tight).execute(data)
         self.pre_action.execute(data)
         # Jump to mark twice then to the beginning of the line.
@@ -945,7 +945,7 @@ emacs_action_map = {
     "full line <line>": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
     "line <n1>": jump_to_line("%(n1)s"),
     "re-center|recenter": Key("c-l"),
-    "set mark": Key("c-backtick"),
+    "set mark": Key("c-backslash"),
     "jump mark": Key("c-langle"),
     "jump change": Key("c-c, c, c"),
     "jump symbol": Key("a-i"),
