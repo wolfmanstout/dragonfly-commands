@@ -91,7 +91,7 @@ symbol_map = {
     "plus": " + ",
     "plus twice": "++",
     "minus": " - ",
-    "comma": ", ",
+    ",": ", ",
     "colon": ":",
     "equals": " = ",
     "equals twice": " == ",
@@ -152,7 +152,7 @@ numbers_map = {
     "minus": "-",
     "slash": "/",
     "colon": ":",
-    "comma": ",",
+    ",": ",",
 }
 
 short_letters_map = {
@@ -1266,7 +1266,7 @@ cmder_environment = MyEnvironment(name="Cmder",
 
 chrome_action_map = {
     "link": Key("c-comma"),
-    "link tab": Key("c-dot"),
+    "link tab|tab link": Key("c-dot"),
     "(link|links) background [tab]": Key("a-f"),
     "tab new":            Key("c-t"),
     "tab incognito":            Key("cs-n"),
