@@ -70,7 +70,7 @@ def format_upper_score(dictation):
     return "_".join(words)
 
 # Format: someWords
-def format_java_method(dictation):
+def format_camel(dictation):
     """ camel <dictation> """
     words = text.split_dictation(dictation)
     return words[0] + "".join(w.capitalize() for w in words[1:])
@@ -84,4 +84,9 @@ def format_dashes(dictation):
 def format_spaces(dictation):
     """ spaces <dictation> """
     return " ".join(text.split_dictation(dictation))
+
+# Format:  some words 
+def format_spaces(dictation):
+    """ padded <dictation> """
+    return " " + " ".join(text.split_dictation(dictation)) + " "
 

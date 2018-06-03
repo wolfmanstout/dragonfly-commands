@@ -87,20 +87,20 @@ namespace = config.load()
 #-------------------------------------------------------------------------------
 # Common maps and lists.
 # TODO make formatting explicit
-symbol_map = {
-    "plus": " + ",
+symbols_map = {
+    "plus": "+",
     "plus twice": "++",
-    "minus": " - ",
-    ",": ", ",
+    "minus": "-",
+    ",": ",",
     "colon": ":",
-    "equals": " = ",
-    "equals twice": " == ",
-    "not equals": " != ",
-    "plus equals": " += ",
-    "greater than": " > ",
-    "less than": " < ",
-    "greater equals": " >= ",
-    "less equals": " <= ",
+    "equals": "=",
+    "equals twice": "==",
+    "not equals": "!=",
+    "plus equals": "+=",
+    "greater than": ">",
+    "less than": "<",
+    "greater equals": ">=",
+    "less equals": "<=",
     "dot": ".",
     "leap": "(",
     "reap": ")",
@@ -109,7 +109,7 @@ symbol_map = {
     "lobe": "[",
     "robe": "]",
     "luke": "<",
-    "luke twice": " << ",
+    "luke twice": "<<",
     "ruke": ">",
     "quote": "\"",
     "dash": "-",
@@ -128,15 +128,14 @@ symbol_map = {
     "fat arrow": "=>",
     "colon twice": "::",
     "amper": "&",
-    "amper twice": " && ",
+    "amper twice": "&&",
     "pipe": "|",
-    "pipe twice": " || ",
+    "pipe twice": "||",
     "hash": "#",
     "at sign": "@",
     "question": "?",
 }
 
-# TODO try naming by symbol
 numbers_map = {
     "zero": "0",
     "one": "1",
@@ -254,8 +253,7 @@ suffixes = [
 
 letters_map = utils.combine_maps(quick_letters_map, long_letters_map)
 
-char_map = dict((k, v.strip())
-                for (k, v) in utils.combine_maps(letters_map, numbers_map, symbol_map).iteritems())
+char_map = utils.combine_maps(letters_map, numbers_map, symbols_map)
 
 # Load commonly misrecognized words saved to a file.
 saved_words = []
@@ -275,7 +273,7 @@ except:
 global_key_action_map = {
     "[<n>] (slap|enter)": Key("enter/5:%(n)d"),
     "[<n>] (spooce|space)": Key("space/5:%(n)d"),
-    "[<n>] tab key": Key("tab/5:%(n)d"),
+    "[<n>] tab-key": Key("tab/5:%(n)d"),
 }
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -304,9 +302,11 @@ key_action_map = {
     # TODO train lefts?
     "[<n>] ((lefts|leffs) delete|backspace)": release + Key("backspace/5:%(n)d"),
     "apps key": release + Key("apps"),
-    "cancel|escape": release + Key("escape"),
-    "volume up": Key("volumeup"),
-    "volume down": Key("volumedown"),
+    "escape": release + Key("escape"),
+    # Separate for overrides.
+    "cancel": release + Key("escape"),
+    "volume [<n>] up": Key("volumeup/5:%(n)d"),
+    "volume [<n>] down": Key("volumedown/5:%(n)d"),
     "volume (mute|unmute)": Key("volumemute"),
     "track next": Key("tracknext"),
     "track (preev|previous)": Key("trackprev"),
@@ -356,15 +356,15 @@ key_action_map = {
 
 # Actions for speaking out sequences of characters.
 character_action_map = {
-    "plain <chars>": Text("%(chars)s"),
-    "numbers <numerals>": Text("%(numerals)s"),
-    "print <letters>": Text("%(letters)s"),
-    "shout <letters>": Function(lambda letters: Text(letters.upper()).execute()),
+    "<chars> short": Text("%(chars)s"),
+    "number <numerals>": Text("%(numerals)s"),
+    "letter <letters>": Text("%(letters)s"),
+    "upper letter <letters>": Function(lambda letters: Text(letters.upper()).execute()),
 }
 
 # Actions that can be used anywhere in any command.
 global_action_map = utils.combine_maps(global_key_action_map,
-                                       utils.text_map_to_action_map(symbol_map))
+                                       utils.text_map_to_action_map(symbols_map))
 
 # Actions that can be used anywhere except after a command with arbitrary
 # dictation.
@@ -394,7 +394,8 @@ if namespace:
 #-------------------------------------------------------------------------------
 # Simple elements that may be referred to within a rule.
 
-numbers_dict_list  = DictList("numbers_dict_list", numbers_map)
+symbols_dict_list = DictList("symbols_dict_list", symbols_map)
+numbers_dict_list = DictList("numbers_dict_list", numbers_map)
 letters_dict_list = DictList("letters_dict_list", letters_map)
 char_dict_list = DictList("char_dict_list", char_map)
 saved_word_list = List("saved_word_list", saved_words)
@@ -455,6 +456,17 @@ format_rule = utils.create_rule(
     "FormatRule",
     format_functions,
     {"dictation": mixed_dictation}
+)
+
+# Rule for formatting symbols.
+symbol_format_rule = utils.create_rule(
+    "SymbolFormatRule",
+    {
+        "padded <symbol>": Text(" %(symbol)s "),
+    },
+    {
+        "symbol": DictListRef(None, symbols_dict_list),
+    }
 )
 
 # Rule for formatting pure dictation elements.
@@ -534,6 +546,7 @@ single_action = RuleRef(rule=utils.create_rule("CommandKeystrokeRule",
 dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=dictation_rule),
     RuleRef(rule=format_rule),
+    RuleRef(rule=symbol_format_rule),
     RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
     RuleRef(rule=utils.create_rule("DictationKeystrokeRule",
@@ -551,9 +564,9 @@ dictation_element = RuleWrap(None, Alternative([
 windows = [
     "explorer",
     ["dragonbar", "dragon [messages]", "dragonpad"],
-    "home chrome",
-    "home terminal",
-    "home emacs",
+    "[home] chrome",
+    "[home] terminal",
+    "[home] emacs",
 ]
 json_windows = utils.load_json("windows.json")
 if json_windows:
@@ -597,7 +610,7 @@ class RepeatRule(CompoundRule):
         spec = ("[<sequence>] "
                 "[<nested_repetitions>] "
                 "([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) "
-                "[[[and] repeat [that]] <n> times] "
+                "[<n> times] "
                 "[<final_command>]")
         extras = [
             Repetition(command, min=1, max = 5, name="sequence"),
@@ -1287,7 +1300,7 @@ chrome_action_map = {
     "tab reopen":         Key("cs-t"),
     "tab duplicate": Key("c-l/15, a-enter"),
     "find":               Key("c-f"),
-    "<link>":          Text("%(link)s"),
+    "<link> go":          Text("%(link)s"),
     "(caret|carrot) browsing": Key("f7"),
     "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
     "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
