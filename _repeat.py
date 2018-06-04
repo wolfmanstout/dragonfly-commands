@@ -1339,6 +1339,7 @@ chrome_terminal_action_map = {
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
     "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
     "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
+    "<link>":          Text("%(link)s"),
 }
 
 link_char_map = {
