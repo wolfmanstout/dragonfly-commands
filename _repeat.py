@@ -290,7 +290,7 @@ key_action_map = {
     "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
     "[<n>] lines delete": Key("c-k/5:%(n)d"),
     "[<n>] screen up": Key("pgup/5:%(n)d"),
-    "[<n>] screen [down]": Key("pgdown/5:%(n)d"),
+    "[<n>] screen down": Key("pgdown/5:%(n)d"),
     "go (home|west)": Key("home"),
     "go (end|east)": Key("end"),
     "go (top|north)": Key("c-home"),
@@ -341,8 +341,8 @@ key_action_map = {
     "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
     "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
     "half scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
-    "scroll [down]": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
-    "half scroll [down]": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
+    "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
+    "half scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
     "(touch|click) [left]": Mouse("left"),
     "(touch|click) right": Mouse("right"),
     "(touch|click) middle": Mouse("middle"),
@@ -428,11 +428,11 @@ letters_element = RuleWrap(None, utils.JoinedRepetition(
 
 # A sequence of numbers.
 numbers_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, numbers_dict_list), min=0, max=10))
+    "", DictListRef(None, numbers_dict_list), min=1, max=10))
 
 # A sequence of characters.
 chars_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, char_dict_list), min=0, max=10))
+    "", DictListRef(None, char_dict_list), min=1, max=10))
 
 # Simple element map corresponding to keystroke action maps from earlier.
 keystroke_element_map = {
@@ -1215,7 +1215,7 @@ shell_action_map = utils.combine_maps(
         "paste": Key("cs-v"),
         "cut": Key("cs-x"),
         "[<n>] screen up": Key("s-pgup/5:%(n)d"),
-        "[<n>] screen [down]": Key("s-pgdown/5:%(n)d"),
+        "[<n>] screen down": Key("s-pgdown/5:%(n)d"),
         "[<n>] rights delete": Key("c-d/5:%(n)d"),
         "tab [<n>] left": Key("cs-left/5:%(n)d"),
         "tab [<n>] right": Key("cs-right/5:%(n)d"),
@@ -1358,7 +1358,7 @@ link_char_dict_list  = DictList("link_char_dict_list", link_char_map)
 chrome_element_map = {
     "tab_n": IntegerRef(None, 1, 9),
     "link": utils.JoinedRepetition(
-        "", DictListRef(None, link_char_dict_list), min=0, max=5),
+        "", DictListRef(None, link_char_dict_list), min=1, max=5),
 }
 
 chrome_environment = MyEnvironment(name="Chrome",
