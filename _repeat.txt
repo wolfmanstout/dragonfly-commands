@@ -86,7 +86,7 @@ def format_spaces(dictation):
     return " ".join(text.split_dictation(dictation))
 
 # Format:  some words 
-def format_spaces(dictation):
+def format_padded(dictation):
     """ padded <dictation> """
     return " " + " ".join(text.split_dictation(dictation)) + " "
 

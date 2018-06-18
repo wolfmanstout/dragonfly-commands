@@ -30,6 +30,7 @@ from dragonfly import (
     ActionBase,
     Alternative,
     AppContext,
+    Choice,
     CompoundRule,
     Config,
     DictList,
@@ -86,7 +87,7 @@ namespace = config.load()
 
 #-------------------------------------------------------------------------------
 # Common maps and lists.
-# TODO make formatting explicit
+# TODO: Generalize "twice".
 symbols_map = {
     "plus": "+",
     "plus twice": "++",
@@ -111,6 +112,7 @@ symbols_map = {
     "luke": "<",
     "luke twice": "<<",
     "ruke": ">",
+    "ruke twice": ">>",
     "quote": "\"",
     "dash": "-",
     "semi": ";",
@@ -120,6 +122,7 @@ symbols_map = {
     "backslash": "\\",
     "slash": "/",
     "tilde": "~",
+    "backtick": "`",
     "underscore": "_",
     "single quote": "'",
     "dollar": "$",
@@ -134,6 +137,18 @@ symbols_map = {
     "hash": "#",
     "at sign": "@",
     "question": "?",
+}
+
+symbol_keys_map = {
+    "minus|dash": "-",
+    ",": ",",
+    "equals": "=",
+    "dot|period": ".",
+    "semi": ";",
+    "backslash": "\\",
+    "slash": "/",
+    "backtick": "`",
+    "single quote": "'",
 }
 
 numbers_map = {
@@ -152,35 +167,6 @@ numbers_map = {
     "slash": "/",
     "colon": ":",
     ",": ",",
-}
-
-short_letters_map = {
-    "A": "a",
-    "B": "b",
-    "C": "c",
-    "D": "d",
-    "E": "e",
-    "F": "f",
-    "G": "g",
-    "H": "h",
-    "I": "i",
-    "J": "j",
-    "K": "k",
-    "L": "l",
-    "M": "m",
-    "N": "n",
-    "O": "o",
-    "P": "p",
-    "Q": "q",
-    "R": "r",
-    "S": "s",
-    "T": "t",
-    "U": "u",
-    "V": "v",
-    "W": "w",
-    "X": "x",
-    "Y": "y",
-    "Z": "z",
 }
 
 quick_letters_map = {
@@ -253,9 +239,10 @@ suffixes = [
 
 letters_map = utils.combine_maps(quick_letters_map, long_letters_map)
 
-char_map = utils.combine_maps(letters_map, numbers_map, symbols_map)
+chars_map = utils.combine_maps(letters_map, numbers_map, symbols_map)
 
 # Load commonly misrecognized words saved to a file.
+# TODO: Revisit.
 saved_words = []
 try:
     with open(text.WORDS_PATH) as file:
@@ -269,90 +256,128 @@ except:
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
 
-# Key actions which may be used anywhere in any command.
-global_key_action_map = {
-    "[<n>] (slap|enter)": Key("enter/5:%(n)d"),
-    "[<n>] (spooce|space)": Key("space/5:%(n)d"),
-    "[<n>] tab-key": Key("tab/5:%(n)d"),
+def add_key_repeats(key_action_map):
+    return dict([("[<n>] (" + k + ")", (v + Pause("5")) * Repeat(extra="n"))
+                 for (k, v) in key_action_map.items()])
+
+dictation_single_key_action_map = {
+    "enter|slap": Key("enter"),
+    "space|spooce": Key("space"),
+    "tab-key": Key("tab"),
 }
+
+standalone_single_key_action_map = utils.combine_maps(
+    dictation_single_key_action_map,
+    {
+        "up": Key("up"),
+        "down": Key("down"),
+        "left": Key("left"),
+        "right": Key("right"),
+        "page up": Key("pgup"),
+        "page down": Key("pgdown"),
+        "apps key": Key("apps"),
+        "escape": Key("escape"),
+        "backspace": Key("backspace"),
+        "delete key": Key("del"),
+    })
+
+dictation_key_combo_action_map = utils.combine_maps(dictation_single_key_action_map,
+                                                    utils.text_map_to_action_map(symbols_map))
+standalone_key_combo_action_map = utils.combine_maps(add_key_repeats(standalone_single_key_action_map),
+                                                     utils.text_map_to_action_map(symbols_map))
+
+full_single_key_action_map = utils.combine_maps(
+    standalone_single_key_action_map,
+    utils.text_map_to_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)))
+
+
+# TODO move to utils
+class ModifiedAction(ActionBase):
+    def __init__(self, name, action):
+        ActionBase.__init__(self)
+        self.name = name
+        self.action = action
+
+    def _execute(self, data=None):
+        modifier = data[self.name]
+        modified_action = modifier(self.action)
+        modified_action.execute(data)
+
+
+full_key_combo_action_map = add_key_repeats(
+    dict([("<modifier> (" + k + ")", ModifiedAction("modifier", v))
+          for (k, v) in full_single_key_action_map.items()]))
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
-release = Key("shift:up, ctrl:up, alt:up")
-key_action_map = {
-    "[<n>] up": Key("up/5:%(n)d"),
-    "[<n>] down": Key("down/5:%(n)d"),
-    "[<n>] left": Key("left/5:%(n)d"),
-    "[<n>] right": Key("right/5:%(n)d"),
-    "[<n>] after": Key("c-right/5:%(n)d"),
-    "[<n>] before": Key("c-left/5:%(n)d"),
-    "[<n>] afters delete": Key("c-del/5:%(n)d"),
-    "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
-    "[<n>] lines delete": Key("c-k/5:%(n)d"),
-    "[<n>] screen up": Key("pgup/5:%(n)d"),
-    "[<n>] screen down": Key("pgdown/5:%(n)d"),
-    "go (home|west)": Key("home"),
-    "go (end|east)": Key("end"),
-    "go (top|north)": Key("c-home"),
-    "go (bottom|south)": Key("c-end"),
-    "yankee|yang": Key("y"),
-    "november|nerb": Key("n"),
+command_action_map = utils.combine_maps(
+    standalone_key_combo_action_map,
+    full_key_combo_action_map,
+    {
+        "[<n>] after": Key("c-right/5:%(n)d"),
+        "[<n>] before": Key("c-left/5:%(n)d"),
+        "[<n>] afters delete": Key("c-del/5:%(n)d"),
+        "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
+        "[<n>] kill": Key("c-k/5:%(n)d"),
+        "[<n>] screen up": Key("pgup/5:%(n)d"),
+        "[<n>] screen down": Key("pgdown/5:%(n)d"),
+        "[go] (home|west)": Key("home"),
+        "[go] (end|east)": Key("end"),
+        "[go] (top|north)": Key("c-home"),
+        "[go] (bottom|south)": Key("c-end"),
+        "[<n>] rights delete": Key("del/5:%(n)d"),
+        # TODO train lefts?
+        "[<n>] (lefts|leffs) delete": Key("backspace/5:%(n)d"),
+        # Separate for overrides.
+        "cancel": Key("escape"),
+        "volume [<n>] up": Key("volumeup/5:%(n)d"),
+        "volume [<n>] down": Key("volumedown/5:%(n)d"),
+        "volume (mute|unmute)": Key("volumemute"),
+        "track next": Key("tracknext"),
+        "track (preev|previous)": Key("trackprev"),
+        "track (pause|play)": Key("playpause"),
 
-    "[<n>] rights delete": release + Key("del/5:%(n)d"),
-    # TODO train lefts?
-    "[<n>] ((lefts|leffs) delete|backspace)": release + Key("backspace/5:%(n)d"),
-    "apps key": release + Key("apps"),
-    "escape": release + Key("escape"),
-    # Separate for overrides.
-    "cancel": release + Key("escape"),
-    "volume [<n>] up": Key("volumeup/5:%(n)d"),
-    "volume [<n>] down": Key("volumedown/5:%(n)d"),
-    "volume (mute|unmute)": Key("volumemute"),
-    "track next": Key("tracknext"),
-    "track (preev|previous)": Key("trackprev"),
-    "track (pause|play)": Key("playpause"),
+        "paste": Key("c-v"),
+        "copy": Key("c-c"),
+        "cut": Key("c-x"),
+        "all select":                       Key("c-a"),
+        "here edit": utils.RunApp("notepad"),
+        "all edit": Key("c-a, c-x") + utils.RunApp("notepad") + Key("c-v"),
+        "this edit": Key("c-x") + utils.RunApp("notepad") + Key("c-v"),
+        "shift hold":                     Key("shift:down"),
+        "shift release":                    Key("shift:up"),
+        "control hold":                   Key("ctrl:down"),
+        "control release":                  Key("ctrl:up"),
+        "(meta|alt) hold":                   Key("alt:down"),
+        "(meta|alt) release":                  Key("alt:up"),
+        "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
-    "paste": release + Key("c-v"),
-    "copy": release + Key("c-c"),
-    "cut": release + Key("c-x"),
-    "all select":                       release + Key("c-a"),
-    "here edit": utils.RunApp("notepad"),
-    "all edit": Key("c-a, c-x") + utils.RunApp("notepad") + Key("c-v"),
-    "this edit": Key("c-x") + utils.RunApp("notepad") + Key("c-v"),
-    "shift [hold]":                     Key("shift:down"),
-    "shift release":                    Key("shift:up"),
-    "control [hold]":                   Key("ctrl:down"),
-    "control release":                  Key("ctrl:up"),
-    "(meta|alt) [hold]":                   Key("alt:down"),
-    "(meta|alt) release":                  Key("alt:up"),
-    "all release":                    release,
+        "(I|eye) connect": Function(eye_tracker.connect),
+        "(I|eye) disconnect": Function(eye_tracker.disconnect),
+        "(I|eye) print position": Function(eye_tracker.print_position),
+        "(I|eye) move": Function(eye_tracker.move_to_position),
+        "(I|eye) act": Function(eye_tracker.activate_position),
+        "(I|eye) pan": Function(eye_tracker.panning_step_position),
+        "(I|eye) (touch|click)": Function(eye_tracker.move_to_position) + Mouse("left"),
+        "(I|eye) (touch|click) right": Function(eye_tracker.move_to_position) + Mouse("right"),
+        "(I|eye) (touch|click) middle": Function(eye_tracker.move_to_position) + Mouse("middle"),
+        "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
+        "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
+        "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
+        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
+        "half scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
+        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
+        "half scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
+        "(touch|click) [left]": Mouse("left"),
+        "(touch|click) right": Mouse("right"),
+        "(touch|click) middle": Mouse("middle"),
+        "(touch|click) [left] twice": Mouse("left:2"),
+        "(touch|click) hold": Mouse("left:down"),
+        "(touch|click) release": Mouse("left:up"),
 
-    "(I|eye) connect": Function(eye_tracker.connect),
-    "(I|eye) disconnect": Function(eye_tracker.disconnect),
-    "(I|eye) print position": Function(eye_tracker.print_position),
-    "(I|eye) move": Function(eye_tracker.move_to_position),
-    "(I|eye) act": Function(eye_tracker.activate_position),
-    "(I|eye) pan": Function(eye_tracker.panning_step_position),
-    "(I|eye) (touch|click)": Function(eye_tracker.move_to_position) + Mouse("left"),
-    "(I|eye) (touch|click) right": Function(eye_tracker.move_to_position) + Mouse("right"),
-    "(I|eye) (touch|click) middle": Function(eye_tracker.move_to_position) + Mouse("middle"),
-    "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
-    "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
-    "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-    "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
-    "half scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
-    "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
-    "half scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
-    "(touch|click) [left]": Mouse("left"),
-    "(touch|click) right": Mouse("right"),
-    "(touch|click) middle": Mouse("middle"),
-    "(touch|click) [left] twice": Mouse("left:2"),
-    "(touch|click) hold": Mouse("left:down"),
-    "(touch|click) release": Mouse("left:up"),
-
-    "webdriver open": Function(webdriver.create_driver),
-    "webdriver close": Function(webdriver.quit_driver),
-}
+        "webdriver open": Function(webdriver.create_driver),
+        "webdriver close": Function(webdriver.quit_driver),
+    })
 
 # Actions for speaking out sequences of characters.
 character_action_map = {
@@ -361,14 +386,6 @@ character_action_map = {
     "letter <letters>": Text("%(letters)s"),
     "upper letter <letters>": Function(lambda letters: Text(letters.upper()).execute()),
 }
-
-# Actions that can be used anywhere in any command.
-global_action_map = utils.combine_maps(global_key_action_map,
-                                       utils.text_map_to_action_map(symbols_map))
-
-# Actions that can be used anywhere except after a command with arbitrary
-# dictation.
-command_action_map = utils.combine_maps(global_action_map, key_action_map)
 
 # Here we prepare the action map of formatting functions from the config file.
 # Retrieve text-formatting functions from this module's config file. Each of
@@ -397,7 +414,7 @@ if namespace:
 symbols_dict_list = DictList("symbols_dict_list", symbols_map)
 numbers_dict_list = DictList("numbers_dict_list", numbers_map)
 letters_dict_list = DictList("letters_dict_list", letters_map)
-char_dict_list = DictList("char_dict_list", char_map)
+chars_dict_list = DictList("chars_dict_list", chars_map)
 saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
 context_phrase_list = List("context_phrase_list", [])
@@ -405,17 +422,21 @@ context_word_list = List("context_word_list", [])
 prefix_list = List("prefix_list", prefixes)
 suffix_list = List("suffix_list", suffixes)
 
-# Dictation consisting of sources of contextually likely words.
-custom_dictation = RuleWrap(None, Alternative([
-    ListRef(None, saved_word_list),
-    ListRef(None, context_phrase_list),
-]))
-
-# Either arbitrary dictation or letters.
+# Either arbitrary or custom dictation.
 mixed_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
         Dictation(),
+        DictListRef(None, letters_dict_list),
+        ListRef(None, saved_word_list),
+    ]),
+    Optional(ListRef(None, suffix_list)),
+]))
+
+# Same as above, except no arbitrary dictation allowed.
+custom_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
+    Optional(ListRef(None, prefix_list)),
+    Alternative([
         DictListRef(None, letters_dict_list),
         ListRef(None, saved_word_list),
     ]),
@@ -432,20 +453,28 @@ numbers_element = RuleWrap(None, utils.JoinedRepetition(
 
 # A sequence of characters.
 chars_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, char_dict_list), min=1, max=10))
+    "", DictListRef(None, chars_dict_list), min=1, max=10))
 
-# Simple element map corresponding to keystroke action maps from earlier.
-keystroke_element_map = {
+# Simple element map corresponding to command action maps from earlier.
+command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
-    "char": DictListRef(None, char_dict_list),
+    "char": DictListRef(None, chars_dict_list),
     "custom_text": RuleWrap(None, Alternative([
         Dictation(),
-        DictListRef(None, char_dict_list),
+        DictListRef(None, chars_dict_list),
         ListRef(None, prefix_list),
         ListRef(None, suffix_list),
         ListRef(None, saved_word_list),
     ])),
+    "modifier": RuleWrap(None, Choice(None, {
+        "control": lambda action: Key("ctrl:down") + action + Key("ctrl:up"),
+        "alt|meta": lambda action: Key("alt:down") + action + Key("alt:up"),
+        "control (alt|meta)": lambda action: Key("ctrl:down, alt:down") + action + Key("ctrl:up, alt:up"),
+        "control shift": lambda action: Key("ctrl:down, shift:down") + action + Key("ctrl:up, shift:up"),
+        "(alt|meta) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
+        "control (alt|meta) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
+    }))
 }
 
 #-------------------------------------------------------------------------------
@@ -472,7 +501,7 @@ symbol_format_rule = utils.create_rule(
 # Rule for formatting pure dictation elements.
 pure_format_rule = utils.create_rule(
     "PureFormatRule",
-    dict([("pure " + k, v)
+    dict([("pure (" + k + ")", v)
           for (k, v) in format_functions.items()]),
     {"dictation": Dictation()}
 )
@@ -480,19 +509,20 @@ pure_format_rule = utils.create_rule(
 # Rule for formatting custom_dictation elements.
 custom_format_rule = utils.create_rule(
     "CustomFormatRule",
-    dict([("my " + k, v)
+    dict([("my (" + k + ")", v)
           for (k, v) in format_functions.items()]),
     {"dictation": custom_dictation}
 )
 
 # Rule for handling raw dictation.
+# TODO: Improve grammar.
 dictation_rule = utils.create_rule(
     "DictationRule",
     {
-        "(mim|mimic) text <text>": release + Text("%(text)s"),
-        "mim small <text>": release + utils.uncapitalize_text_action("%(text)s"),
-        "mim big <text>": release + utils.capitalize_text_action("%(text)s"),
-        "mimic <text>": release + Mimic(extra="text"),
+        "(mim|mimic) text <text>": Text("%(text)s"),
+        "mim small <text>": utils.uncapitalize_text_action("%(text)s"),
+        "mim big <text>": utils.capitalize_text_action("%(text)s"),
+        "mimic <text>": Mimic(extra="text"),
     },
     {
         "text": Dictation()
@@ -506,14 +536,14 @@ single_character_rule = utils.create_rule(
     {
         "numerals": DictListRef(None, numbers_dict_list),
         "letters": DictListRef(None, letters_dict_list),
-        "chars": DictListRef(None, char_dict_list),
+        "chars": DictListRef(None, chars_dict_list),
     }
 )
 
 # Rule for spelling a word letter by letter and formatting it.
 spell_format_rule = utils.create_rule(
     "SpellFormatRule",
-    dict([("spell " + k, v)
+    dict([("spell (" + k + ")", v)
           for (k, v) in format_functions.items()]),
     {"dictation": letters_element}
 )
@@ -533,12 +563,6 @@ character_rule = utils.create_rule(
 # Elements that are composed of rules. Note that the value of these elements are
 # actions which will have to be triggered manually.
 
-# Element matching simple commands.
-# For efficiency, this should not contain any repeating elements.
-single_action = RuleRef(rule=utils.create_rule("CommandKeystrokeRule",
-                                               command_action_map,
-                                               keystroke_element_map))
-
 # Element matching dictation and commands allowed at the end of an utterance.
 # For efficiency, this should not contain any repeating elements. For accuracy,
 # few custom commands should be included to avoid clashes with dictation
@@ -549,9 +573,9 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=symbol_format_rule),
     RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
-    RuleRef(rule=utils.create_rule("DictationKeystrokeRule",
-                                   global_action_map,
-                                   keystroke_element_map)),
+    RuleRef(rule=utils.create_rule("DictationKeyComboRule",
+                                   dictation_key_combo_action_map,
+                                   command_element_map)),
     RuleRef(rule=single_character_rule),
 ]))
 
@@ -662,7 +686,6 @@ class RepeatRule(CompoundRule):
                 dictation.execute()
             if terminal_command:
                 terminal_command.execute()
-        release.execute()
         if final_command:
             final_command.execute()
 
@@ -750,7 +773,7 @@ class MyEnvironment(object):
 
 global_environment = MyEnvironment(name="Global",
                                    action_map=command_action_map,
-                                   element_map=keystroke_element_map)
+                                   element_map=command_element_map)
 
 
 ### Shell commands
@@ -1342,7 +1365,7 @@ chrome_terminal_action_map = {
     "<link>":          Text("%(link)s"),
 }
 
-link_char_map = {
+link_chars_map = {
     "zero": "0",
     "one": "1",
     "two": "2",
@@ -1354,11 +1377,11 @@ link_char_map = {
     "eight": "8",
     "nine": "9",
 }
-link_char_dict_list  = DictList("link_char_dict_list", link_char_map)
+link_chars_dict_list  = DictList("link_chars_dict_list", link_chars_map)
 chrome_element_map = {
     "tab_n": IntegerRef(None, 1, 9),
     "link": utils.JoinedRepetition(
-        "", DictListRef(None, link_char_dict_list), min=1, max=5),
+        "", DictListRef(None, link_chars_dict_list), min=1, max=5),
 }
 
 chrome_environment = MyEnvironment(name="Chrome",
@@ -1421,8 +1444,6 @@ critique_environment = MyEnvironment(name="Critique",
 ### Chrome: Calendar
 
 calendar_action_map = {
-    "click <name>": webdriver.ClickElementAction(
-        By.XPATH, "//*[@role='option' and contains(string(.), '%(name)s')]"),
     "today": Key("t"),
     "preev": Key("k"),
     "next": Key("j"),
@@ -1431,20 +1452,11 @@ calendar_action_map = {
     "month": Key("m"),
     "agenda": Key("a"), 
 }
-names_dict_list = DictList(
-    "name_dict_list",
-    {
-        "Sonica": "Sonica"
-    })
-calendar_element_map = {
-    "name": DictListRef(None, names_dict_list),
-}
 calendar_environment = MyEnvironment(name="Calendar",
                                      parent=chrome_environment,
                                      context=(AppContext(title="Google Calendar") |
                                               AppContext(title="Google.com - Calendar")),
-                                     action_map=calendar_action_map,
-                                     element_map=calendar_element_map)
+                                     action_map=calendar_action_map)
 
 
 ### Chrome: Code search
