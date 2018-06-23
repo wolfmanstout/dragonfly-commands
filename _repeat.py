@@ -88,6 +88,7 @@ namespace = config.load()
 #-------------------------------------------------------------------------------
 # Common maps and lists.
 # TODO: Generalize "twice".
+# TODO: Add regular naming as option for each of these.
 symbols_map = {
     "plus": "+",
     "plus twice": "++",
@@ -288,7 +289,13 @@ standalone_key_combo_action_map = utils.combine_maps(add_key_repeats(standalone_
 
 full_single_key_action_map = utils.combine_maps(
     standalone_single_key_action_map,
-    utils.text_map_to_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)))
+    utils.text_map_to_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)),
+    {
+        "home": Key("home"),
+        "end": Key("end"),
+        "tab": Key("tab"),
+        "delete": Key("delete"),
+    })
 
 
 # TODO move to utils
@@ -310,21 +317,26 @@ full_key_combo_action_map = add_key_repeats(
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
+# TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
 command_action_map = utils.combine_maps(
     standalone_key_combo_action_map,
-    full_key_combo_action_map,
     {
         "[<n>] after": Key("c-right/5:%(n)d"),
         "[<n>] before": Key("c-left/5:%(n)d"),
+        # TODO: Add support for selection commands without deletion.
         "[<n>] afters delete": Key("c-del/5:%(n)d"),
         "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
+        "[<n>] ahead": Key("a-f/5:%(n)d"),
+        "[<n>] behind": Key("a-b/5:%(n)d"),
+        "[<n>] aheads delete": Key("a-d/5:%(n)d"),
+        "[<n>] behinds delete": Key("a-backspace/5:%(n)d"),
         "[<n>] kill": Key("c-k/5:%(n)d"),
         "[<n>] screen up": Key("pgup/5:%(n)d"),
         "[<n>] screen down": Key("pgdown/5:%(n)d"),
-        "[go] (home|west)": Key("home"),
-        "[go] (end|east)": Key("end"),
-        "[go] (top|north)": Key("c-home"),
-        "[go] (bottom|south)": Key("c-end"),
+        "go home|[go] west": Key("home"),
+        "go end|[go] east": Key("end"),
+        "go top|[go] north": Key("c-home"),
+        "go bottom|[go] south": Key("c-end"),
         "[<n>] rights delete": Key("del/5:%(n)d"),
         # TODO train lefts?
         "[<n>] (lefts|leffs) delete": Key("backspace/5:%(n)d"),
@@ -469,11 +481,12 @@ command_element_map = {
     ])),
     "modifier": RuleWrap(None, Choice(None, {
         "control": lambda action: Key("ctrl:down") + action + Key("ctrl:up"),
-        "alt|meta": lambda action: Key("alt:down") + action + Key("alt:up"),
-        "control (alt|meta)": lambda action: Key("ctrl:down, alt:down") + action + Key("ctrl:up, alt:up"),
+        "alt|meta|under": lambda action: Key("alt:down") + action + Key("alt:up"),
+        "shift": lambda action: Key("shift:down") + action + Key("shift:up"),
+        "control (alt|meta|under)": lambda action: Key("ctrl:down, alt:down") + action + Key("ctrl:up, alt:up"),
         "control shift": lambda action: Key("ctrl:down, shift:down") + action + Key("ctrl:up, shift:up"),
-        "(alt|meta) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
-        "control (alt|meta) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
+        "(alt|meta|under) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
+        "control (alt|meta|under) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
     }))
 }
 
@@ -773,6 +786,7 @@ class MyEnvironment(object):
 
 global_environment = MyEnvironment(name="Global",
                                    action_map=command_action_map,
+                                   terminal_action_map=full_key_combo_action_map,
                                    element_map=command_element_map)
 
 
@@ -960,8 +974,6 @@ emacs_action_map = {
     "list bookmarks": Key("c-x, r, l"),
 
     # Movement
-    "[<n>] ahead": Key("a-f/5:%(n)d"),
-    "[<n>] behind": Key("a-b/5:%(n)d"),
     "nasper": Key("ca-f"),
     "pesper": Key("ca-b"),
     "dowsper": Key("ca-d"),
@@ -1010,8 +1022,6 @@ emacs_action_map = {
     "(clang format|format region)": Key("ca-q"),
     "format <n1> [(through|to) <n2>]": MarkLinesAction() + Key("ca-q"),
     "format comment": Key("a-q"),
-    "[<n>] aheads delete": Key("a-d/5:%(n)d"),
-    "[<n>] behinds delete": Key("a-backspace/5:%(n)d"),
     "replace": Key("as-5"),
     "regex replace": Key("cas-5"),
     "replace symbol": Key("a-apostrophe"),
@@ -1240,11 +1250,11 @@ shell_action_map = utils.combine_maps(
         "[<n>] screen up": Key("s-pgup/5:%(n)d"),
         "[<n>] screen down": Key("s-pgdown/5:%(n)d"),
         "[<n>] rights delete": Key("c-d/5:%(n)d"),
-        "tab [<n>] left": Key("cs-left/5:%(n)d"),
-        "tab [<n>] right": Key("cs-right/5:%(n)d"),
+        "[<n>] tab left": Key("cs-left/5:%(n)d"),
+        "[<n>] tab right": Key("cs-right/5:%(n)d"),
         "tab move [<n>] left": Key("cs-pgup/5:%(n)d"),
         "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
-        "go tab <n>": Key("a-%(tab_n)d"),
+        "go tab <tab_n>": Key("a-%(tab_n)d"),
         "go tab last": Key("a-1, cs-left"),
         "preev": Key("c-r"),
         "next": Key("c-s"),
@@ -1273,8 +1283,8 @@ shell_environment = MyEnvironment(name="Shell",
 cmder_action_map = utils.combine_maps(
     shell_command_map,
     {
-        "tab [<n>] left": Key("cs-tab/5:%(n)d"),
-        "tab [<n>] right": Key("c-tab/5:%(n)d"),
+        "[<n>] tab left": Key("cs-tab/5:%(n)d"),
+        "[<n>] tab right": Key("c-tab/5:%(n)d"),
         "preev": Key("c-r"),
         "next": Key("c-s"),
         "cancel": Key("c-g"),
@@ -1314,8 +1324,8 @@ chrome_action_map = {
     "reload": Key("c-r"),
     "go tab <tab_n>": Key("c-%(tab_n)d"),
     "go tab last": Key("c-9"),
-    "tab [<n>] right":           Key("c-tab:%(n)d"),
-    "tab [<n>] left":           Key("cs-tab:%(n)d"),
+    "[<n>] tab right":           Key("c-tab:%(n)d"),
+    "[<n>] tab left":           Key("cs-tab:%(n)d"),
     "tab move [<n>] left": Key("cs-pgup/5:%(n)d"),
     "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
     "tab move to <tab_n>": Key("cs-%(tab_n)d"),
