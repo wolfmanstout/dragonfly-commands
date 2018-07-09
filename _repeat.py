@@ -377,9 +377,9 @@ command_action_map = utils.combine_maps(
         "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
         "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
         "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
-        "half scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
+        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
         "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
-        "half scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
+        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
         "(touch|click) [left]": Mouse("left"),
         "(touch|click) right": Mouse("right"),
         "(touch|click) middle": Mouse("middle"),
@@ -487,7 +487,7 @@ command_element_map = {
         "control shift": lambda action: Key("ctrl:down, shift:down") + action + Key("ctrl:up, shift:up"),
         "(alt|meta|under) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
         "control (alt|meta|under) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
-    }))
+    })),
 }
 
 #-------------------------------------------------------------------------------
@@ -654,8 +654,8 @@ class RepeatRule(CompoundRule):
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
             Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
-            utils.ElementWrapper("dictation", dictation_element),
-            utils.ElementWrapper("terminal_command", terminal_command),
+            utils.renamed_element("dictation", dictation_element),
+            utils.renamed_element("terminal_command", terminal_command),
             IntegerRef("n", 1, 100),  # Times to repeat the sequence.
             RuleRef(rule=final_rule, name="final_command"),
         ]

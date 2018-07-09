@@ -13,6 +13,7 @@ DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
 CHROME_DRIVER_PATH: Path to chrome driver executable.
 """
 
+import copy
 import json
 import os
 import os.path
@@ -89,21 +90,16 @@ class JoinedSequence(Sequence):
                                    if v)
 
 
-class ElementWrapper(Sequence):
-    """Identity function on element, useful for renaming."""
-
-    def __init__(self, name, child):
-        Sequence.__init__(self, (child, ), name)
-
-    def value(self, node):
-        return Sequence.value(self, node)[0]
-
+def renamed_element(name, element):
+    element_copy = copy.copy(element)
+    element.name = name
+    return element
 
 def element_map_to_extras(element_map):
     """Converts an element map to a standard named element list that may be used in
     MappingRule.
     """
-    return [ElementWrapper(name, element[0] if isinstance(element, tuple) else element)
+    return [renamed_element(name, element[0] if isinstance(element, tuple) else element)
             for (name, element) in element_map.items()]
 
 
