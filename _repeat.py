@@ -258,19 +258,17 @@ except:
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
 
-# TODO: Refactor functionality into RepeatRule.
-def add_key_repeats(key_action_map):
-    return dict([("[<n>] (" + k + ")", (v + Pause("5")) * Repeat(extra="n"))
-                 for (k, v) in key_action_map.items()])
-
-dictation_single_key_action_map = {
+dictation_key_action_map = {
     "enter|slap": Key("enter"),
     "space|spooce": Key("space"),
     "tab-key": Key("tab"),
 }
 
-standalone_single_key_action_map = utils.combine_maps(
-    dictation_single_key_action_map,
+dictation_action_map = utils.combine_maps(dictation_key_action_map,
+                                          utils.text_map_to_action_map(symbols_map))
+
+standalone_key_action_map = utils.combine_maps(
+    dictation_key_action_map,
     {
         "up": Key("up"),
         "down": Key("down"),
@@ -284,13 +282,8 @@ standalone_single_key_action_map = utils.combine_maps(
         "delete key": Key("del"),
     })
 
-dictation_key_combo_action_map = utils.combine_maps(dictation_single_key_action_map,
-                                                    utils.text_map_to_action_map(symbols_map))
-standalone_key_combo_action_map = utils.combine_maps(add_key_repeats(standalone_single_key_action_map),
-                                                     utils.text_map_to_action_map(symbols_map))
-
-full_single_key_action_map = utils.combine_maps(
-    standalone_single_key_action_map,
+full_key_action_map = utils.combine_maps(
+    standalone_key_action_map,
     utils.text_map_to_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)),
     {
         "home": Key("home"),
@@ -317,7 +310,7 @@ class ModifiedAction(ActionBase):
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
 command_action_map = utils.combine_maps(
-    standalone_key_combo_action_map,
+    utils.text_map_to_action_map(symbols_map),
     {
         "[<n>] after": Key("c-right/5:%(n)d"),
         "[<n>] before": Key("c-left/5:%(n)d"),
@@ -575,8 +568,8 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=symbol_format_rule),
     RuleRef(rule=pure_format_rule),
     RuleRef(rule=custom_format_rule),
-    RuleRef(rule=utils.create_rule("DictationKeyComboRule",
-                                   dictation_key_combo_action_map,
+    RuleRef(rule=utils.create_rule("DictationActionRule",
+                                   dictation_action_map,
                                    command_element_map)),
     RuleRef(rule=single_character_rule),
 ]))
@@ -638,8 +631,8 @@ class RepeatRule(CompoundRule):
                 "([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) "
                 "[<n> times] "
                 "[<final_command>]")
-        single_key_element = RuleRef(rule=utils.create_rule("single_key_rule", full_single_key_action_map, {}), name="single_key")
-        key_combo_element = Compound(spec="[<n>] <modifier> <single_key>",
+        full_key_element = RuleRef(rule=utils.create_rule("full_key_rule", full_key_action_map, {}), name="single_key")
+        combo_key_element = Compound(spec="[<n>] <modifier> <single_key>",
                                      extras=[IntegerRef("n", 1, 21, default=1),
                                              RuleWrap("modifier", Choice(None, {
                                                  "control": lambda action: Key("ctrl:down") + action + Key("ctrl:up"),
@@ -650,10 +643,15 @@ class RepeatRule(CompoundRule):
                                                  "(alt|meta|under) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
                                                  "control (alt|meta|under) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
                                              })),
-                                             single_key_element],
+                                             full_key_element],
                                      value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
+        standalone_key_element = RuleRef(rule=utils.create_rule("standalone_key_rule", standalone_key_action_map, {}), name="single_key")
+        repeated_key_element = Compound(spec="[<n>] <single_key>",
+                                        extras=[IntegerRef("n", 1, 21, default=1),
+                                                standalone_key_element],
+                                        value_func=lambda node, extras: (extras["single_key"] + Pause("5")) * Repeat(extras["n"]))
         extras = [
-            Repetition(Alternative([command, key_combo_element]), min=1, max = 5, name="sequence"),
+            Repetition(RuleWrap(None, Alternative([command, combo_key_element, repeated_key_element])), min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
             Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
