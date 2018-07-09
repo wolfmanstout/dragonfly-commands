@@ -88,7 +88,6 @@ namespace = config.load()
 
 #-------------------------------------------------------------------------------
 # Common maps and lists.
-# TODO: Generalize "twice".
 # TODO: Add regular naming as option for each of these.
 symbols_map = {
     "plus": "+",
@@ -291,20 +290,6 @@ full_key_action_map = utils.combine_maps(
         "tab": Key("tab"),
         "delete": Key("delete"),
     })
-
-
-# TODO move to utils
-class ModifiedAction(ActionBase):
-    def __init__(self, name, action):
-        ActionBase.__init__(self)
-        self.name = name
-        self.action = action
-
-    def _execute(self, data=None):
-        modifier = data[self.name]
-        modified_action = modifier(self.action)
-        modified_action.execute(data)
-
 
 repeatable_action_map = utils.combine_maps(
     standalone_key_action_map,
@@ -634,6 +619,10 @@ class RepeatRule(CompoundRule):
                 "([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) "
                 "[<n> times] "
                 "[<final_command>]")
+        repeated_command = Compound(spec="[<n>] <repeatable_command>",
+                                    extras=[IntegerRef("n", 1, 21, default=1),
+                                            utils.renamed_element("repeatable_command", repeatable_command)],
+                                    value_func=lambda node, extras: (extras["repeatable_command"] + Pause("5")) * Repeat(extras["n"]))
         full_key_element = RuleRef(rule=utils.create_rule("full_key_rule", full_key_action_map, {}), name="single_key")
         combo_key_element = Compound(spec="[<n>] <modifier> <single_key>",
                                      extras=[IntegerRef("n", 1, 21, default=1),
@@ -648,18 +637,14 @@ class RepeatRule(CompoundRule):
                                              })),
                                              full_key_element],
                                      value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
-        repeated_key_element = Compound(spec="[<n>] <repeatable_command>",
-                                        extras=[IntegerRef("n", 1, 21, default=1),
-                                                utils.renamed_element("repeatable_command", repeatable_command)],
-                                        value_func=lambda node, extras: (extras["repeatable_command"] + Pause("5")) * Repeat(extras["n"]))
         extras = [
-            Repetition(RuleWrap(None, Alternative([command, combo_key_element, repeated_key_element])), min=1, max = 5, name="sequence"),
+            Repetition(RuleWrap(None, Alternative([command, repeated_command, combo_key_element])), min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
             Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
             utils.renamed_element("dictation", dictation_element),
             utils.renamed_element("terminal_command", terminal_command),
-            IntegerRef("n", 1, 100),  # Times to repeat the sequence.
+            IntegerRef("n", 1, 21),  # Times to repeat the sequence.
             RuleRef(rule=final_rule, name="final_command"),
         ]
         defaults = {

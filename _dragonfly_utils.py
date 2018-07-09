@@ -133,6 +133,18 @@ def combine_contexts(context1, context2):
     return context1 & context2
 
 
+class ModifiedAction(ActionBase):
+    def __init__(self, name, action):
+        ActionBase.__init__(self)
+        self.name = name
+        self.action = action
+
+    def _execute(self, data=None):
+        modifier = data[self.name]
+        modified_action = modifier(self.action)
+        modified_action.execute(data)
+
+
 class SwitchWindows(DynStrActionBase):
     """Simulates the effects of alt-tab. The constructor argument should be a string
     representing the number of times to effectively press the "tab" button if
