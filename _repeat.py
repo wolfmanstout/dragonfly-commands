@@ -31,6 +31,7 @@ from dragonfly import (
     Alternative,
     AppContext,
     Choice,
+    Compound,
     CompoundRule,
     Config,
     DictList,
@@ -257,6 +258,7 @@ except:
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
 
+# TODO: Refactor functionality into RepeatRule.
 def add_key_repeats(key_action_map):
     return dict([("[<n>] (" + k + ")", (v + Pause("5")) * Repeat(extra="n"))
                  for (k, v) in key_action_map.items()])
@@ -310,10 +312,6 @@ class ModifiedAction(ActionBase):
         modified_action = modifier(self.action)
         modified_action.execute(data)
 
-
-full_key_combo_action_map = add_key_repeats(
-    dict([("<modifier> (" + k + ")", ModifiedAction("modifier", v))
-          for (k, v) in full_single_key_action_map.items()]))
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
@@ -479,15 +477,6 @@ command_element_map = {
         ListRef(None, suffix_list),
         ListRef(None, saved_word_list),
     ])),
-    "modifier": RuleWrap(None, Choice(None, {
-        "control": lambda action: Key("ctrl:down") + action + Key("ctrl:up"),
-        "alt|meta|under": lambda action: Key("alt:down") + action + Key("alt:up"),
-        "shift": lambda action: Key("shift:down") + action + Key("shift:up"),
-        "control (alt|meta|under)": lambda action: Key("ctrl:down, alt:down") + action + Key("ctrl:up, alt:up"),
-        "control shift": lambda action: Key("ctrl:down, shift:down") + action + Key("ctrl:up, shift:up"),
-        "(alt|meta|under) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
-        "control (alt|meta|under) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
-    })),
 }
 
 #-------------------------------------------------------------------------------
@@ -649,8 +638,22 @@ class RepeatRule(CompoundRule):
                 "([<dictation_sequence>] [terminal <dictation>] | <terminal_command>) "
                 "[<n> times] "
                 "[<final_command>]")
+        single_key_element = RuleRef(rule=utils.create_rule("single_key_rule", full_single_key_action_map, {}), name="single_key")
+        key_combo_element = Compound(spec="[<n>] <modifier> <single_key>",
+                                     extras=[IntegerRef("n", 1, 21, default=1),
+                                             RuleWrap("modifier", Choice(None, {
+                                                 "control": lambda action: Key("ctrl:down") + action + Key("ctrl:up"),
+                                                 "alt|meta|under": lambda action: Key("alt:down") + action + Key("alt:up"),
+                                                 "shift": lambda action: Key("shift:down") + action + Key("shift:up"),
+                                                 "control (alt|meta|under)": lambda action: Key("ctrl:down, alt:down") + action + Key("ctrl:up, alt:up"),
+                                                 "control shift": lambda action: Key("ctrl:down, shift:down") + action + Key("ctrl:up, shift:up"),
+                                                 "(alt|meta|under) shift": lambda action: Key("alt:down, shift:down") + action + Key("alt:up, shift:up"),
+                                                 "control (alt|meta|under) shift": lambda action: Key("ctrl:down, alt:down, shift:down") + action + Key("ctrl:up, alt:up, shift:up"),
+                                             })),
+                                             single_key_element],
+                                     value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
         extras = [
-            Repetition(command, min=1, max = 5, name="sequence"),
+            Repetition(Alternative([command, key_combo_element]), min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
                         name="nested_repetitions"),
             Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
@@ -786,7 +789,6 @@ class MyEnvironment(object):
 
 global_environment = MyEnvironment(name="Global",
                                    action_map=command_action_map,
-                                   terminal_action_map=full_key_combo_action_map,
                                    element_map=command_element_map)
 
 
