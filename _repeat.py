@@ -306,33 +306,36 @@ class ModifiedAction(ActionBase):
         modified_action.execute(data)
 
 
+repeatable_action_map = utils.combine_maps(
+    standalone_key_action_map,
+    {
+        "after": Key("c-right"),
+        "before": Key("c-left"),
+        # TODO: Add support for selection commands without deletion.
+        "afters delete": Key("c-del"),
+        "befores delete": Key("c-backspace"),
+        "ahead": Key("a-f"),
+        "behind": Key("a-b"),
+        "aheads delete": Key("a-d"),
+        "behinds delete": Key("a-backspace"),
+        "kill": Key("c-k"),
+        "screen up": Key("pgup"),
+        "screen down": Key("pgdown"),
+        "rights delete": Key("del"),
+        "(lefts|leffs) delete": Key("backspace"),
+        "cancel": Key("escape"),
+    })
+
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
 command_action_map = utils.combine_maps(
     utils.text_map_to_action_map(symbols_map),
     {
-        "[<n>] after": Key("c-right/5:%(n)d"),
-        "[<n>] before": Key("c-left/5:%(n)d"),
-        # TODO: Add support for selection commands without deletion.
-        "[<n>] afters delete": Key("c-del/5:%(n)d"),
-        "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
-        "[<n>] ahead": Key("a-f/5:%(n)d"),
-        "[<n>] behind": Key("a-b/5:%(n)d"),
-        "[<n>] aheads delete": Key("a-d/5:%(n)d"),
-        "[<n>] behinds delete": Key("a-backspace/5:%(n)d"),
-        "[<n>] kill": Key("c-k/5:%(n)d"),
-        "[<n>] screen up": Key("pgup/5:%(n)d"),
-        "[<n>] screen down": Key("pgdown/5:%(n)d"),
         "go home|[go] west": Key("home"),
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
-        "[<n>] rights delete": Key("del/5:%(n)d"),
-        # TODO train lefts?
-        "[<n>] (lefts|leffs) delete": Key("backspace/5:%(n)d"),
-        # Separate for overrides.
-        "cancel": Key("escape"),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
@@ -620,7 +623,7 @@ final_rule = utils.create_rule("FinalRule",
 #  actions and the number of times to repeat them.
 class RepeatRule(CompoundRule):
 
-    def __init__(self, name, command, terminal_command):
+    def __init__(self, name, command, repeatable_command, terminal_command):
         # Here we define this rule's spoken-form and special elements. Note that
         # nested_repetitions is the only one that contains Repetitions, and it
         # is not itself repeated. This is for performance purposes. We also
@@ -645,11 +648,10 @@ class RepeatRule(CompoundRule):
                                              })),
                                              full_key_element],
                                      value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
-        standalone_key_element = RuleRef(rule=utils.create_rule("standalone_key_rule", standalone_key_action_map, {}), name="single_key")
-        repeated_key_element = Compound(spec="[<n>] <single_key>",
+        repeated_key_element = Compound(spec="[<n>] <repeatable_command>",
                                         extras=[IntegerRef("n", 1, 21, default=1),
-                                                standalone_key_element],
-                                        value_func=lambda node, extras: (extras["single_key"] + Pause("5")) * Repeat(extras["n"]))
+                                                utils.renamed_element("repeatable_command", repeatable_command)],
+                                        value_func=lambda node, extras: (extras["repeatable_command"] + Pause("5")) * Repeat(extras["n"]))
         extras = [
             Repetition(RuleWrap(None, Alternative([command, combo_key_element, repeated_key_element])), min=1, max = 5, name="sequence"),
             Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
@@ -765,11 +767,13 @@ class MyEnvironment(object):
                  parent=None,
                  context=None,
                  action_map=None,
+                 repeatable_action_map=None,
                  terminal_action_map=None,
                  element_map=None):
         self.environment = Environment(
             name,
             {"command": (action_map or {}, element_map or {}),
+             "repeatable_command": (repeatable_action_map or {}, element_map or {}),
              "terminal_command": (terminal_action_map or {}, element_map or {})},
             context,
             parent.environment if parent else None)
@@ -778,8 +782,8 @@ class MyEnvironment(object):
         self.environment.add_child(child.environment)
 
     def install(self):
-        def create_exported_rule(name, command, terminal_command):
-            return RepeatRule(name, command or Empty(), terminal_command or Empty())
+        def create_exported_rule(name, command, terminal_command, repeatable_command):
+            return RepeatRule(name, command or Empty(), repeatable_command or Empty(), terminal_command or Empty())
         return self.environment.install(create_exported_rule)
 
 
@@ -787,6 +791,7 @@ class MyEnvironment(object):
 
 global_environment = MyEnvironment(name="Global",
                                    action_map=command_action_map,
+                                   repeatable_action_map=repeatable_action_map,
                                    element_map=command_element_map)
 
 
@@ -895,14 +900,26 @@ class UseLinesAction(ActionBase):
             Key("c-a").execute()
         self.post_action.execute(data)
 
+emacs_repeatable_action_map = {
+    # Overrides
+    # NX doesn't forward <delete> properly, so we avoid those bindings.
+    "rights delete": Key("c-d"),
+    "afters delete": Key("as-d"),
+
+    # Movement
+    "preev": Key("c-r"),
+    "next": Key("c-s"),
+
+    # Undo
+    "cancel": Key("c-g"),
+    "(shuck|undo)": Key("c-slash"),
+    "redo": Key("c-question"),
+}
 
 emacs_action_map = {
     # Overrides
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
     "[<n>] down": Key("c-u") + Text("%(n)s") + Key("down"),
-    # NX doesn't forward <delete> properly, so we avoid those bindings.
-    "[<n>] rights delete": Key("c-d:%(n)d"),
-    "[<n>] afters delete": Key("as-d:%(n)d"),
     "all select": Key("c-x, h"),
     "all edit": Key("c-x, h, c-w") + utils.RunApp("notepad") + Key("c-v"),
     "this edit": Key("c-w") + utils.RunApp("notepad") + Key("c-v"),
@@ -914,7 +931,6 @@ emacs_action_map = {
     "preelin": Key("a-p"),
     "nollin": Key("a-n"),
     "prefix": Key("c-u"),
-    "quit": Key("q"),
     "refresh": Key("g"),
     "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
 
@@ -926,12 +942,6 @@ emacs_action_map = {
     "help back": Key("c-c, c-b"),
     "customize": Exec("customize-apropos"),
     "kill emacs server": Exec("ws-stop-all"),
-
-    # Undo
-    "cancel": Key("c-g"),
-    "cancel all": Key("c-g/5:3"),
-    "(shuck|undo)": Key("c-slash"),
-    "redo": Key("c-question"),
 
     # Window manipulation
     "split fub": Key("c-x, 3"),
@@ -989,8 +999,6 @@ emacs_action_map = {
     "jump change": Key("c-c, c, c"),
     "jump symbol": Key("a-i"),
     "swap mark": Key("c-c, c-x"),
-    "[<n>] preev": Key("c-r/5:%(n)d"),
-    "[<n>] next": Key("c-s/5:%(n)d"),
     "edit search": Key("a-e"),
     "word search": Key("a-s, w"),
     "symbol search": Key("a-s, underscore"),
@@ -1158,6 +1166,7 @@ emacs_environment = MyEnvironment(name="Emacs",
                                   parent=global_environment,
                                   context=linux.UniversalAppContext(title = "Emacs editor"),
                                   action_map=emacs_action_map,
+                                  repeatable_action_map=emacs_repeatable_action_map,
                                   terminal_action_map=emacs_terminal_action_map,
                                   element_map=emacs_element_map)
 
@@ -1241,29 +1250,28 @@ emacs_shell_environment = MyEnvironment(name="EmacsShell",
 
 ### Shell
 
+shell_repeatable_action_map = {
+    "screen up": Key("s-pgup"),
+    "screen down": Key("s-pgdown"),
+    "rights delete": Key("c-d"),
+    "tab left": Key("cs-left"),
+    "tab right": Key("cs-right"),
+    "preev": Key("c-r"),
+    "next": Key("c-s"),
+    "cancel": Key("c-g"),
+    "tab close": Key("cs-w"),
+}
 shell_action_map = utils.combine_maps(
     shell_command_map,
     {
+        "cut": Key("cs-x"),
         "copy": Key("cs-c"),
         "paste": Key("cs-v"),
-        "cut": Key("cs-x"),
-        "[<n>] screen up": Key("s-pgup/5:%(n)d"),
-        "[<n>] screen down": Key("s-pgdown/5:%(n)d"),
-        "[<n>] rights delete": Key("c-d/5:%(n)d"),
-        "[<n>] tab left": Key("cs-left/5:%(n)d"),
-        "[<n>] tab right": Key("cs-right/5:%(n)d"),
         "tab move [<n>] left": Key("cs-pgup/5:%(n)d"),
         "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
         "go tab <tab_n>": Key("a-%(tab_n)d"),
         "go tab last": Key("a-1, cs-left"),
-        "preev": Key("c-r"),
-        "next": Key("c-s"),
-        "cancel": Key("c-g"),
         "tab new": Key("cs-t"),
-        "[<n>] tab close": Key("cs-w/5:%(n)d"),
-        "text down": Key("f"),
-        "text up": Key("b"),
-        "quit": Key("q"),
         "kill process": Key("c-c"),
     })
 
@@ -1275,25 +1283,25 @@ shell_environment = MyEnvironment(name="Shell",
                                   parent=global_environment,
                                   context=linux.UniversalAppContext(title=" - Terminal"),
                                   action_map=shell_action_map,
+                                  repeatable_action_map=shell_repeatable_action_map,
                                   element_map=shell_element_map)
 
 
 ### Cmder
 
+cmder_repeatable_action_map = {
+    "tab left": Key("cs-tab"),
+    "tab right": Key("c-tab"),
+    "preev": Key("c-r"),
+    "next": Key("c-s"),
+    "cancel": Key("c-g"),
+    "tab close": Key("c-w"),
+}
 cmder_action_map = utils.combine_maps(
     shell_command_map,
     {
-        "[<n>] tab left": Key("cs-tab/5:%(n)d"),
-        "[<n>] tab right": Key("c-tab/5:%(n)d"),
-        "preev": Key("c-r"),
-        "next": Key("c-s"),
-        "cancel": Key("c-g"),
         "tab (new|bash)": Key("as-5"),
         "tab dos": Key("as-2"),
-        "[<n>] tab close": Key("c-w/5:%(n)d"),
-        "text down": Key("f"),
-        "text up": Key("b"),
-        "quit": Key("q"),
         "kill process": Key("c-c"),
     })
 
@@ -1305,10 +1313,17 @@ cmder_environment = MyEnvironment(name="Cmder",
                                   parent=global_environment,
                                   context=AppContext(title="Cmder"),
                                   action_map=cmder_action_map,
+                                  repeatable_action_map=cmder_repeatable_action_map,
                                   element_map=cmder_element_map)
 
 
 ### Chrome
+
+chrome_repeatable_action_map = {
+    "tab right":           Key("c-tab"),
+    "tab left":           Key("cs-tab"),
+    "tab close":          Key("c-w"),
+}
 
 chrome_action_map = {
     "link": Key("c-comma"),
@@ -1317,7 +1332,6 @@ chrome_action_map = {
     "tab new":            Key("c-t"),
     "tab incognito":            Key("cs-n"),
     "window new": Key("c-n"),
-    "[<n>] tab close":          Key("c-w/5:%(n)d"),
     "go address":        Key("c-l"),
     "go [<n>] back":               Key("a-left/15:%(n)d"),
     "go [<n>] forward":            Key("a-right/15:%(n)d"),
@@ -1325,8 +1339,6 @@ chrome_action_map = {
     "go tab <tab_n>": Key("c-%(tab_n)d"),
     "go tab last": Key("c-9"),
     "go tab recent": Key("cs-1"),
-    "[<n>] tab right":           Key("c-tab:%(n)d"),
-    "[<n>] tab left":           Key("cs-tab:%(n)d"),
     "tab move [<n>] left": Key("cs-pgup/5:%(n)d"),
     "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
     "tab reopen":         Key("cs-t"),
@@ -1397,6 +1409,7 @@ chrome_environment = MyEnvironment(name="Chrome",
                                    parent=global_environment,
                                    context=(AppContext(title=" - Google Chrome") | AppContext(executable="firefox.exe") | AppContext(title="Mozilla Firefox")),
                                    action_map=chrome_action_map,
+                                   repeatable_action_map=chrome_repeatable_action_map,
                                    terminal_action_map=chrome_terminal_action_map,
                                    element_map=chrome_element_map)
 
