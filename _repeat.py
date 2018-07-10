@@ -387,7 +387,7 @@ except:
 
 dictation_key_action_map = {
     "enter|slap": Key("enter"),
-    "(space|spooce) [bar]": Key("space"),
+    "space|spooce|spacebar": Key("space"),
     "tab-key": Key("tab"),
 }
 
