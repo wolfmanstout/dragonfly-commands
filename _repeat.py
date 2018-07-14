@@ -1641,6 +1641,7 @@ gmail_action_map = {
     "go sent": Key("g, t"),
     "go drafts": Key("g, d"),
     "expand all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
+    "collapse all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Collapse all']"),
     "click to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
     "click cc": Key("cs-c"),
     "open chat": Key("q"),
