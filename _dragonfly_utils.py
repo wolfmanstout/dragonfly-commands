@@ -161,11 +161,11 @@ class SwitchWindows(DynStrActionBase):
             os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
             Pause("10").execute()
             if platform.release() == "8":
-                Key("tab:%d/25, enter" % (repeat - 1)).execute()
+                Key("tab:%d/10, enter" % (repeat - 1)).execute()
             else:
-                Key("right:%d/25, enter" % repeat).execute()
+                Key("right:%d/10, enter" % repeat).execute()
         else:
-            Key("alt:down, tab:%d/25, alt:up" % repeat).execute()
+            Key("alt:down, tab:%d/10, alt:up" % repeat).execute()
 
 
 class RunApp(ActionBase):
