@@ -44,6 +44,7 @@ from dragonfly import (
     Key,
     List,
     ListRef,
+    MappingRule,
     Mimic,
     Mouse,
     Optional,
@@ -203,6 +204,7 @@ symbols_map = {
     "equals sign twice": "==",
     "not equals": "!=",
     "plus equals": "+=",
+    "minus equals": "-=",
     "greater than": ">",
     "ruke": ">",
     "close angle": ">",
@@ -726,6 +728,43 @@ final_rule = utils.create_rule("FinalRule",
                                final_element_map)
 
 
+#-------------------------------------------------------------------------------
+# System for benchmarking other commands.
+
+class CommandBenchmark:
+    def __init__(self):
+        self.remaining_count = 0
+
+    def start(self, command, repeat_count):
+        if self.remaining_count > 0:
+            print("Benchmark already running!")
+            return
+        self.repeat_count = repeat_count
+        self.remaining_count = repeat_count
+        self.command = command
+        self.start_time = time.time()
+        Mimic(*self.command.split()).execute()
+
+    def record_and_replay_recognition(self):
+        if self.remaining_count == 0:
+            print("Benchmark not running!")
+            return
+        self.remaining_count -= 1
+        if self.remaining_count == 0:
+            print("Average response for command %s: %.10f" % (self.command, (time.time() - self.start_time) / self.repeat_count))
+        else:
+            Mimic(*self.command.split()).execute()
+
+    def is_active(self):
+        return self.remaining_count > 0
+
+
+def reset_benchmark():
+    global command_benchmark
+    command_benchmark = CommandBenchmark()
+
+reset_benchmark()
+
 #---------------------------------------------------------------------------
 # Here we define the top-level rule which the user can say.
 
@@ -817,6 +856,9 @@ class RepeatRule(CompoundRule):
                 terminal_command.execute()
         if final_command:
             final_command.execute()
+        global command_benchmark
+        if command_benchmark.is_active():
+            command_benchmark.record_and_replay_recognition()
 
 
 #-------------------------------------------------------------------------------
@@ -1749,6 +1791,18 @@ linux_grammar = Grammar("linux")   # Create this module's grammar.
 linux_grammar.add_rule(linux_rule)
 linux_grammar.load()
 grammars.append(linux_grammar)
+
+class BenchmarkRule(MappingRule):
+    mapping = {
+        "benchmark [<n>] command <command>": Function(lambda command, n: command_benchmark.start(str(command), n)),
+        "benchmark reset": Function(reset_benchmark),
+    }
+    extras = [Dictation("command"), IntegerRef("n", 1, 10, default=1)]
+
+benchmark_grammar = Grammar("benchmark")
+benchmark_grammar.add_rule(BenchmarkRule())
+benchmark_grammar.load()
+grammars.append(benchmark_grammar)
 
 
 #-------------------------------------------------------------------------------
