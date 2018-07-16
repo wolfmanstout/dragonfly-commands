@@ -329,35 +329,36 @@ quick_letters_map = {
     "zooch": "z",
 }
 
-long_letters_map = {
-    "alpha": "a",
-    "bravo": "b",
-    "charlie": "c",
-    "delta": "d",
-    "echo": "e",
-    "foxtrot": "f",
-    "golf": "g",
-    "hotel": "h",
-    "india": "i",
-    "juliet": "j",
-    "kilo": "k",
-    "lima": "l",
-    "mike": "m",
-    "november": "n",
-    "oscar": "o",
-    "poppa": "p",
-    "quebec": "q",
-    "romeo": "r",
-    "sierra": "s",
-    "tango": "t",
-    "uniform": "u",
-    "victor": "v",
-    "whiskey": "w",
-    "x-ray": "x",
-    "yankee": "y",
-    "zulu": "z",
-    "dot": ".",
-}
+# Disabled for efficiency.
+# long_letters_map = {
+#     "alpha": "a",
+#     "bravo": "b",
+#     "charlie": "c",
+#     "delta": "d",
+#     "echo": "e",
+#     "foxtrot": "f",
+#     "golf": "g",
+#     "hotel": "h",
+#     "india": "i",
+#     "juliet": "j",
+#     "kilo": "k",
+#     "lima": "l",
+#     "mike": "m",
+#     "november": "n",
+#     "oscar": "o",
+#     "poppa": "p",
+#     "quebec": "q",
+#     "romeo": "r",
+#     "sierra": "s",
+#     "tango": "t",
+#     "uniform": "u",
+#     "victor": "v",
+#     "whiskey": "w",
+#     "x-ray": "x",
+#     "yankee": "y",
+#     "zulu": "z",
+#     "dot": ".",
+# }
 
 prefixes = [
     "num",
@@ -368,7 +369,7 @@ suffixes = [
     "bytes",
 ]
 
-letters_map = utils.combine_maps(quick_letters_map, long_letters_map)
+letters_map = utils.combine_maps(quick_letters_map)
 
 chars_map = utils.combine_maps(letters_map, numbers_map, symbols_map)
 
@@ -533,9 +534,17 @@ if namespace:
 # Simple elements that may be referred to within a rule.
 
 symbols_dict_list = DictList("symbols_dict_list", symbols_map)
+symbol_element = DictListRef(None, symbols_dict_list)
+# symbol_element = RuleWrap(None, Choice(None, symbols_map))
 numbers_dict_list = DictList("numbers_dict_list", numbers_map)
+number_element = DictListRef(None, numbers_dict_list)
+# number_element = RuleWrap(None, Choice(None, numbers_map))
 letters_dict_list = DictList("letters_dict_list", letters_map)
+letter_element = DictListRef(None, letters_dict_list)
+# letter_element = RuleWrap(None, Choice(None, letters_map))
 chars_dict_list = DictList("chars_dict_list", chars_map)
+char_element = DictListRef(None, chars_dict_list)
+# char_element = RuleWrap(None, Choice(None, chars_map))
 saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
 context_phrase_list = List("context_phrase_list", [])
@@ -548,7 +557,7 @@ mixed_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
         Dictation(),
-        DictListRef(None, letters_dict_list),
+        letter_element,
         ListRef(None, saved_word_list),
     ]),
     Optional(ListRef(None, suffix_list)),
@@ -558,7 +567,7 @@ mixed_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
 custom_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
-        DictListRef(None, letters_dict_list),
+        letter_element,
         ListRef(None, saved_word_list),
     ]),
     Optional(ListRef(None, suffix_list)),
@@ -566,24 +575,24 @@ custom_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
 
 # A sequence of either short letters or long letters.
 letters_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, letters_dict_list), min=1, max=10))
+    "", letter_element, min=1, max=10))
 
 # A sequence of numbers.
 numbers_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, numbers_dict_list), min=1, max=10))
+    "", number_element, min=1, max=10))
 
 # A sequence of characters.
 chars_element = RuleWrap(None, utils.JoinedRepetition(
-    "", DictListRef(None, chars_dict_list), min=1, max=5))
+    "", char_element, min=1, max=5))
 
 # Simple element map corresponding to command action maps from earlier.
 command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
-    "char": DictListRef(None, chars_dict_list),
+    "char": char_element,
     "custom_text": RuleWrap(None, Alternative([
         Dictation(),
-        DictListRef(None, chars_dict_list),
+        chars_element,
         ListRef(None, prefix_list),
         ListRef(None, suffix_list),
         ListRef(None, saved_word_list),
@@ -607,7 +616,7 @@ symbol_format_rule = utils.create_rule(
         "padded <symbol>": Text(" %(symbol)s "),
     },
     {
-        "symbol": DictListRef(None, symbols_dict_list),
+        "symbol": symbol_element,
     }
 )
 
@@ -647,19 +656,20 @@ single_character_rule = utils.create_rule(
     "SingleCharacterRule",
     character_action_map,
     {
-        "numerals": DictListRef(None, numbers_dict_list),
-        "letters": DictListRef(None, letters_dict_list),
-        "chars": DictListRef(None, chars_dict_list),
+        "numerals": number_element,
+        "letters": letter_element,
+        "chars": char_element,
     }
 )
 
 # Rule for spelling a word letter by letter and formatting it.
-spell_format_rule = utils.create_rule(
-    "SpellFormatRule",
-    dict([("spell (" + k + ")", v)
-          for (k, v) in format_functions.items()]),
-    {"dictation": letters_element}
-)
+# Disabled for efficiency.
+# spell_format_rule = utils.create_rule(
+#     "SpellFormatRule",
+#     dict([("spell (" + k + ")", v)
+#           for (k, v) in format_functions.items()]),
+#     {"dictation": letters_element}
+# )
 
 # Rule for printing a sequence of characters.
 character_rule = utils.create_rule(
@@ -685,11 +695,13 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=format_rule),
     RuleRef(rule=symbol_format_rule),
     RuleRef(rule=pure_format_rule),
-    RuleRef(rule=custom_format_rule),
+    # Disabled for efficiency.
+    # RuleRef(rule=custom_format_rule),
     RuleRef(rule=utils.create_rule("DictationActionRule",
                                    dictation_action_map,
                                    command_element_map)),
-    RuleRef(rule=single_character_rule),
+    # Disabled for efficiency.
+    # RuleRef(rule=single_character_rule),
 ]))
 
 
@@ -806,7 +818,7 @@ class RepeatRule(CompoundRule):
                                      value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
         extras = [
             Repetition(RuleWrap(None, Alternative([command, repeated_command, combo_key_element])), min=1, max = 5, name="sequence"),
-            Alternative([RuleRef(rule=character_rule), RuleRef(rule=spell_format_rule)],
+            Alternative([RuleRef(rule=character_rule)],
                         name="nested_repetitions"),
             Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
             utils.renamed_element("dictation", dictation_element),
