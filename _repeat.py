@@ -972,6 +972,7 @@ shell_command_map = utils.combine_maps({
     "fig XL": Text("hg xl "),
     "fig sync": Text("hg sync "),
     "fig checkout": Text("hg checkout "),
+    "fig checkout P4 head": Text("hg checkout p4head "),
     "fig commit": Text("hg commit -m "),
     "fig diff": Text("hg diff "),
     "fig diff P4 base": Text("hg diff -r p4base "),
@@ -983,7 +984,6 @@ shell_command_map = utils.combine_maps({
     "list": Text("ls -l "),
     "make dear": Text("mkdir "),
     "ps (a UX|aux)": Text("ps aux "),
-    "kill command": Text("kill "),
     "pipe": Text(" | "),
     "CH mod": Text("chmod "),
     "TK diff": Text("tkdiff "),
@@ -1105,11 +1105,11 @@ emacs_action_map = {
     "exec": Key("a-x"),
     "helm": Key("c-x, c"),
     "helm resume": Key("c-x, c, b"),
-    "preelin": Key("a-p"),
-    "nollin": Key("a-n"),
+    "this word preev": Key("a-p"),
+    "this word next": Key("a-n"),
     "prefix": Key("c-u"),
     "refresh": Key("g"),
-    "open link": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
+    "this link open": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
 
     # Emacs
     "help variable": Key("c-h, v"),
@@ -1118,31 +1118,30 @@ emacs_action_map = {
     "help mode": Key("c-h, m"),
     "help back": Key("c-c, c-b"),
     "customize": Exec("customize-apropos"),
-    "kill emacs server": Exec("ws-stop-all"),
 
     # Window manipulation
-    "split fub": Key("c-x, 3"),
-    "clote fub": Key("c-x, 0"),
-    "done fub": Key("c-x, hash"),
-    "only fub": Key("c-x, 1"),
-    "other fub": Key("c-x, o"),
-    "die fub": Key("c-x, k"),
-    "even fub": Key("c-x, plus"),
-    "up fub": Exec("windmove-up"),
-    "down fub": Exec("windmove-down"),
-    "left fub": Exec("windmove-left"),
-    "right fub": Exec("windmove-right"),
-    "split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+    "buff open": Key("c-x, b"),
+    "buff split": Key("c-x, 3"),
+    "buff split header": Key("c-x, 3, c-x, o, c-x, c-h"),
+    "buff close": Key("c-x, 0"),
+    "buff close other": Key("c-x, 1"),
+    "buff done": Key("c-x, hash"),
+    "buff other": Key("c-x, o"),
+    "buff kill": Key("c-x, k"),
+    "buff even": Key("c-x, plus"),
+    "buff up": Exec("windmove-up"),
+    "buff down": Exec("windmove-down"),
+    "buff left": Exec("windmove-left"),
+    "buff right": Exec("windmove-right"),
 
     # Filesystem
     "save": Key("c-x, c-s"),
     "save as": Key("c-x, c-w"),
     "save all": Key("c-x, s"),
     "save all now": Key("c-u, c-x, s"),
-    "buff": Key("c-x, b"),
-    "oaf|oafile": Key("c-x, c-f"),
+    "file open": Key("c-x, c-f"),
     "no ido": Key("c-f"),
-    "dear red": Key("c-d"),
+    "dear open": Key("c-d"),
     "project file": Key("c-c, p, f"),
     "simulator file": Key("c-c, c, p, s"),
     "switch project": Key("c-c, p, p"),
@@ -1416,6 +1415,8 @@ emacs_org_environment = MyEnvironment(name="EmacsOrg",
 emacs_shell_action_map = utils.combine_maps(
     shell_command_map,
     {
+        "shell up": Key("a-p"),
+        "shell down": Key("a-n"),
         "shell (preev|back)": Key("a-r"),
         "show output": Key("c-c, c-r"),
     })
@@ -1449,7 +1450,6 @@ shell_action_map = utils.combine_maps(
         "go tab <tab_n>": Key("a-%(tab_n)d"),
         "go tab last": Key("a-1, cs-left"),
         "tab new": Key("cs-t"),
-        "kill process": Key("c-c"),
     })
 
 shell_element_map = {
@@ -1479,7 +1479,6 @@ cmder_action_map = utils.combine_maps(
     {
         "tab (new|bash)": Key("as-5"),
         "tab dos": Key("as-2"),
-        "kill process": Key("c-c"),
     })
 
 cmder_element_map = {
