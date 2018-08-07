@@ -1105,11 +1105,11 @@ emacs_action_map = {
     "exec": Key("a-x"),
     "helm": Key("c-x, c"),
     "helm resume": Key("c-x, c, b"),
-    "this word preev": Key("a-p"),
-    "this word next": Key("a-n"),
+    "word preev": Key("a-p"),
+    "word next": Key("a-n"),
     "prefix": Key("c-u"),
     "refresh": Key("g"),
-    "this link open": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
+    "link open": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
 
     # Emacs
     "help variable": Key("c-h, v"),

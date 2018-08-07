@@ -53,13 +53,13 @@ def format_q_studley(dictation):
     return "Q" + "".join(words)
 
 # Format: somewords
-def format_one_word(dictation):
-    """ [all] one word <dictation> """
+def format_compound(dictation):
+    """ [all] compound <dictation> """
     return "".join(text.split_dictation(dictation))
 
 # Format: SOMEWORDS
-def format_upper_one_word(dictation):
-    """ upper one word <dictation> """
+def format_upper_compound(dictation):
+    """ upper compound <dictation> """
     words = [word.upper() for word in text.split_dictation(dictation)]
     return "".join(words)
 
