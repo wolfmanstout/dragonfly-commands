@@ -419,26 +419,26 @@ full_key_action_map = utils.combine_maps(
         "home": Key("home"),
         "end": Key("end"),
         "tab": Key("tab"),
-        "delete": Key("delete"),
+        "delete": Key("del"),
     })
 
 repeatable_action_map = utils.combine_maps(
     standalone_key_action_map,
     {
+        "delete": Key("del"),
         "after": Key("c-right"),
         "before": Key("c-left"),
-        # TODO: Add support for selection commands without deletion.
-        "afters delete": Key("c-del"),
-        "befores delete": Key("c-backspace"),
+        "afters": Key("shift:down, c-right, shift:up"),
+        "befores": Key("shift:down, c-left, shift:up"),
         "ahead": Key("a-f"),
         "behind": Key("a-b"),
-        "aheads delete": Key("a-d"),
-        "behinds delete": Key("a-backspace"),
+        "aheads": Key("shift:down, a-f, shift:up"),
+        "behinds": Key("shift:down, a-b, shift:up"),
+        "rights": Key("shift:down, right, shift:up"),
+        "lefts": Key("shift:down, left, shift:up"),
         "kill": Key("c-k"),
         "screen up": Key("pgup"),
         "screen down": Key("pgdown"),
-        "rights delete": Key("del"),
-        "(lefts|leffs) delete": Key("backspace"),
         "cancel": Key("escape"),
     })
 
@@ -973,6 +973,7 @@ shell_command_map = utils.combine_maps({
     "fig sync": Text("hg sync "),
     "fig checkout": Text("hg checkout "),
     "fig checkout P4 head": Text("hg checkout p4head "),
+    "fig add": Text("hg add "),
     "fig commit": Text("hg commit -m "),
     "fig diff": Text("hg diff "),
     "fig diff P4 base": Text("hg diff -r p4base "),
@@ -1079,10 +1080,14 @@ class UseLinesAction(ActionBase):
 
 emacs_repeatable_action_map = {
     # Overrides
-    # NX doesn't forward <delete> properly, so we avoid those bindings.
-    "rights delete": Key("c-d"),
-    "afters delete": Key("as-d"),
-
+    "afters": Key("c-space, c-right"),
+    "befores": Key("c-space, c-left"),
+    "aheads": Key("c-space, a-f"),
+    "behinds": Key("c-space, a-b"),
+    "rights": Key("c-space, right"),
+    "lefts": Key("c-space, left"),
+    "delete": Key("c-c, c, c-w"),
+    
     # Movement
     "preev": Key("c-r"),
     "next": Key("c-s"),
@@ -1118,7 +1123,7 @@ emacs_action_map = {
     "helm": Key("c-x, c"),
     "helm open": Key("c-x, c, b"),
     "prefix": Key("c-u"),
-    "refresh": Key("g"),
+    "reload": Key("g"),
     "quit": Key("q"),
     "link open": Key("c-c, c, u/25") + OpenClipboardUrlAction(),
 
@@ -1132,6 +1137,7 @@ emacs_action_map = {
 
     # Window manipulation
     "buff open": Key("c-x, b"),
+    "buff switch": Key("c-x, b, enter"),
     "buff split": Key("c-x, 3"),
     "buff split header": Key("c-x, 3, c-x, o, c-x, c-h"),
     "buff close": Key("c-x, 0"),
@@ -1152,7 +1158,7 @@ emacs_action_map = {
     "save all now": Key("c-u, c-x, s"),
     "file open": Key("c-x, c-f"),
     "no ido": Key("c-f"),
-    "dir open": Key("c-d"),
+    "directory open": Key("c-x, d"),
     "file open project": Key("c-c, p, f"),
     "file open simulator": Key("c-c, c, p, s"),
     "project open": Key("c-c, p, p"),
@@ -1206,7 +1212,7 @@ emacs_action_map = {
     "this dupe [<n>] down": Key("c-u") + Text("%(n)d") + Key("as-down"),
     "line clear": Key("c-a, c-c, c, k"),
     "(line|lines) join": Key("as-6"),
-    "line open <n1>": jump_to_line("%(n1)s") + Key("a-enter"),
+    "line <n1> open": jump_to_line("%(n1)s") + Key("a-enter"),
     "this select": Key("c-x, c-x"),
     "this indent": Key("ca-backslash"),
     "this comment": Key("a-semicolon"),
@@ -1268,7 +1274,7 @@ emacs_action_map = {
 
     # Shell
     "shell open": Exec("shell"),
-    "shell [open] dir": Key("c-c, c, dollar"),
+    "shell open directory": Key("c-c, c, dollar"),
 
     # Clojure
     "closure compile": Key("c-c, c-k"),
@@ -1425,7 +1431,6 @@ emacs_shell_environment = MyEnvironment(name="EmacsShell",
 shell_repeatable_action_map = {
     "screen up": Key("s-pgup"),
     "screen down": Key("s-pgdown"),
-    "rights delete": Key("c-d"),
     "tab left": Key("cs-left"),
     "tab right": Key("cs-right"),
     "preev": Key("c-r"),
@@ -1770,7 +1775,6 @@ analog_environment = MyEnvironment(name="Analog",
 ### Notepad
 
 notepad_action_map = {
-    "[<n>] befores delete": Key("shift:down, c-left/5:%(n)d, backspace, shift:up"),
     "transfer out": Key("c-a, c-x, a-f4") + utils.UniversalPaste(),
 }
 
