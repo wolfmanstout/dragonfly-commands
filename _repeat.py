@@ -425,7 +425,6 @@ full_key_action_map = utils.combine_maps(
 repeatable_action_map = utils.combine_maps(
     standalone_key_action_map,
     {
-        "delete": Key("del"),
         "after": Key("c-right"),
         "before": Key("c-left"),
         "afters": Key("shift:down, c-right, shift:up"),
@@ -448,6 +447,7 @@ repeatable_action_map = utils.combine_maps(
 command_action_map = utils.combine_maps(
     utils.text_map_to_action_map(symbols_map),
     {
+        "delete": Key("del"),
         "go home|[go] west": Key("home"),
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
@@ -1061,32 +1061,40 @@ class MarkLinesAction(ActionBase):
 class UseLinesAction(ActionBase):
     """Make use of lines within a range."""
 
-    def __init__(self, pre_action, post_action, tight=False):
+    def __init__(self, pre_action, post_action, tight=False, other_buffer=False):
         super(UseLinesAction, self).__init__()
         self.pre_action = pre_action
         self.post_action = post_action
         self.tight = tight
+        self.other_buffer = other_buffer
 
     def _execute(self, data=None):
-        # Set mark without activating.
-        Key("c-backslash").execute()
+        if self.other_buffer:
+            Key("c-x, o").execute()
+        else:
+            # Set mark without activating.
+            Key("c-backslash").execute()
         MarkLinesAction(self.tight).execute(data)
         self.pre_action.execute(data)
-        # Jump to mark twice then to the beginning of the line.
-        (Key("c-langle") + Key("c-langle")).execute()
+        # Jump back to the beginning of the selection.
+        Key("c-langle").execute()
+        if self.other_buffer:
+            Key("c-x, o").execute()
+        else:
+            # Jump back to the original position.
+            Key("c-langle").execute()
         if not self.tight:
             Key("c-a").execute()
         self.post_action.execute(data)
 
 emacs_repeatable_action_map = {
     # Overrides
-    "afters": Key("c-space, c-right"),
-    "befores": Key("c-space, c-left"),
-    "aheads": Key("c-space, a-f"),
-    "behinds": Key("c-space, a-b"),
-    "rights": Key("c-space, right"),
-    "lefts": Key("c-space, left"),
-    "delete": Key("c-c, c, c-w"),
+    "afters": None,
+    "befores": None,
+    "aheads": None,
+    "behinds": None,
+    "rights": None,
+    "lefts": None,
     
     # Movement
     "preev": Key("c-r"),
@@ -1137,6 +1145,7 @@ emacs_action_map = {
 
     # Window manipulation
     "buff open": Key("c-x, b"),
+    "buff open split": Key("c-x, 3, c-x, o, c-x, b"),
     "buff switch": Key("c-x, b, enter"),
     "buff split": Key("c-x, 3"),
     "buff split header": Key("c-x, 3, c-x, o, c-x, c-h"),
@@ -1144,7 +1153,7 @@ emacs_action_map = {
     "buff close other": Key("c-x, 1"),
     "buff done": Key("c-x, hash"),
     "buff other": Key("c-x, o"),
-    "buff kill": Key("c-x, k"),
+    "buff kill": Key("c-x, k, enter"),
     "buff even": Key("c-x, plus"),
     "buff up": Exec("windmove-up"),
     "buff down": Exec("windmove-down"),
@@ -1159,6 +1168,7 @@ emacs_action_map = {
     "file open": Key("c-x, c-f"),
     "no ido": Key("c-f"),
     "directory open": Key("c-x, d"),
+    "file open split": Key("c-x, 4, f"),
     "file open project": Key("c-c, p, f"),
     "file open simulator": Key("c-c, c, p, s"),
     "project open": Key("c-c, p, p"),
@@ -1180,7 +1190,7 @@ emacs_action_map = {
     "start": Key("a-m"),
     "line <line> long": Key("a-g, a-g") + Text("%(line)s") + Key("enter"),
     "line <n1> [short]": jump_to_line("%(n1)s"),
-    "line scroll": Key("c-l"),
+    "here scroll": Key("c-l"),
     "mark set": Key("c-space"),
     "mark save": Key("c-backslash"),
     "go mark": Key("c-langle"),
@@ -1199,17 +1209,24 @@ emacs_action_map = {
     "go after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
     "go before next <char>": Key("c-c, c, s") + Text("%(char)s"),
     "go after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
-    "screen up other": Key("c-minus, ca-v"),
-    "screen down other": Key("ca-v"),
+    "other screen up": Key("c-minus, ca-v"),
+    "other screen down": Key("ca-v"),
     "go eye <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
 
     # Editing
+    "delete": Key("c-c, c, c-w"),
+    "[<n>] afters": Key("c-space, c-right/5:%(n)d"),
+    "[<n>] befores": Key("c-space, c-left/5:%(n)d"),
+    "[<n>] aheads": Key("c-space, a-f/5:%(n)d"),
+    "[<n>] behinds": Key("c-space, a-b/5:%(n)d"),
+    "[<n>] rights": Key("c-space, right/5:%(n)d"),
+    "[<n>] lefts": Key("c-space, left/5:%(n)d"),
     "line open up": Key("a-enter"),
     "line open down": Key("c-enter"),
     "this move [<n>] up": Key("c-u") + Text("%(n)d") + Key("a-up"),
     "this move [<n>] down": Key("c-u") + Text("%(n)d") + Key("a-down"),
-    "this dupe [<n>] up": Key("c-u") + Text("%(n)d") + Key("as-up"),
-    "this dupe [<n>] down": Key("c-u") + Text("%(n)d") + Key("as-down"),
+    "this copy [<n>] up": Key("c-u") + Text("%(n)d") + Key("as-up"),
+    "this copy [<n>] down": Key("c-u") + Text("%(n)d") + Key("as-down"),
     "line clear": Key("c-a, c-c, c, k"),
     "(line|lines) join": Key("as-6"),
     "line <n1> open": jump_to_line("%(n1)s") + Key("a-enter"),
@@ -1227,10 +1244,14 @@ emacs_action_map = {
     "paste other": Key("a-y"),
     "<n1> through [<n2>]": MarkLinesAction(),
     "<n1> through [<n2>] short": MarkLinesAction(True),
-    "<n1> through [<n2>] dupe": UseLinesAction(Key("a-w"), Key("c-y")),
-    "<n1> through [<n2>] short dupe": UseLinesAction(Key("a-w"), Key("c-y"), True),
-    "<n1> through [<n2>] move": UseLinesAction(Key("c-w"), Key("c-y")),
-    "<n1> through [<n2>] short move": UseLinesAction(Key("c-w"), Key("c-y"), True),
+    "<n1> through [<n2>] copy here": UseLinesAction(Key("a-w"), Key("c-y")),
+    "<n1> through [<n2>] short copy here": UseLinesAction(Key("a-w"), Key("c-y"), tight=True),
+    "<n1> through [<n2>] move here": UseLinesAction(Key("c-w"), Key("c-y")),
+    "<n1> through [<n2>] short move here": UseLinesAction(Key("c-w"), Key("c-y"), tight=True),
+    "other <n1> through [<n2>] copy here": UseLinesAction(Key("a-w"), Key("c-y"), other_buffer=True),
+    "other <n1> through [<n2>] short copy here": UseLinesAction(Key("a-w"), Key("c-y"), tight=True, other_buffer=True),
+    "other <n1> through [<n2>] move here": UseLinesAction(Key("c-w"), Key("c-y"), other_buffer=True),
+    "other <n1> through [<n2>] short move here": UseLinesAction(Key("c-w"), Key("c-y"), tight=True, other_buffer=True),
     "layer select": Key("cas-2"),
     "layer kill": Key("ca-k"),
     "select more": Key("c-equals"),

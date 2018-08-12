@@ -33,8 +33,8 @@ class CommandRule(MappingRule):
         "confirm": Text("yes") + Key("enter"),
         "deny": Text("no") + Key("enter"),
         "relative line numbers": Exec("linum-relative-toggle"),
-        "revert buffer": Exec("revert-buffer"),
-        "exit out of Emacs": Key("c-x, c-c"),
+        "buff revert": Exec("revert-buffer"),
+        "emacs close now": Key("c-x, c-c"),
         }
     extras = [
         IntegerRef("n", 1, 20),

@@ -49,11 +49,17 @@ import _dragonfly_local as local
 # on the fly without defining a new class.
 
 def combine_maps(*maps):
-    """Merge the contents of multiple maps, giving precedence to later maps."""
+    """Merge the contents of multiple maps, giving precedence to later maps. Skips
+    empty maps and deletes entries with value None."""
     result = {}
     for map in maps:
-        if map:
-            result.update(map)
+        if not map:
+            continue
+        for key, value in map.iteritems():
+            if value is None and key in result:
+                del result[key]
+            else:
+                result[key] = value
     return result
 
 

@@ -17,9 +17,14 @@ def format_score(dictation):          # Function name must start with "format_".
     return "_".join(text.split_dictation(dictation))  # Put underscores between words.
 
 # Format: some_words_
-def format_field(dictation):
+def format_trail_score(dictation):
     """ trail score <dictation> """
     return "_".join(text.split_dictation(dictation)) + "_"
+
+# Format: _some_words
+def format_pre_score(dictation):
+    """ pre score <dictation> """
+    return "_" + "_".join(text.split_dictation(dictation))
 
 # Format: some_words()
 def format_under_function(dictation):
