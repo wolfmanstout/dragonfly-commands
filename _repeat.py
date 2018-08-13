@@ -57,6 +57,8 @@ from dragonfly import (
     get_engine,
 )
 import dragonfly.log
+import dragonfly.a11y
+import dragonfly.a11y.utils
 from selenium.webdriver.common.by import By
 
 import _dragonfly_utils as utils
@@ -388,6 +390,8 @@ except:
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
 
+a11y_controller = dragonfly.a11y.GetA11yController()
+
 dictation_key_action_map = {
     "enter|slap": Key("enter"),
     "space|spooce|spacebar": Key("space"),
@@ -452,6 +456,9 @@ command_action_map = utils.combine_maps(
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
+        # TODO Rename and replace built-in functionality once these have been more fully tested.
+        "my go before <text>": Function(lambda text: dragonfly.a11y.utils.move_cursor(a11y_controller, str(text), before=True)),
+        "my go after <text>": Function(lambda text: dragonfly.a11y.utils.move_cursor(a11y_controller, str(text), before=False)),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
