@@ -1155,9 +1155,8 @@ emacs_action_map = {
     "buff open split": Key("c-x, 3, c-x, o, c-x, b"),
     "buff switch": Key("c-x, b, enter"),
     "buff split": Key("c-x, 3"),
-    "buff split header": Key("c-x, 3, c-x, o, c-x, c-h"),
     "buff close": Key("c-x, 0"),
-    "buff close other": Key("c-x, 1"),
+    "other close|buff close other": Key("c-x, 1"),
     "buff done": Key("c-x, hash"),
     "buff other": Key("c-x, o"),
     "buff kill": Key("c-x, k, enter"),
@@ -1218,6 +1217,7 @@ emacs_action_map = {
     "go after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
     "other screen up": Key("c-minus, ca-v"),
     "other screen down": Key("ca-v"),
+    "other <n1> enter": Key("c-x, o") + jump_to_line("%(n1)s") + Key("enter"),
     "go eye <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
 
     # Editing
@@ -1239,7 +1239,7 @@ emacs_action_map = {
     "line <n1> open": jump_to_line("%(n1)s") + Key("a-enter"),
     "this select": Key("c-x, c-x"),
     "this indent": Key("ca-backslash"),
-    "this comment": Key("a-semicolon"),
+    "(this|here) comment": Key("a-semicolon"),
     "this format [clang]": Key("ca-q"),
     "this format comment": Key("a-q"),
     "replace": Key("as-5"),
@@ -1294,6 +1294,7 @@ emacs_action_map = {
 
     # C++
     "header open": Key("c-x, c-h"),
+    "header open split": Key("c-x, 3, c-x, o, c-x, c-h"),
     "import copy": Key("f5"),
     "import paste": Key("f6"),
 
@@ -1687,9 +1688,10 @@ calendar_environment = MyEnvironment(name="Calendar",
 ### Chrome: Code search
 
 code_search_action_map = {
-    "header": Key("r/25, h"),
-    "source": Key("r/25, c"),
-    "search bar": Key("slash"),
+    "header open": Key("r/25, h"),
+    "cc open": Key("r/25, c"),
+    "directory open": Key("r/25, p"),
+    "go search": Key("slash"),
 }
 code_search_environment = MyEnvironment(name="CodeSearch",
                                         parent=chrome_environment,
@@ -1865,7 +1867,11 @@ callbacks = Queue.Queue()
 def RunCallbacks():
     global callbacks
     while not callbacks.empty():
-        callbacks.get_nowait()()
+        callback = callbacks.get_nowait()
+        try:
+            callback()
+        except Exception as exception:
+            traceback.print_exc()
 
 
 timer = get_engine().create_timer(RunCallbacks, 0.1)
