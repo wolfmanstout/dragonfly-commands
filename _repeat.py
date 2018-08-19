@@ -57,8 +57,8 @@ from dragonfly import (
     get_engine,
 )
 import dragonfly.log
-import dragonfly.a11y
-import dragonfly.a11y.utils
+from dragonfly import a11y
+from dragonfly.a11y import utils as a11y_utils
 from selenium.webdriver.common.by import By
 
 import _dragonfly_utils as utils
@@ -390,7 +390,7 @@ except:
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
 
-a11y_controller = dragonfly.a11y.GetA11yController()
+a11y_controller = a11y.GetA11yController()
 
 dictation_key_action_map = {
     "enter|slap": Key("enter"),
@@ -445,6 +445,13 @@ repeatable_action_map = utils.combine_maps(
         "cancel": Key("escape"),
     })
 
+
+def select_words(text):
+    selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
+    Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
+                                                         selection_points[1][0], selection_points[1][1])).execute()
+
+    
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
@@ -457,9 +464,9 @@ command_action_map = utils.combine_maps(
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
         # TODO Rename and replace built-in functionality once these have been more fully tested.
-        "my go before <text>": Function(lambda text: dragonfly.a11y.utils.move_cursor(a11y_controller, str(text), before=True)),
-        "my go after <text>": Function(lambda text: dragonfly.a11y.utils.move_cursor(a11y_controller, str(text), before=False)),
-        "my words <text>": Function(lambda text: dragonfly.a11y.utils.select_text(a11y_controller, str(text))),
+        "my go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
+        "my go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
+        "my words <text>": Function(select_words),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
