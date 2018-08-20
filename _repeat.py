@@ -451,7 +451,16 @@ def select_words(text):
     Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
                                                          selection_points[1][0], selection_points[1][1])).execute()
 
-    
+
+def replace_words(text, replacement):
+    cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
+    select_words(text)
+    # TODO Add escaping.
+    Text(str(replacement)).execute()
+    # TODO Use actual selection length, not search phrase length.
+    if cursor_before:
+        a11y_utils.set_cursor_offset(a11y_controller, cursor_before + len(str(replacement)) - len(str(text)))
+
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
@@ -463,7 +472,8 @@ command_action_map = utils.combine_maps(
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
-        # TODO Rename and replace built-in functionality once these have been more fully tested.
+        # These work like the built-in commands and are available for any
+        # application that supports IAccessible2.
         "my go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
         "my go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
         "my words <text>": Function(select_words),
@@ -501,10 +511,10 @@ command_action_map = utils.combine_maps(
         "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
         "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
         "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"), 
-        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"), 
-        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"), 
-        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"), 
+        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"),
+        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"),
+        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"),
+        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"),
         "(touch|click) [left]": Mouse("left"),
         "(touch|click) right": Mouse("right"),
         "(touch|click) middle": Mouse("middle"),
@@ -1013,7 +1023,7 @@ shell_command_map = utils.combine_maps({
     "pseudo": Text("sudo "),
     "apt get": Text("apt-get "),
 }, dict((command, Text(command + " ")) for command in [
-    "echo", 
+    "echo",
     "grep",
     "ssh",
     "diff",
@@ -1110,7 +1120,7 @@ emacs_repeatable_action_map = {
     "behinds": None,
     "rights": None,
     "lefts": None,
-    
+
     # Movement
     "preev": Key("c-r"),
     "next": Key("c-s"),
@@ -1538,6 +1548,10 @@ chrome_repeatable_action_map = {
 }
 
 chrome_action_map = {
+    "go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
+    "go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
+    "words <text>": Function(select_words),
+    "replace <text> with <replacement>": Function(replace_words),
     "link": Key("c-comma"),
     "link tab|tab [new] link": Key("c-dot"),
     "(link|links) background [tab]": Key("a-f"),
@@ -1615,6 +1629,7 @@ chrome_element_map = {
     "tab_n": IntegerRef(None, 1, 9),
     "link": utils.JoinedRepetition(
         "", DictListRef(None, link_chars_dict_list), min=1, max=5),
+    "replacement": Dictation(),
 }
 
 chrome_environment = MyEnvironment(name="Chrome",
@@ -1633,7 +1648,7 @@ amazon_action_map = {
 }
 
 amazon_environment = MyEnvironment(name="Amazon",
-                                   parent=chrome_environment, 
+                                   parent=chrome_environment,
                                    context=(AppContext(title="<www.amazon.com>") |
                                             AppContext(title="<smile.amazon.com>")),
                                    action_map=amazon_action_map)
@@ -1684,7 +1699,7 @@ calendar_action_map = {
     "day": Key("d"),
     "week": Key("w"),
     "month": Key("m"),
-    "agenda": Key("a"), 
+    "agenda": Key("a"),
 }
 calendar_environment = MyEnvironment(name="Calendar",
                                      parent=chrome_environment,
@@ -1773,7 +1788,7 @@ docs_action_map = {
     "add comment": Key("ca-m"),
     "preev comment": Key("ctrl:down, alt:down, p, c, ctrl:up, alt:up"),
     "next comment": Key("ctrl:down, alt:down, n, c, ctrl:up, alt:up"),
-    "enter comment": Key("ctrl:down, alt:down, e, c, ctrl:up, alt:up"), 
+    "enter comment": Key("ctrl:down, alt:down, e, c, ctrl:up, alt:up"),
     "(new|insert) row above": Key("a-i/15, r"),
     "(new|insert) row [below]": Key("a-i/15, b"),
     "dupe row": Key("s-space:2, c-c/15, a-i/15, b, c-v/30, up/30, down"),
