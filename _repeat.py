@@ -1751,7 +1751,7 @@ gmail_action_map = {
     "check": Key("x"),
     "check next <n>": Key("x, j") * Repeat(extra="n"),
     "new messages": Key("N"),
-    "go inbox": Key("g, i"),
+    "go inbox|going box": Key("g, i"),
     "go starred": Key("g, s"),
     "go sent": Key("g, t"),
     "go drafts": Key("g, d"),
