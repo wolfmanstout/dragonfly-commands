@@ -36,6 +36,11 @@ def format_flag(dictation):
     """ flag score <dictation> """
     return "FLAGS_" + "_".join(text.split_dictation(dictation))
 
+# Format: some_words::
+def format_namespace(dictation):
+    """ namespace <dictation> """
+    return "_".join(text.split_dictation(dictation)) + "::"
+
 # Format: SomeWords
 def format_studley(dictation):
     """ studley <dictation> """
