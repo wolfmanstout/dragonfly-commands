@@ -1129,7 +1129,7 @@ emacs_repeatable_action_map = {
 
     # Undo
     "cancel": Key("c-g"),
-    "(shuck|undo)": Key("c-slash"),
+    "undo": Key("c-slash"),
     "redo": Key("c-question"),
 
     # Movement
@@ -1176,11 +1176,11 @@ emacs_action_map = {
     "buff switch": Key("c-x, b, enter"),
     "buff split": Key("c-x, 3"),
     "buff close": Key("c-x, 0"),
-    "other close|buff close other": Key("c-x, 1"),
     "buff done": Key("c-x, hash"),
-    "buff other": Key("c-x, o"),
     "buff kill": Key("c-x, k, enter"),
     "buff even": Key("c-x, plus"),
+    "go other": Key("c-x, o"),
+    "other close|buff focus": Key("c-x, 1"),
     "buff up": Exec("windmove-up"),
     "buff down": Exec("windmove-down"),
     "buff left": Exec("windmove-left"),
