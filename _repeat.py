@@ -1707,9 +1707,9 @@ critique_action_map = {
         By.XPATH, ("//span[contains(@class, 'stx-line') and "
                    "starts-with(@id, 'c') and "
                    "substring-after(@id, '_') = '%(line_n)s']")),
-    "click LGTM": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='LGTM']"),
-    "click action required": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Action required']"),
-    "click send": webdriver.ClickElementAction(By.XPATH, "//*[starts-with(@aria-label, 'Send')]"),
+    "(touch|click) LGTM": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='LGTM']"),
+    "(touch|click) action required": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Action required']"),
+    "(touch|click) send": webdriver.ClickElementAction(By.XPATH, "//*[starts-with(@aria-label, 'Send')]"),
     "search bar": Key("slash"),
 }
 critique_element_map = {
@@ -1789,8 +1789,8 @@ gmail_action_map = {
     "go drafts": Key("g, d"),
     "expand all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
     "collapse all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Collapse all']"),
-    "click to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
-    "click cc": Key("cs-c"),
+    "(touch|click) to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
+    "(touch|click) cc": Key("cs-c"),
     "open chat": Key("q"),
     "send mail": Key("c-enter"),
 }
