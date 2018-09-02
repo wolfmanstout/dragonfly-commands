@@ -1344,6 +1344,14 @@ emacs_terminal_action_map = {
     "go after preev <custom_text>": Key("left, c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("c-s, enter"),
     "go before next <custom_text>": Key("right, c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("c-r, enter"),
     "go after [next] <custom_text>": Key("c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
+    "words <custom_text>": (Key("c-c, c, c-r")
+                            + utils.lowercase_text_action("%(custom_text)s") + Key("enter")),
+    "words <custom_text> through <custom_text2>": (Key("c-c, c, c-t")
+                                                   + utils.lowercase_text_action("%(custom_text)s") + Key("enter")
+                                                   + utils.lowercase_text_action("%(custom_text2)s") + Key("enter")),
+    "replace <custom_text> with <custom_text2>": (Key("c-c, c, as-5")
+                                                 + utils.lowercase_text_action("%(custom_text)s") + Key("enter")
+                                                 + utils.lowercase_text_action("%(custom_text2)s") + Key("enter")),
 }
 
 templates = {
@@ -1387,6 +1395,14 @@ emacs_element_map = {
     "n2": IntegerRef(None, 0, 100),
     "line": IntegerRef(None, 1, 10000),
     "template": DictListRef(None, template_dict_list),
+    # TODO Figure out why we can't reuse custom_text element from earlier.
+    "custom_text2": RuleWrap(None, Alternative([
+        Dictation(),
+        chars_element,
+        ListRef(None, prefix_list),
+        ListRef(None, suffix_list),
+        ListRef(None, saved_word_list),
+    ])),
 }
 
 emacs_environment = MyEnvironment(name="Emacs",
@@ -1564,10 +1580,6 @@ chrome_repeatable_action_map = {
 }
 
 chrome_action_map = {
-    "go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
-    "go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
-    "words <text>": Function(select_words),
-    "replace <text> with <replacement>": Function(replace_words),
     "link": Key("c-comma"),
     "link tab|tab [new] link": Key("c-dot"),
     "(link|links) background [tab]": Key("a-f"),
@@ -1622,6 +1634,10 @@ chrome_action_map = {
 }
 
 chrome_terminal_action_map = {
+    "go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
+    "go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
+    "words <text>": Function(select_words),
+    "replace <text> with <replacement>": Function(replace_words),
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
     "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
     "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
