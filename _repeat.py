@@ -1770,47 +1770,48 @@ code_search_environment = MyEnvironment(name="CodeSearch",
 
 ### Chrome: Gmail
 
+gmail_repeatable_action_map = {
+    "preev": Key("plus, k"),
+    "next": Key("plus, j"),
+    "message preev": Key("plus, p"),
+    "message next": Key("plus, n"),
+    "section next": Key("plus, backtick"),
+    "section preev": Key("plus, tilde"),
+}
+
 gmail_action_map = {
     "open": Key("plus, o"),
     "archive": Text("+{"),
     "done": Text("+["),
-    "mark unread": Text("+_"),
+    "this unread": Text("+_"),
     "undo": Key("plus, z"),
     "list": Key("plus, u"),
-    "preev": Key("plus, k"),
-    "next": Key("plus, j"),
-    "preev message": Key("plus, p"),
-    "next message": Key("plus, n"),
     "compose": Key("plus, c"),
     "reply": Key("plus, r"),
     "reply all": Key("plus, a"),
     "forward": Key("plus, f"),
     "important": Key("plus, plus"),
-    "mark starred": Key("plus, s"),
-    "section next": Key("plus, backtick"),
-    "section preev": Key("plus, tilde"),
-    "not important|don't care": Key("plus, minus"),
+    "this starred": Key("plus, s"),
+    "this important": Key("plus, plus"),
+    "this not important": Key("plus, minus"),
     "label waiting": Key("plus, l/50") + Text("waiting") + Key("enter"),
     "label snooze": Key("plus, l/50") + Text("snooze") + Key("enter"),
-    "snooze": Key("plus, l/50") + Text("snooze") + Key("enter") + Text("["),
+    "snooze": Key("plus, l/50") + Text("snooze") + Key("enter") + Text("+["),
     "label candidates": Key("plus, l/50") + Text("candidates") + Key("enter"),
-    "check": Key("plus, x"),
-    "check next <n>": Key("plus, x, plus, j") * Repeat(extra="n"),
-    "new messages": Key("plus, N"),
+    "this select": Key("plus, x"),
+    "<n> select": Key("plus, x, plus, j") * Repeat(extra="n"),
+    "messages reload": Key("plus, N"),
     "go inbox|going box": Key("plus, g, i"),
     "go starred": Key("plus, g, s"),
     "go sent": Key("plus, g, t"),
     "go drafts": Key("plus, g, d"),
     "expand all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Expand all']"),
     "collapse all": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Collapse all']"),
-    "(touch|click) to": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
-    "(touch|click) cc": Key("cs-c"),
-    "open chat": Key("plus, q"),
-    "send mail": Key("c-enter"),
+    "go to field": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='To']"),
+    "go cc field": Key("cs-c"),
+    "chat open": Key("plus, q"),
+    "this send": Key("c-enter"),
     "go search": Key("plus, slash"),
-}
-gmail_terminal_action_map = {
-    "chat with <text>": Key("q/50") + Text("%(text)s") + Pause("50") + Key("enter"),
 }
 
 gmail_environment = MyEnvironment(name="Gmail",
@@ -1820,7 +1821,7 @@ gmail_environment = MyEnvironment(name="Gmail",
                                            AppContext(title="<mail.google.com>") |
                                            AppContext(title="<inbox.google.com>")),
                                   action_map=gmail_action_map,
-                                  terminal_action_map=gmail_terminal_action_map)
+                                  repeatable_action_map=gmail_repeatable_action_map)
 
 
 ### Chrome: docs
