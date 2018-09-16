@@ -1569,7 +1569,8 @@ cmder_repeatable_action_map = {
 cmder_action_map = utils.combine_maps(
     shell_command_map,
     {
-        "tab (new|bash)": Key("as-5"),
+        "tab (new|cygwin)": Key("as-6"),
+        "tab ubuntu": Key("as-5"),
         "tab dos": Key("as-2"),
     })
 
