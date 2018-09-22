@@ -454,6 +454,10 @@ def select_words(text):
                                                          selection_points[1][0], selection_points[1][1])).execute()
 
 
+def select_word_range(text, text2):
+    select_words("%s through %s" % (text, text2))
+
+
 def replace_words(text, replacement):
     cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
     select_words(text)
@@ -479,6 +483,7 @@ command_action_map = utils.combine_maps(
         "my go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
         "my go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
         "my words <text>": Function(select_words),
+        "my words <text> through <text2>": Function(select_word_range),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
@@ -513,10 +518,10 @@ command_action_map = utils.combine_maps(
         "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
         "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
         "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:8"),
-        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("scrollup:4"),
-        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:8"),
-        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("scrolldown:4"),
+        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("wheelup:8"),
+        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 50))) + Mouse("wheelup:4"),
+        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("wheeldown:8"),
+        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -50))) + Mouse("wheeldown:4"),
         "(touch|click) [left]": Mouse("left"),
         "(touch|click) right": Mouse("right"),
         "(touch|click) middle": Mouse("middle"),
@@ -616,8 +621,17 @@ chars_element = RuleWrap(None, utils.JoinedRepetition(
 command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
+    "text2": Dictation(),
     "char": char_element,
     "custom_text": RuleWrap(None, Alternative([
+        Dictation(),
+        chars_element,
+        ListRef(None, prefix_list),
+        ListRef(None, suffix_list),
+        ListRef(None, saved_word_list),
+    ])),
+    # TODO Figure out why we can't reuse custom_text element.
+    "custom_text2": RuleWrap(None, Alternative([
         Dictation(),
         chars_element,
         ListRef(None, prefix_list),
@@ -1287,11 +1301,9 @@ emacs_action_map = {
     "tag close": Key("c-c, c-e"),
 
     # Registers
-    "(reg|rej) <char> here": Key("c-x, r, space, %(char)s"),
-    "(reg|rej) <char> mark": Key("c-c, c, m, %(char)s"),
+    "mark save (reg|rej) <char>": Key("c-x, r, space, %(char)s"),
     "go (reg|rej) <char>": Key("c-x, r, j, %(char)s"),
-    "(reg|rej) <char> this": Key("c-x, r, s, %(char)s"),
-    "(reg|rej) <char> copy": Key("c-c, c, w, %(char)s"),
+    "copy (reg|rej) <char>": Key("c-x, r, s, %(char)s"),
     "(reg|rej) <char> paste": Key("c-u, c-x, r, i, %(char)s"),
 
     # Templates
@@ -1395,14 +1407,6 @@ emacs_element_map = {
     "n2": IntegerRef(None, 0, 100),
     "line": IntegerRef(None, 1, 10000),
     "template": DictListRef(None, template_dict_list),
-    # TODO Figure out why we can't reuse custom_text element from earlier.
-    "custom_text2": RuleWrap(None, Alternative([
-        Dictation(),
-        chars_element,
-        ListRef(None, prefix_list),
-        ListRef(None, suffix_list),
-        ListRef(None, saved_word_list),
-    ])),
 }
 
 emacs_environment = MyEnvironment(name="Emacs",
@@ -1653,6 +1657,7 @@ chrome_terminal_action_map = {
     "go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
     "go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
     "words <text>": Function(select_words),
+    "words <text> through <text2>": Function(select_word_range),
     "replace <text> with <replacement>": Function(replace_words),
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
     "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
