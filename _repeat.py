@@ -1454,7 +1454,7 @@ emacs_org_action_map = {
     "open org link": Key("c-c, c-o"),
     "show to do's": Key("c-c, slash, t"),
     "archive": Key("c-c, c-x, c-a"),
-    "org (West|white)": Key("c-c, c, c-a"),
+    "org (West|start)": Key("c-c, c, c-a"),
     "tag <tag>": Key("c-c, c-q") + Text("%(tag)s") + Key("enter"),
 }
 tags = {
