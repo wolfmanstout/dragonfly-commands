@@ -580,7 +580,6 @@ char_element = DictListRef(None, chars_dict_list)
 saved_word_list = List("saved_word_list", saved_words)
 # Lists which will be populated later via RPC.
 context_phrase_list = List("context_phrase_list", [])
-context_word_list = List("context_word_list", [])
 prefix_list = List("prefix_list", prefixes)
 suffix_list = List("suffix_list", suffixes)
 
@@ -600,6 +599,7 @@ custom_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
         letter_element,
+        ListRef(None, context_phrase_list),
         ListRef(None, saved_word_list),
     ]),
     Optional(ListRef(None, suffix_list)),
@@ -1954,11 +1954,11 @@ def RunCallbacks():
 
 timer = get_engine().create_timer(RunCallbacks, 0.1)
 
-
-# Update the context words and phrases.
-def UpdateWords(words, phrases):
-    context_word_list.set(words)
-    context_phrase_list.set(phrases)
+# Update the context phrases.
+def UpdateWords(phrases):
+    # Not currently used, and not working if enabled.
+    # context_phrase_list.set(phrases)
+    pass
 
 def IsValidIp(ip):
     m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
@@ -1985,10 +1985,9 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         file_type = self.headers.getheader("My-File-Type")
         request_text = self.rfile.read(int(length)) if length else ""
         # print("received text: %s" % request_text)
-        words = text.extract_words(request_text, file_type)
         phrases = text.extract_phrases(request_text, file_type)
         # Asynchronously update word lists available to Dragon.
-        callbacks.put_nowait(lambda: UpdateWords(words, phrases))
+        callbacks.put_nowait(lambda: UpdateWords(phrases))
         self.send_response(204)  # no content
         self.end_headers()
         # The following sequence of low-level socket commands was needed to get
