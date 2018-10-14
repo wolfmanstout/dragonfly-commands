@@ -1208,6 +1208,7 @@ emacs_action_map = {
     "file open": Key("c-x, c-f"),
     "no ido": Key("c-f"),
     "directory open": Key("c-x, d"),
+    "file open recent": Key("c-x, c-r"),
     "file open split": Key("c-x, 4, f"),
     "file open project": Key("c-c, p, f"),
     "file open simulator": Key("c-c, c, p, s"),
@@ -1573,9 +1574,9 @@ cmder_repeatable_action_map = {
 cmder_action_map = utils.combine_maps(
     shell_command_map,
     {
-        "tab (new|cygwin)": Key("as-6"),
-        "tab ubuntu": Key("as-5"),
-        "tab dos": Key("as-2"),
+        "tab new [cygwin]": Key("as-6"),
+        "tab new ubuntu": Key("as-5"),
+        "tab new dos": Key("as-2"),
     })
 
 cmder_element_map = {
