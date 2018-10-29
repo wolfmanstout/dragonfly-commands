@@ -449,9 +449,14 @@ repeatable_action_map = utils.combine_maps(
 
 
 def select_words(text):
-    selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
-    Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
-                                                         selection_points[1][0], selection_points[1][1])).execute()
+    result = a11y_utils.select_text(a11y_controller, str(text))
+    # Check explicitly for False to indicate failure to select contiguous text.
+    # TODO Clean this up.
+    # TODO Disable fallback in unsupported apps (e.g. Google Docs).
+    if result == False:
+        selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
+        Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
+                                                             selection_points[1][0], selection_points[1][1])).execute()
 
 
 def select_word_range(text, text2):
