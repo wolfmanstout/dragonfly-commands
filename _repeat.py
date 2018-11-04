@@ -1854,6 +1854,7 @@ docs_action_map = {
     "(new|insert) row [below]": Key("a-i/15, b"),
     "dupe row": Key("s-space:2, c-c/15, a-i/15, b, c-v/30, up/30, down"),
     "delete row": Key("a-e/15, d"),
+    "(click|touch) present": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Start presentation (Ctrl+F5)']"),
 }
 docs_environment = MyEnvironment(name="Docs",
                                  parent=chrome_environment,
