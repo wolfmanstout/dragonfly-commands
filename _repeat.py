@@ -11,12 +11,6 @@ This is heavily modified from _multiedit.py, found here:
 https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedit.py
 """
 
-try:
-    import pkg_resources
-    pkg_resources.require("dragonfly >= 0.6.5beta1.dev-r99")
-except ImportError:
-    pass
-
 import BaseHTTPServer
 import Queue
 import re
