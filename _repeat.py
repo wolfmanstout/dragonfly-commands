@@ -449,22 +449,27 @@ def select_words(text):
     # TODO Disable fallback in unsupported apps (e.g. Google Docs).
     if result == False:
         selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
-        Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
-                                                             selection_points[1][0], selection_points[1][1])).execute()
+        if selection_points:
+            Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
+                                                                 selection_points[1][0], selection_points[1][1])).execute()
+            return True
+        else:
+            return False
+    return result
 
 
 def select_word_range(text, text2):
-    select_words("%s through %s" % (text, text2))
+    return select_words("%s through %s" % (text, text2))
 
 
 def replace_words(text, replacement):
     cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
-    select_words(text)
-    # TODO Add escaping.
-    Text(str(replacement)).execute()
-    # TODO Use actual selection length, not search phrase length.
-    if cursor_before:
-        a11y_utils.set_cursor_offset(a11y_controller, cursor_before + len(str(replacement)) - len(str(text)))
+    if select_words(text):
+        # TODO Add escaping.
+        Text(str(replacement)).execute()
+        # TODO Use actual selection length, not search phrase length.
+        if cursor_before:
+            a11y_utils.set_cursor_offset(a11y_controller, cursor_before + len(str(replacement)) - len(str(text)))
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
