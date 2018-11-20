@@ -446,12 +446,10 @@ def select_words(text):
     try:
         return a11y_utils.select_text(a11y_controller, str(text))
     except a11y.UnsupportedSelectionError:
-        # TODO Disable fallback in unsupported apps (e.g. Google Docs).
-        selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
-        if selection_points:
+        text_info = a11y_utils.get_text_info(a11y_controller, str(text))
+        if text_info and text_info.start_coordinates and text_info.end_coordinates:
             Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" %
-                  (selection_points[0][0], selection_points[0][1],
-                   selection_points[1][0], selection_points[1][1])).execute()
+                  (text_info.start_coordinates + text_info.end_coordinates)).execute()
             return True
         else:
             return False
@@ -464,16 +462,23 @@ def select_word_range(text, text2=None):
 
 def replace_words(text, replacement):
     saved_cursor = a11y_utils.get_cursor_offset(a11y_controller)
-    if not a11y_utils.move_cursor(a11y_controller, str(text), a11y_utils.CursorPosition.after):
+    text_info = a11y_utils.get_text_info(a11y_controller, str(text))
+    if not text_info:
         return
-    cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
+    cursor_before = text_info.end
     if select_words(text):
-        if not replacement:
+        if replacement:
+            replacement = str(replacement)
+            if text_info.text.isupper():
+                replacement = replacement.upper()
+            elif text_info.text[0].isupper():
+                replacement = replacement.capitalize()
+            # TODO Add escaping.
+            Text(replacement).execute()
+        else:
             # Simulate backspace twice: once to delete the selected words, and
             # again to delete the preceding whitespace.
             Key("backspace:2").execute()
-        # TODO Add escaping.
-        Text(str(replacement)).execute()
         cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
         if saved_cursor is not None and cursor_before is not None and cursor_after is not None:
             a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
@@ -500,11 +505,11 @@ command_action_map = utils.combine_maps(
         "my go before <text>": Function(lambda text: a11y_utils.move_cursor(
             a11y_controller,
             str(text),
-            a11y_utils.CursorPosition.before)),
+            a11y_utils.Position.start)),
         "my go after <text>": Function(lambda text: a11y_utils.move_cursor(
             a11y_controller,
             str(text),
-            a11y_utils.CursorPosition.after)),
+            a11y_utils.Position.end)),
         "my words <text> [through <text2>]": Function(select_word_range),
         "my words <text> [through <text2>] delete": Function(delete_word_range),
         "my replace <text> with <replacement>": Function(replace_words),
@@ -1683,11 +1688,11 @@ chrome_terminal_action_map = {
     "go before <text>": Function(lambda text: a11y_utils.move_cursor(
         a11y_controller,
         str(text),
-        a11y_utils.CursorPosition.before)),
+        a11y_utils.Position.before)),
     "go after <text>": Function(lambda text: a11y_utils.move_cursor(
         a11y_controller,
         str(text),
-        a11y_utils.CursorPosition.after)),
+        a11y_utils.Position.after)),
     "words <text> [through <text2>]": Function(select_word_range),
     "words <text> [through <text2>] delete": Function(delete_word_range),
     "replace <text> with <replacement>": Function(replace_words),
