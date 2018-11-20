@@ -480,8 +480,10 @@ def replace_words(text, replacement):
             # again to delete the preceding whitespace.
             Key("backspace:2").execute()
         if saved_cursor is not None:
-            if saved_cursor < cursor_before:
+            if saved_cursor <= text_info.start:
                 a11y_utils.set_cursor_offset(a11y_controller, saved_cursor)
+            elif saved_cursor <= text_info.end:
+                pass
             else:
                 cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
                 if cursor_after:
