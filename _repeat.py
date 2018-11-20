@@ -443,19 +443,18 @@ repeatable_action_map = utils.combine_maps(
 
 
 def select_words(text):
-    result = a11y_utils.select_text(a11y_controller, str(text))
-    # Check explicitly for False to indicate failure to select contiguous text.
-    # TODO Clean this up.
-    # TODO Disable fallback in unsupported apps (e.g. Google Docs).
-    if result == False:
+    try:
+        return a11y_utils.select_text(a11y_controller, str(text))
+    except a11y.UnsupportedSelectionError:
+        # TODO Disable fallback in unsupported apps (e.g. Google Docs).
         selection_points = a11y_utils.get_text_selection_points(a11y_controller, str(text))
         if selection_points:
-            Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" % (selection_points[0][0], selection_points[0][1],
-                                                                 selection_points[1][0], selection_points[1][1])).execute()
+            Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" %
+                  (selection_points[0][0], selection_points[0][1],
+                   selection_points[1][0], selection_points[1][1])).execute()
             return True
         else:
             return False
-    return result
 
 
 def select_word_range(text, text2):
@@ -463,13 +462,17 @@ def select_word_range(text, text2):
 
 
 def replace_words(text, replacement):
+    saved_cursor = a11y_utils.get_cursor_offset(a11y_controller)
+    if not a11y_utils.move_cursor(a11y_controller, str(text), a11y_utils.CursorPosition.after):
+        return
     cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
     if select_words(text):
         # TODO Add escaping.
         Text(str(replacement)).execute()
-        # TODO Use actual selection length, not search phrase length.
-        if cursor_before:
-            a11y_utils.set_cursor_offset(a11y_controller, cursor_before + len(str(replacement)) - len(str(text)))
+        cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
+        if saved_cursor and cursor_before and cursor_after:
+            a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
+
 
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
@@ -484,8 +487,14 @@ command_action_map = utils.combine_maps(
         "go bottom|[go] south": Key("c-end"),
         # These work like the built-in commands and are available for any
         # application that supports IAccessible2.
-        "my go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
-        "my go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
+        "my go before <text>": Function(lambda text: a11y_utils.move_cursor(
+            a11y_controller,
+            str(text),
+            a11y_utils.CursorPosition.before)),
+        "my go after <text>": Function(lambda text: a11y_utils.move_cursor(
+            a11y_controller,
+            str(text),
+            a11y_utils.CursorPosition.after)),
         "my words <text>": Function(select_words),
         "my words <text> through <text2>": Function(select_word_range),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
@@ -1659,8 +1668,14 @@ chrome_action_map = {
 }
 
 chrome_terminal_action_map = {
-    "go before <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=True)),
-    "go after <text>": Function(lambda text: a11y_utils.move_cursor(a11y_controller, str(text), before=False)),
+    "go before <text>": Function(lambda text: a11y_utils.move_cursor(
+        a11y_controller,
+        str(text),
+        a11y_utils.CursorPosition.before)),
+    "go after <text>": Function(lambda text: a11y_utils.move_cursor(
+        a11y_controller,
+        str(text),
+        a11y_utils.CursorPosition.after)),
     "words <text>": Function(select_words),
     "words <text> through <text2>": Function(select_word_range),
     "replace <text> with <replacement>": Function(replace_words),
