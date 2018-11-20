@@ -457,8 +457,9 @@ def select_words(text):
             return False
 
 
-def select_word_range(text, text2):
-    return select_words("%s through %s" % (text, text2))
+def select_word_range(text, text2=None):
+    merged = "%s through %s" % (text, text2) if text2 else text
+    return select_words(merged)
 
 
 def replace_words(text, replacement):
@@ -467,11 +468,20 @@ def replace_words(text, replacement):
         return
     cursor_before = a11y_utils.get_cursor_offset(a11y_controller)
     if select_words(text):
+        if not replacement:
+            # Simulate backspace twice: once to delete the selected words, and
+            # again to delete the preceding whitespace.
+            Key("backspace:2").execute()
         # TODO Add escaping.
         Text(str(replacement)).execute()
         cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
-        if saved_cursor and cursor_before and cursor_after:
+        if saved_cursor is not None and cursor_before is not None and cursor_after is not None:
             a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
+
+
+def delete_word_range(text, text2=None):
+    merged = "%s through %s" % (text, text2) if text2 else text
+    replace_words(merged, "")
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -495,8 +505,9 @@ command_action_map = utils.combine_maps(
             a11y_controller,
             str(text),
             a11y_utils.CursorPosition.after)),
-        "my words <text>": Function(select_words),
-        "my words <text> through <text2>": Function(select_word_range),
+        "my words <text> [through <text2>]": Function(select_word_range),
+        "my words <text> [through <text2>] delete": Function(delete_word_range),
+        "my replace <text> with <replacement>": Function(replace_words),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
@@ -651,6 +662,7 @@ command_element_map = {
         ListRef(None, suffix_list),
         ListRef(None, saved_word_list),
     ])),
+    "replacement": Dictation(),
 }
 
 #-------------------------------------------------------------------------------
@@ -1676,8 +1688,8 @@ chrome_terminal_action_map = {
         a11y_controller,
         str(text),
         a11y_utils.CursorPosition.after)),
-    "words <text>": Function(select_words),
-    "words <text> through <text2>": Function(select_word_range),
+    "words <text> [through <text2>]": Function(select_word_range),
+    "words <text> [through <text2>] delete": Function(delete_word_range),
     "replace <text> with <replacement>": Function(replace_words),
     "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
     "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
