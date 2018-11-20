@@ -479,9 +479,13 @@ def replace_words(text, replacement):
             # Simulate backspace twice: once to delete the selected words, and
             # again to delete the preceding whitespace.
             Key("backspace:2").execute()
-        cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
-        if saved_cursor is not None and cursor_before is not None and cursor_after is not None:
-            a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
+        if saved_cursor is not None:
+            if saved_cursor < cursor_before:
+                a11y_utils.set_cursor_offset(a11y_controller, saved_cursor)
+            else:
+                cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
+                if cursor_after:
+                    a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
 
 
 def delete_word_range(text, text2=None):
@@ -1688,11 +1692,11 @@ chrome_terminal_action_map = {
     "go before <text>": Function(lambda text: a11y_utils.move_cursor(
         a11y_controller,
         str(text),
-        a11y_utils.Position.before)),
+        a11y_utils.Position.start)),
     "go after <text>": Function(lambda text: a11y_utils.move_cursor(
         a11y_controller,
         str(text),
-        a11y_utils.Position.after)),
+        a11y_utils.Position.end)),
     "words <text> [through <text2>]": Function(select_word_range),
     "words <text> [through <text2>] delete": Function(delete_word_range),
     "replace <text> with <replacement>": Function(replace_words),
