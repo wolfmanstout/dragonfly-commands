@@ -487,14 +487,10 @@ def replace_text(text_query, replacement):
 
 
 accessibility_movement_commands = {
-    "go before <text>": Function(lambda text: a11y_utils.move_cursor(
-        a11y_controller,
-        a11y_utils.TextQuery(full_phrase=str(text)),
-        a11y_utils.Position.start)),
-    "go after <text>": Function(lambda text: a11y_utils.move_cursor(
-        a11y_controller,
-        a11y_utils.TextQuery(full_phrase=str(text)),
-        a11y_utils.Position.end)),
+    "go before <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
+        a11y_controller, text_position_query, a11y_utils.Position.before)),
+    "go after <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
+        a11y_controller, text_position_query, a11y_utils.Position.after)),
     "words <text_query>": Function(select_text),
     "words <text_query> delete": Function(lambda text_query: replace_text(text_query, "")),
     "replace <text_query> with <replacement>": Function(replace_text),
@@ -658,6 +654,7 @@ numbers_element = RuleWrap(None, utils.JoinedRepetition(
 chars_element = RuleWrap(None, utils.JoinedRepetition(
     "", char_element, min=1, max=5))
 
+
 # Simple element map corresponding to command action maps from earlier.
 command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
@@ -680,24 +677,33 @@ command_element_map = {
         ListRef(None, saved_word_list),
     ])),
     "replacement": Dictation(),
-    "text_query": Compound(spec=("[[<start_before>|<start_after>] <start_phrase>] through "
-                                 "[<end_before>|<end_after>] <end_phrase>"
-                                 "|<full_phrase>"),
-                      extras=[Dictation("full_phrase", default=""),
-                              Literal("before", "start_before", value=True, default=False),
-                              Literal("after", "start_after", value=True, default=False),
-                              Dictation("start_phrase", default=""),
-                              Literal("before", "end_before", value=True, default=False),
-                              Literal("after", "end_after", value=True, default=False),
-                              Dictation("end_phrase", default="")],
-                      value_func=lambda node, extras: a11y_utils.TextQuery(
-                          full_phrase=str(extras["full_phrase"]),
-                          start_before=extras["start_before"],
-                          start_after=extras["start_after"],
-                          start_phrase=str(extras["start_phrase"]),
-                          end_before=extras["end_before"],
-                          end_after=extras["end_after"],
-                          end_phrase=str(extras["end_phrase"]))),
+    "text_query": Compound(
+        spec=("[[([<start_phrase>] <start_relative_position> <start_relative_phrase>|<start_phrase>)] <through>] "
+              "([<end_phrase>] <end_relative_position> <end_relative_phrase>|<end_phrase>)"),
+        extras=[Dictation("start_phrase", default=""),
+                Alternative([Literal("before"), Literal("after")], name="start_relative_position"),
+                Dictation("start_relative_phrase", default=""),
+                Literal("through", "through", value=True, default=False),
+                Dictation("end_phrase", default=""),
+                Alternative([Literal("before"), Literal("after")], name="end_relative_position"),
+                Dictation("end_relative_phrase", default="")],
+        value_func=lambda node, extras: a11y_utils.TextQuery(
+            start_phrase=str(extras["start_phrase"]),
+            start_relative_position=a11y_utils.Position[extras["start_relative_position"]] if "start_relative_position" in extras else None,
+            start_relative_phrase=str(extras["start_relative_phrase"]),
+            through=extras["through"],
+            end_phrase=str(extras["end_phrase"]),
+            end_relative_position=a11y_utils.Position[extras["end_relative_position"]] if "end_relative_position" in extras else None,
+            end_relative_phrase=str(extras["end_relative_phrase"]))),
+    "text_position_query": Compound(
+        spec="<phrase> [<relative_position> <relative_phrase>]",
+        extras=[Dictation("phrase", default=""),
+                Alternative([Literal("before"), Literal("after")], name="relative_position"),
+                Dictation("relative_phrase", default="")],
+        value_func=lambda node, extras: a11y_utils.TextQuery(
+            end_phrase=str(extras["phrase"]),
+            end_relative_position=a11y_utils.Position[extras["relative_position"]] if "relative_position" in extras else None,
+            end_relative_phrase=str(extras["relative_phrase"]))),
 }
 
 #-------------------------------------------------------------------------------
