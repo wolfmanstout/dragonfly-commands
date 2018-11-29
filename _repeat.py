@@ -680,9 +680,9 @@ command_element_map = {
         ListRef(None, saved_word_list),
     ])),
     "replacement": Dictation(),
-    "text_query": Compound(spec=("<full_phrase>|"
-                            "[[<start_before>|<start_after>] <start_phrase>] through "
-                            "[<end_before>|<end_after>] <end_phrase>"),
+    "text_query": Compound(spec=("[[<start_before>|<start_after>] <start_phrase>] through "
+                                 "[<end_before>|<end_after>] <end_phrase>"
+                                 "|<full_phrase>"),
                       extras=[Dictation("full_phrase", default=""),
                               Literal("before", "start_before", value=True, default=False),
                               Literal("after", "start_after", value=True, default=False),
