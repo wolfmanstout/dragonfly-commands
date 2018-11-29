@@ -38,6 +38,7 @@ from dragonfly import (
     Key,
     List,
     ListRef,
+    Literal,
     MappingRule,
     Mimic,
     Mouse,
@@ -383,8 +384,8 @@ try:
 except:
     print("Unable to open: " + text.WORDS_PATH)
 
-#-------------------------------------------------------------------------------
-# Action maps to be used in rules.
+
+# TODO Move accessibility functions into a separate utils.
 
 a11y_controller = a11y.GetA11yController()
 
@@ -442,11 +443,11 @@ repeatable_action_map = utils.combine_maps(
     })
 
 
-def select_words(text):
+def select_text(text_query):
     try:
-        return a11y_utils.select_text(a11y_controller, str(text))
+        return a11y_utils.select_text(a11y_controller, text_query)
     except a11y.UnsupportedSelectionError:
-        text_info = a11y_utils.get_text_info(a11y_controller, str(text))
+        text_info = a11y_utils.get_text_info(a11y_controller, text_query)
         if text_info and text_info.start_coordinates and text_info.end_coordinates:
             Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" %
                   (text_info.start_coordinates + text_info.end_coordinates)).execute()
@@ -455,20 +456,15 @@ def select_words(text):
             return False
 
 
-def select_word_range(text, text2=None):
-    merged = "%s through %s" % (text, text2) if text2 else text
-    return select_words(merged)
-
-
-def replace_words(text, replacement):
+def replace_text(text_query, replacement):
     saved_cursor = a11y_utils.get_cursor_offset(a11y_controller)
-    text_info = a11y_utils.get_text_info(a11y_controller, str(text))
+    text_info = a11y_utils.get_text_info(a11y_controller, text_query)
     if not text_info:
         return
     cursor_before = text_info.end
-    if select_words(text):
+    if select_text(text_query):
         if replacement:
-            replacement = str(replacement)
+            replacement = str(replacement).lower()
             if text_info.text.isupper():
                 replacement = replacement.upper()
             elif text_info.text[0].isupper():
@@ -490,9 +486,23 @@ def replace_words(text, replacement):
                     a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
 
 
-def delete_word_range(text, text2=None):
-    merged = "%s through %s" % (text, text2) if text2 else text
-    replace_words(merged, "")
+accessibility_movement_commands = {
+    "go before <text>": Function(lambda text: a11y_utils.move_cursor(
+        a11y_controller,
+        a11y_utils.TextQuery(full_phrase=str(text)),
+        a11y_utils.Position.start)),
+    "go after <text>": Function(lambda text: a11y_utils.move_cursor(
+        a11y_controller,
+        a11y_utils.TextQuery(full_phrase=str(text)),
+        a11y_utils.Position.end)),
+    "words <text_query>": Function(select_text),
+    "words <text_query> delete": Function(lambda text_query: replace_text(text_query, "")),
+    "replace <text_query> with <replacement>": Function(replace_text),
+}
+
+
+#-------------------------------------------------------------------------------
+# Action maps to be used in rules.
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -500,25 +510,19 @@ def delete_word_range(text, text2=None):
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
 command_action_map = utils.combine_maps(
     utils.text_map_to_action_map(symbols_map),
+    # These work like the built-in commands and are available for any
+    # application that supports IAccessible2. A "my" prefix is used to avoid
+    # overwriting similarly-phrased commands built into Dragon, because in some
+    # applications only those will work. These are primarily present to test
+    # functionality; to add these commands to a specific application, just merge
+    # in the map without a prefix.
+    dict([("my " + k, v) for k, v in accessibility_movement_commands.items()]),
     {
         "delete": Key("del"),
         "go home|[go] west": Key("home"),
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
-        # These work like the built-in commands and are available for any
-        # application that supports IAccessible2.
-        "my go before <text>": Function(lambda text: a11y_utils.move_cursor(
-            a11y_controller,
-            str(text),
-            a11y_utils.Position.start)),
-        "my go after <text>": Function(lambda text: a11y_utils.move_cursor(
-            a11y_controller,
-            str(text),
-            a11y_utils.Position.end)),
-        "my words <text> [through <text2>]": Function(select_word_range),
-        "my words <text> [through <text2>] delete": Function(delete_word_range),
-        "my replace <text> with <replacement>": Function(replace_words),
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
@@ -676,6 +680,24 @@ command_element_map = {
         ListRef(None, saved_word_list),
     ])),
     "replacement": Dictation(),
+    "text_query": Compound(spec=("<full_phrase>|"
+                            "[[<start_before>|<start_after>] <start_phrase>] through "
+                            "[<end_before>|<end_after>] <end_phrase>"),
+                      extras=[Dictation("full_phrase", default=""),
+                              Literal("before", "start_before", value=True, default=False),
+                              Literal("after", "start_after", value=True, default=False),
+                              Dictation("start_phrase", default=""),
+                              Literal("before", "end_before", value=True, default=False),
+                              Literal("after", "end_after", value=True, default=False),
+                              Dictation("end_phrase", default="")],
+                      value_func=lambda node, extras: a11y_utils.TextQuery(
+                          full_phrase=str(extras["full_phrase"]),
+                          start_before=extras["start_before"],
+                          start_after=extras["start_after"],
+                          start_phrase=str(extras["start_phrase"]),
+                          end_before=extras["end_before"],
+                          end_after=extras["end_after"],
+                          end_phrase=str(extras["end_phrase"]))),
 }
 
 #-------------------------------------------------------------------------------
@@ -1692,23 +1714,14 @@ chrome_action_map = {
     "bill new": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
 }
 
-chrome_terminal_action_map = {
-    "go before <text>": Function(lambda text: a11y_utils.move_cursor(
-        a11y_controller,
-        str(text),
-        a11y_utils.Position.start)),
-    "go after <text>": Function(lambda text: a11y_utils.move_cursor(
-        a11y_controller,
-        str(text),
-        a11y_utils.Position.end)),
-    "words <text> [through <text2>]": Function(select_word_range),
-    "words <text> [through <text2>] delete": Function(delete_word_range),
-    "replace <text> with <replacement>": Function(replace_words),
-    "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
-    "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
-    "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
-    "<link>":          Text("%(link)s"),
-}
+chrome_terminal_action_map = utils.combine_maps(
+    accessibility_movement_commands,
+    {
+        "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
+        "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
+        "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
+        "<link>":          Text("%(link)s"),
+    })
 
 link_chars_map = {
     "zero": "0",
