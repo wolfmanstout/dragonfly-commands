@@ -488,9 +488,9 @@ def replace_text(text_query, replacement):
 
 accessibility_movement_commands = {
     "go before <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
-        a11y_controller, text_position_query, a11y_utils.Position.before)),
+        a11y_controller, text_position_query, a11y_utils.Position.BEFORE)),
     "go after <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
-        a11y_controller, text_position_query, a11y_utils.Position.after)),
+        a11y_controller, text_position_query, a11y_utils.Position.AFTER)),
     "words <text_query>": Function(select_text),
     "words <text_query> delete": Function(lambda text_query: replace_text(text_query, "")),
     "replace <text_query> with <replacement>": Function(replace_text),
