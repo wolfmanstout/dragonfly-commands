@@ -28,6 +28,7 @@ from dragonfly import (
     Compound,
     CompoundRule,
     Config,
+    CursorPosition,
     DictList,
     DictListRef,
     Dictation,
@@ -49,11 +50,11 @@ from dragonfly import (
     RuleRef,
     RuleWrap,
     Text,
+    TextQuery,
+    get_accessibility_controller,
     get_engine,
 )
 import dragonfly.log
-from dragonfly import a11y
-from dragonfly.a11y import utils as a11y_utils
 from selenium.webdriver.common.by import By
 
 import _dragonfly_utils as utils
@@ -385,10 +386,6 @@ except:
     print("Unable to open: " + text.WORDS_PATH)
 
 
-# TODO Move accessibility functions into a separate utils.
-
-a11y_controller = a11y.GetA11yController()
-
 dictation_key_action_map = {
     "enter|slap": Key("enter"),
     "space|spooce|spacebar": Key("space"),
@@ -443,57 +440,16 @@ repeatable_action_map = utils.combine_maps(
     })
 
 
-def select_text(text_query):
-    try:
-        return a11y_utils.select_text(a11y_controller, text_query)
-    except a11y.UnsupportedSelectionError:
-        text_info = a11y_utils.get_text_info(a11y_controller, text_query)
-        if text_info and text_info.start_coordinates and text_info.end_coordinates:
-            Mouse("[%d, %d], left:down, [%d, %d]/10, left:up" %
-                  (text_info.start_coordinates + text_info.end_coordinates)).execute()
-            return True
-        else:
-            return False
-
-
-def replace_text(text_query, replacement):
-    saved_cursor = a11y_utils.get_cursor_offset(a11y_controller)
-    text_info = a11y_utils.get_text_info(a11y_controller, text_query)
-    if not text_info:
-        return
-    cursor_before = text_info.end
-    if select_text(text_query):
-        if replacement:
-            replacement = str(replacement).lower()
-            if text_info.text.isupper():
-                replacement = replacement.upper()
-            elif text_info.text[0].isupper():
-                replacement = replacement.capitalize()
-            # TODO Add escaping.
-            Text(replacement).execute()
-        else:
-            # Simulate backspace twice: once to delete the selected words, and
-            # again to delete the preceding whitespace.
-            Key("backspace:2").execute()
-        if saved_cursor is not None:
-            if saved_cursor <= text_info.start:
-                a11y_utils.set_cursor_offset(a11y_controller, saved_cursor)
-            elif saved_cursor <= text_info.end:
-                pass
-            else:
-                cursor_after = a11y_utils.get_cursor_offset(a11y_controller)
-                if cursor_after:
-                    a11y_utils.set_cursor_offset(a11y_controller, saved_cursor + cursor_after - cursor_before)
-
+accessibility = get_accessibility_controller()
 
 accessibility_movement_commands = {
-    "go before <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
-        a11y_controller, text_position_query, a11y_utils.Position.BEFORE)),
-    "go after <text_position_query>": Function(lambda text_position_query: a11y_utils.move_cursor(
-        a11y_controller, text_position_query, a11y_utils.Position.AFTER)),
-    "words <text_query>": Function(select_text),
-    "words <text_query> delete": Function(lambda text_query: replace_text(text_query, "")),
-    "replace <text_query> with <replacement>": Function(replace_text),
+    "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+        text_position_query, CursorPosition.BEFORE)),
+    "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+        text_position_query, CursorPosition.AFTER)),
+    "words <text_query>": Function(accessibility.select_text),
+    "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
+    "replace <text_query> with <replacement>": Function(accessibility.replace_text),
 }
 
 
@@ -687,22 +643,22 @@ command_element_map = {
                 Dictation("end_phrase", default=""),
                 Alternative([Literal("before"), Literal("after")], name="end_relative_position"),
                 Dictation("end_relative_phrase", default="")],
-        value_func=lambda node, extras: a11y_utils.TextQuery(
+        value_func=lambda node, extras: TextQuery(
             start_phrase=str(extras["start_phrase"]),
-            start_relative_position=a11y_utils.Position[extras["start_relative_position"]] if "start_relative_position" in extras else None,
+            start_relative_position=CursorPosition[extras["start_relative_position"]] if "start_relative_position" in extras else None,
             start_relative_phrase=str(extras["start_relative_phrase"]),
             through=extras["through"],
             end_phrase=str(extras["end_phrase"]),
-            end_relative_position=a11y_utils.Position[extras["end_relative_position"]] if "end_relative_position" in extras else None,
+            end_relative_position=CursorPosition[extras["end_relative_position"]] if "end_relative_position" in extras else None,
             end_relative_phrase=str(extras["end_relative_phrase"]))),
     "text_position_query": Compound(
         spec="<phrase> [<relative_position> <relative_phrase>]",
         extras=[Dictation("phrase", default=""),
                 Alternative([Literal("before"), Literal("after")], name="relative_position"),
                 Dictation("relative_phrase", default="")],
-        value_func=lambda node, extras: a11y_utils.TextQuery(
+        value_func=lambda node, extras: TextQuery(
             end_phrase=str(extras["phrase"]),
-            end_relative_position=a11y_utils.Position[extras["relative_position"]] if "relative_position" in extras else None,
+            end_relative_position=CursorPosition[extras["relative_position"]] if "relative_position" in extras else None,
             end_relative_phrase=str(extras["relative_phrase"]))),
 }
 
