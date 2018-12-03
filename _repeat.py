@@ -442,7 +442,7 @@ repeatable_action_map = utils.combine_maps(
 
 accessibility = get_accessibility_controller()
 
-accessibility_movement_commands = {
+accessibility_commands = {
     "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
         text_position_query, CursorPosition.BEFORE)),
     "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
@@ -468,7 +468,7 @@ command_action_map = utils.combine_maps(
     # applications only those will work. These are primarily present to test
     # functionality; to add these commands to a specific application, just merge
     # in the map without a prefix.
-    dict([("my " + k, v) for k, v in accessibility_movement_commands.items()]),
+    dict([("my " + k, v) for k, v in accessibility_commands.items()]),
     {
         "delete": Key("del"),
         "go home|[go] west": Key("home"),
@@ -645,11 +645,11 @@ command_element_map = {
                 Dictation("end_relative_phrase", default="")],
         value_func=lambda node, extras: TextQuery(
             start_phrase=str(extras["start_phrase"]),
-            start_relative_position=CursorPosition[extras["start_relative_position"]] if "start_relative_position" in extras else None,
+            start_relative_position=CursorPosition[extras["start_relative_position"].upper()] if "start_relative_position" in extras else None,
             start_relative_phrase=str(extras["start_relative_phrase"]),
             through=extras["through"],
             end_phrase=str(extras["end_phrase"]),
-            end_relative_position=CursorPosition[extras["end_relative_position"]] if "end_relative_position" in extras else None,
+            end_relative_position=CursorPosition[extras["end_relative_position"].upper()] if "end_relative_position" in extras else None,
             end_relative_phrase=str(extras["end_relative_phrase"]))),
     "text_position_query": Compound(
         spec="<phrase> [<relative_position> <relative_phrase>]",
@@ -658,7 +658,7 @@ command_element_map = {
                 Dictation("relative_phrase", default="")],
         value_func=lambda node, extras: TextQuery(
             end_phrase=str(extras["phrase"]),
-            end_relative_position=CursorPosition[extras["relative_position"]] if "relative_position" in extras else None,
+            end_relative_position=CursorPosition[extras["relative_position"].upper()] if "relative_position" in extras else None,
             end_relative_phrase=str(extras["relative_phrase"]))),
 }
 
@@ -1677,7 +1677,7 @@ chrome_action_map = {
 }
 
 chrome_terminal_action_map = utils.combine_maps(
-    accessibility_movement_commands,
+    accessibility_commands,
     {
         "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
         "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
