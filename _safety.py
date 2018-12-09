@@ -1,4 +1,4 @@
-﻿# (c) Copyright 2015 by James Stout
+# (c) Copyright 2015 by James Stout
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 
 """Grammar for loading a macro directory backup. WARNING: Renaming sometimes

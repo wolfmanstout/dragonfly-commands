@@ -1,4 +1,4 @@
-﻿#
+#
 # This file is a command-module for Dragonfly.
 # (c) Copyright 2008 by Christo Butcher
 # (c) Copyright 2015 by James Stout
