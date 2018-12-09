@@ -1097,7 +1097,7 @@ class OpenClipboardUrlAction(ActionBase):
         win32clipboard.OpenClipboard()
         data = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
-        print "Opening link: %s" % data
+        print("Opening link: %s" % data)
         webbrowser.open(data)
 
 
@@ -2001,7 +2001,7 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         host = self.headers.getheader("Host")
         host = host.split(":")[0]
         if not (host == "localhost" or host == "localhost." or IsValidIp(host)):
-            print "Host header rejected: " + host
+            print("Host header rejected: " + host)
             return
         length = self.headers.getheader("content-length")
         file_type = self.headers.getheader("My-File-Type")

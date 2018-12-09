@@ -257,5 +257,5 @@ def load_json(filename):
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)) as json_file:
             return byteify(json.load(json_file))
     except IOError:
-        print filename + " not found"
+        print(filename + " not found")
         return None

@@ -5,7 +5,8 @@
 """Actions for manipulating Chrome via WebDriver."""
 
 import json
-import urllib2
+from six.moves import urllib_request
+from six.moves import urllib_error
 
 from dragonfly import (DynStrActionBase)
 import _dragonfly_local as local
@@ -18,8 +19,8 @@ def create_driver():
     global driver
     driver = None
     try:
-        urllib2.urlopen("http://127.0.0.1:9222/json")
-    except urllib2.URLError:
+        urllib_request.urlopen("http://127.0.0.1:9222/json")
+    except urllib_error.URLError:
         print("Unable to start WebDriver, Chrome is not responding.")
         return
     chrome_options = Options()
@@ -35,7 +36,7 @@ def quit_driver():
 
 
 def switch_to_active_tab():
-    tabs = json.load(urllib2.urlopen("http://127.0.0.1:9222/json"))
+    tabs = json.load(urllib_request.urlopen("http://127.0.0.1:9222/json"))
     # Chrome seems to order the tabs by when they were last updated, so we find
     # the first one that is not an extension.
     for tab in tabs:
@@ -46,7 +47,7 @@ def switch_to_active_tab():
         # ChromeDriver adds to the raw ID, so we just look for substring match.
         if active_tab in window:
             driver.switch_to_window(window);
-            print "Switched to: " + driver.title.encode('ascii', 'backslashreplace')
+            print("Switched to: " + driver.title.encode('ascii', 'backslashreplace'))
             return
 
 

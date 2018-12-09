@@ -4,7 +4,7 @@
 
 """Functions and classes to help with manipulating a remote Linux instance."""
 
-import xmlrpclib
+from six.moves import xmlrpc_client
 import time
 
 from dragonfly import (
@@ -17,7 +17,7 @@ class LinuxHelper(object):
     """Helper to access Linux."""
 
     def __init__(self):
-        self.server = xmlrpclib.ServerProxy("http://127.0.0.1:12400", allow_none=True)
+        self.server = xmlrpc_client.ServerProxy("http://127.0.0.1:12400", allow_none=True)
         self.last_update = None
 
     def GetActiveWindowTitle(self):
