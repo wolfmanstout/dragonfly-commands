@@ -207,7 +207,7 @@ class FocusWinRule(CompoundRule):
         for attempt in range(4):
             try:
                 window.set_foreground()
-            except Exception, e:
+            except Exception as e:
                 self._log.warning("%s: set_foreground() failed: %s."
                                   % (self, e))
                 time.sleep(0.2)

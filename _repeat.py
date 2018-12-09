@@ -11,14 +11,16 @@ This is heavily modified from _multiedit.py, found here:
 https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedit.py
 """
 
-import BaseHTTPServer
-import Queue
 import re
 import socket
 import threading
 import time
 import webbrowser
 import win32clipboard
+
+from six.moves import BaseHTTPServer
+from six.moves import queue
+from six import text_type
 
 from dragonfly import (
     ActionBase,
@@ -787,7 +789,7 @@ if json_windows:
 windows_suffix = "(win|window)"
 windows_mapping = {}
 for i, window in enumerate(windows):
-    if isinstance(window, str):
+    if isinstance(window, text_type):
         window = [window]
     for j, words in enumerate(window):
         windows_mapping["(" + words + ") " + windows_suffix] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
@@ -1961,7 +1963,7 @@ grammars.append(benchmark_grammar)
 # attacks. Consider this when adding new functionality.
 
 # Register timer to run arbitrary callbacks added by the server.
-callbacks = Queue.Queue()
+callbacks = queue.Queue()
 
 
 def RunCallbacks():

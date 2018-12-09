@@ -55,7 +55,7 @@ def combine_maps(*maps):
     for map in maps:
         if not map:
             continue
-        for key, value in map.iteritems():
+        for key, value in map.items():
             if value is None and key in result:
                 del result[key]
             else:
@@ -66,7 +66,7 @@ def combine_maps(*maps):
 def text_map_to_action_map(text_map):
     """Converts string values in a map to text actions."""
     return dict((k, Text(v.replace("%", "%%")))
-                for (k, v) in text_map.iteritems())
+                for (k, v) in text_map.items())
 
 
 class JoinedRepetition(Repetition):
@@ -240,22 +240,10 @@ def capitalize_text_action(spec):
     return FormattedText(spec, lambda text: text.capitalize())
 
 
-def byteify(input):
-    """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
-    if isinstance(input, dict):
-        return dict((byteify(key), byteify(value)) for key,value in input.iteritems())
-    elif isinstance(input, list):
-        return [byteify(element) for element in input]
-    elif isinstance(input, unicode):
-        return input.encode('utf-8')
-    else:
-        return input
-
-
 def load_json(filename):
     try:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)) as json_file:
-            return byteify(json.load(json_file))
+            return json.load(json_file)
     except IOError:
         print(filename + " not found")
         return None
