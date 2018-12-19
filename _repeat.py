@@ -526,6 +526,8 @@ command_action_map = utils.combine_maps(
 
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
+
+        "(hey|OK) google <text>": Function(lambda text: None),
     })
 
 # Actions for speaking out sequences of characters.
