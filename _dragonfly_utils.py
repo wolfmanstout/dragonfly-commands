@@ -69,6 +69,28 @@ def text_map_to_action_map(text_map):
                 for (k, v) in text_map.items())
 
 
+def _printable_to_key_action_spec(printable):
+    if len(printable) != 1:
+        raise ValueError("Printable must have a single character: %s" % printable)
+    if printable == "/":
+        return "slash"
+    if printable == ":":
+        return "colon"
+    if printable == ",":
+        return "comma"
+    if printable == "-":
+        return "minus"
+    if printable == "%":
+        return "%%"
+    return printable
+        
+
+def text_map_to_key_action_map(text_map):
+    """Converts string values in a map to key actions."""
+    return dict((k, Key(_printable_to_key_action_spec(v)))
+                for (k, v) in text_map.items())
+
+
 class JoinedRepetition(Repetition):
     """Like Repetition, except the results are joined with the given delimiter
     instead of returned as a list.

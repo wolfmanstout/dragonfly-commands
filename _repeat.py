@@ -414,7 +414,7 @@ standalone_key_action_map = utils.combine_maps(
 
 full_key_action_map = utils.combine_maps(
     standalone_key_action_map,
-    utils.text_map_to_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)),
+    utils.text_map_to_key_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)),
     {
         "home": Key("home"),
         "end": Key("end"),
