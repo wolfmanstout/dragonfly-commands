@@ -532,9 +532,9 @@ command_action_map = utils.combine_maps(
 
 # Actions for speaking out sequences of characters.
 character_action_map = {
-    "<chars> short": Text("%(chars)s"),
-    "number <numerals>": Text("%(numerals)s"),
-    "letter <letters>": Text("%(letters)s"),
+    "<chars> short": Text(u"%(chars)s"),
+    "number <numerals>": Text(u"%(numerals)s"),
+    "letter <letters>": Text(u"%(letters)s"),
     "upper letter <letters>": Function(lambda letters: Text(letters.upper()).execute()),
 }
 
@@ -680,7 +680,7 @@ format_rule = utils.create_rule(
 symbol_format_rule = utils.create_rule(
     "SymbolFormatRule",
     {
-        "padded <symbol>": Text(" %(symbol)s "),
+        "padded <symbol>": Text(u" %(symbol)s "),
     },
     {
         "symbol": symbol_element,
@@ -708,7 +708,7 @@ custom_format_rule = utils.create_rule(
 dictation_rule = utils.create_rule(
     "DictationRule",
     {
-        "(mim|mimic) text <text>": Text("%(text)s"),
+        "(mim|mimic) text <text>": Text(u"%(text)s"),
         "mim small <text>": utils.uncapitalize_text_action("%(text)s"),
         "mim big <text>": utils.capitalize_text_action("%(text)s"),
         "mimic <text>": Mimic(extra="text"),
@@ -1272,14 +1272,14 @@ emacs_action_map = {
     "occur": Key("a-s, o"),
     "symbol preev": Key("a-s, dot, c-r, c-r"),
     "symbol next": Key("a-s, dot, c-s"),
-    "go before [preev] <char>": Key("c-c, c, b") + Text("%(char)s"),
-    "go after [next] <char>": Key("c-c, c, f") + Text("%(char)s"),
-    "go before next <char>": Key("c-c, c, s") + Text("%(char)s"),
-    "go after preev <char>": Key("c-c, c, e") + Text("%(char)s"),
+    "go before [preev] <char>": Key("c-c, c, b") + Text(u"%(char)s"),
+    "go after [next] <char>": Key("c-c, c, f") + Text(u"%(char)s"),
+    "go before next <char>": Key("c-c, c, s") + Text(u"%(char)s"),
+    "go after preev <char>": Key("c-c, c, e") + Text(u"%(char)s"),
     "other screen up": Key("c-minus, ca-v"),
     "other screen down": Key("ca-v"),
     "other <n1> enter": Key("c-x, o") + jump_to_line("%(n1)s") + Key("enter"),
-    "go eye <char>": Key("c-c, c, j") + Text("%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
+    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
 
     # Editing
     "delete": Key("c-c, c, c-w"),
@@ -1334,7 +1334,7 @@ emacs_action_map = {
     "(reg|rej) <char> paste": Key("c-u, c-x, r, i, %(char)s"),
 
     # Templates
-    "plate <template>": Key("c-c, ampersand, c-s") + Text("%(template)s") + Key("enter"),
+    "plate <template>": Key("c-c, ampersand, c-s") + Text(u"%(template)s") + Key("enter"),
     "(snippet|template) open": Key("c-c, ampersand, c-v"),
     "(snippet|template) new": Key("c-c, ampersand, c-n"),
     "(snippets|templates) reload": Exec("yas-reload-all"),
@@ -1486,7 +1486,7 @@ emacs_org_action_map = {
     "show to do's": Key("c-c, slash, t"),
     "archive": Key("c-c, c-x, c-a"),
     "org (West|start)": Key("c-c, c, c-a"),
-    "tag <tag>": Key("c-c, c-q") + Text("%(tag)s") + Key("enter"),
+    "tag <tag>": Key("c-c, c-q") + Text(u"%(tag)s") + Key("enter"),
 }
 tags = {
     "new": "new",
@@ -1683,9 +1683,9 @@ chrome_action_map = {
 chrome_terminal_action_map = utils.combine_maps(
     accessibility_commands,
     {
-        "search <text>":        Key("c-l/15") + Text("%(text)s") + Key("enter"),
-        "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text("%(text)s") + Key("enter"),
-        "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text("%(text)s") + Key("enter"),
+        "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Key("enter"),
+        "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
+        "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
         "<link>":          Text("%(link)s"),
     })
 

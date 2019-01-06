@@ -18,6 +18,7 @@ import json
 import os
 import os.path
 import platform
+from six import text_type
 import tempfile
 
 from dragonfly import (
@@ -113,7 +114,7 @@ class JoinedSequence(Sequence):
         self.delimiter = delimiter
 
     def value(self, node):
-        return self.delimiter.join(str(v)
+        return self.delimiter.join(text_type(v)
                                    for v in Sequence.value(self, node)
                                    if v)
 

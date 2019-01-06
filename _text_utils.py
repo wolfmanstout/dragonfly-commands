@@ -5,6 +5,7 @@
 """Library for extracting words and phrases from text."""
 
 import re
+from six import text_type
 import _dragonfly_local as local
 
 WORDS_PATH = local.HOME + "/dotfiles/words.txt"
@@ -15,7 +16,7 @@ def split_dictation(dictation):
     """Preprocess dictation to do a better job of word separation. Returns a list of
     words."""
     # Make lowercase.
-    clean_dictation = str(dictation).lower()
+    clean_dictation = text_type(dictation).lower()
     # Strip apostrophe.
     clean_dictation = re.sub(r"'", "", clean_dictation)
     # Convert dashes into spaces.
