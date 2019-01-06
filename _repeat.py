@@ -1812,9 +1812,9 @@ gmail_repeatable_action_map = {
 
 gmail_action_map = {
     "open": Key("plus, o"),
-    "archive": Text("+{"),
-    "done": Text("+["),
-    "this unread": Text("+_"),
+    "archive": Key("+, {"),
+    "done": Key("+, ["),
+    "this unread": Key("+, _"),
     "undo": Key("plus, z"),
     "list": Key("plus, u"),
     "compose": Key("plus, c"),
@@ -1827,7 +1827,7 @@ gmail_action_map = {
     "this not important": Key("plus, minus"),
     "label waiting": Key("plus, l/50") + Text("waiting") + Key("enter"),
     "label snooze": Key("plus, l/50") + Text("snooze") + Key("enter"),
-    "snooze": Key("plus, l/50") + Text("snooze") + Key("enter") + Text("+["),
+    "snooze": Key("plus, l/50") + Text("snooze") + Key("enter") + Key("+, ["),
     "label candidates": Key("plus, l/50") + Text("candidates") + Key("enter"),
     "label wedding": Key("plus, l/50") + Text("wedding") + Key("enter"),
     "this select": Key("plus, x"),
