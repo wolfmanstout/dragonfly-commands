@@ -11,6 +11,7 @@ This is heavily modified from _multiedit.py, found here:
 https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedit.py
 """
 
+from collections import OrderedDict
 import re
 import socket
 import threading
@@ -18,6 +19,7 @@ import time
 import webbrowser
 import win32clipboard
 
+from odictliteral import odict
 from six.moves import BaseHTTPServer
 from six.moves import queue
 from six import string_types
@@ -444,15 +446,17 @@ repeatable_action_map = utils.combine_maps(
 
 accessibility = get_accessibility_controller()
 
-accessibility_commands = {
+accessibility_commands = odict[
     "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
         text_position_query, CursorPosition.BEFORE)),
     "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
         text_position_query, CursorPosition.AFTER)),
-    "words <text_query>": Function(accessibility.select_text),
+    # Note that the delete command is declared first so that it has higher
+    # priority than the selection variant.
     "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
+    "words <text_query>": Function(accessibility.select_text),
     "replace <text_query> with <replacement>": Function(accessibility.replace_text),
-}
+]
 
 
 #-------------------------------------------------------------------------------
@@ -470,7 +474,7 @@ command_action_map = utils.combine_maps(
     # applications only those will work. These are primarily present to test
     # functionality; to add these commands to a specific application, just merge
     # in the map without a prefix.
-    dict([("my " + k, v) for k, v in accessibility_commands.items()]),
+    OrderedDict([("my " + k, v) for k, v in accessibility_commands.items()]),
     {
         "delete": Key("del"),
         "go home|[go] west": Key("home"),
@@ -1185,7 +1189,7 @@ emacs_repeatable_action_map = {
     "error next": Key("f12"),
 }
 
-emacs_action_map = {
+emacs_action_map = odict[
     # Overrides
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
     "[<n>] down": Key("c-u") + Text("%(n)s") + Key("down"),
@@ -1283,6 +1287,14 @@ emacs_action_map = {
 
     # Editing
     "delete": Key("c-c, c, c-w"),
+    # Note that the delete commands are declared first so that they have higher
+    # priority than the selection variants.
+    "[<n>] afters delete": Key("c-del/5:%(n)d"),
+    "[<n>] befores delete": Key("c-backspace/5:%(n)d"),
+    "[<n>] aheads delete": Key("a-d/5:%(n)d"),
+    "[<n>] behinds delete": Key("a-backspace/5:%(n)d"),
+    "[<n>] rights delete": Key("del/5:%(n)d"),
+    "[<n>] lefts delete": Key("backspace/5:%(n)d"),
     "[<n>] afters": Key("c-space, c-right/5:%(n)d"),
     "[<n>] befores": Key("c-space, c-left/5:%(n)d"),
     "[<n>] aheads": Key("c-space, a-f/5:%(n)d"),
@@ -1376,7 +1388,7 @@ emacs_action_map = {
     # Version control
     "magit open": Key("c-c, m"),
     "diff open": Key("c-x, v, equals"),
-}
+]
 
 emacs_terminal_action_map = {
     "go before [preev] <custom_text>": Key("c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),

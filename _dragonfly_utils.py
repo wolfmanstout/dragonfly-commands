@@ -13,6 +13,7 @@ DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
 CHROME_DRIVER_PATH: Path to chrome driver executable.
 """
 
+from collections import OrderedDict
 import copy
 import json
 import os
@@ -52,7 +53,8 @@ import _dragonfly_local as local
 def combine_maps(*maps):
     """Merge the contents of multiple maps, giving precedence to later maps. Skips
     empty maps and deletes entries with value None."""
-    result = {}
+    # Use OrderedDict to maintain possible ordering in the source maps.
+    result = OrderedDict()
     for map in maps:
         if not map:
             continue
