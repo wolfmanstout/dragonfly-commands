@@ -397,7 +397,7 @@ dictation_key_action_map = {
 }
 
 dictation_action_map = utils.combine_maps(dictation_key_action_map,
-                                          utils.text_map_to_action_map(symbols_map))
+                                          utils.text_map_to_action_map(utils.combine_maps(letters_map, symbols_map)))
 
 standalone_key_action_map = utils.combine_maps(
     dictation_key_action_map,
@@ -725,11 +725,13 @@ dictation_rule = utils.create_rule(
 # Rule for printing single characters.
 single_character_rule = utils.create_rule(
     "SingleCharacterRule",
-    character_action_map,
     {
-        "numerals": number_element,
-        "letters": letter_element,
-        "chars": char_element,
+        "number <numeral>": Text(u"%(numeral)s"),
+        "upper <letter>": Function(lambda letter: Text(letter.upper()).execute()),
+    },
+    {
+        "numeral": number_element,
+        "letter": letter_element,
     }
 )
 
@@ -771,8 +773,7 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=utils.create_rule("DictationActionRule",
                                    dictation_action_map,
                                    command_element_map)),
-    # Disabled for efficiency.
-    # RuleRef(rule=single_character_rule),
+    RuleRef(rule=single_character_rule),
 ]))
 
 
