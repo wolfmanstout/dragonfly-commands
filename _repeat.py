@@ -467,7 +467,6 @@ accessibility_commands = odict[
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
 command_action_map = utils.combine_maps(
-    utils.text_map_to_action_map(symbols_map),
     # These work like the built-in commands and are available for any
     # application that supports IAccessible2. A "my" prefix is used to avoid
     # overwriting similarly-phrased commands built into Dragon, because in some
