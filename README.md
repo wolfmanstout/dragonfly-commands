@@ -18,10 +18,16 @@ dragonfly-modules repository](https://github.com/t4ngo/dragonfly-modules).
 
 If you do choose to use this code directly, here are the basic steps:
 
-1. Install Dragon, NatLink, and dragonfly (recommended: `pip install dragonfly2`).
+1. Install Dragon, NatLink, and Dragonfly. I generally recommend `pip install
+   dragonfly2` to install Dragonfly, but occasionally this grammar may use
+   features only available in my [development
+   branch](https://github.com/wolfmanstout/dragonfly/tree/develop) that have not
+   yet been integrated upstream.
 2. Install dependencies: `pip install -r requirements.txt`
-3. (Optional) Update Chrome to listen on port 9222 ([instructions](http://handsfreecoding.org/2015/02/21/custom-web-commands-with-webdriver/)).
-4. Copy the contents of this repository into your macros directory (typically the MacroSystem directory).
+3. (Optional) Update Chrome to listen on port 9222
+   ([instructions](http://handsfreecoding.org/2015/02/21/custom-web-commands-with-webdriver/)).
+4. Copy the contents of this repository into your macros directory (typically
+   the MacroSystem directory).
 5. Rename ```_dragonfly_local.py.template``` to ```_dragonfly_local.py```.
 6. Restart Dragon.
 
