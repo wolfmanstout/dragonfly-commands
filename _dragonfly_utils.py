@@ -123,8 +123,8 @@ class JoinedSequence(Sequence):
 
 def renamed_element(name, element):
     element_copy = copy.copy(element)
-    element.name = name
-    return element
+    element_copy.name = name
+    return element_copy
 
 def element_map_to_extras(element_map):
     """Converts an element map to a standard named element list that may be used in
