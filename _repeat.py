@@ -37,6 +37,7 @@ from dragonfly import (
     DictListRef,
     Dictation,
     Empty,
+    FocusWindow,
     Function,
     Grammar,
     IntegerRef,
@@ -196,6 +197,7 @@ symbols_map = {
     "plus twice": "++",
     "plus sign twice": "++",
     "minus": "-",
+    "minus twice": "--",
     "hyphen": "-",
     "dash": "-",
     ",": ",",
@@ -801,6 +803,9 @@ for i, window in enumerate(windows):
         windows_mapping["(" + words + ") " + windows_suffix] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
 
 final_action_map = utils.combine_maps(windows_mapping, {
+    "[work] terminal win": FocusWindow(executable="nxclient.bin", title=" - Terminal"),
+    "[work] emacs win": FocusWindow(executable="nxclient.bin", title=" - Emacs editor"),
+    "[work] studio win": FocusWindow(executable="nxclient.bin", title=" - Android Studio"),
     "[<n>] swap": utils.SwitchWindows("%(n)d"),
 })
 final_element_map = {
@@ -1388,6 +1393,7 @@ emacs_action_map = odict[
     # Version control
     "magit open": Key("c-c, m"),
     "diff open": Key("c-x, v, equals"),
+    "VC open": Key("c-x, v, d, enter"),
 ]
 
 emacs_terminal_action_map = {
@@ -1408,6 +1414,12 @@ emacs_terminal_action_map = {
 templates = {
     "beginend": "beginend",
     "car": "car",
+    "catch": "catch",
+    "doc": "doc",
+    "field declaration": "field_declaration",
+    "field definition": "field_definition",
+    "field initialize": "field_initialize",
+    "finally": "finally",
     "class": "class",
     "const ref": "const_ref",
     "const pointer": "const_pointer",
@@ -1425,15 +1437,21 @@ templates = {
     "info": "info",
     "inverse if": "inverse_if",
     "key": "key",
+    "lambda": "lambda",
+    "list": "list",
     "map": "map",
     "method": "method",
     "namespace": "namespace",
+    "new": "new",
+    "override": "override",
     "ref": "ref",
     "set": "set",
     "shared pointer": "shared_pointer",
+    "test": "test",
     "ternary": "ternary",
     "text": "text",
     "to do": "todo",
+    "try": "try",
     "unique pointer": "unique_pointer",
     "var": "vardef",
     "vector": "vector",
@@ -1658,6 +1676,7 @@ chrome_action_map = {
     "find":               Key("c-f"),
     "<link> go":          Text("%(link)s"),
     "(caret|carrot) browsing": Key("f7"),
+    "code search (voice access|VA)": Key("c-l/15") + Text("csva") + Key("tab"),
     "code search car": Key("c-l/15") + Text("csc") + Key("tab"),
     "code search simulator": Key("c-l/15") + Text("css") + Key("tab"),
     "code search": Key("c-l/15") + Text("cs") + Key("tab"),
