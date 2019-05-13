@@ -1059,6 +1059,8 @@ shell_command_map = utils.combine_maps({
     "fig submit": Text("hg submit "),
     "fig status": Text("hg status "),
     "fig fix": Text("hg fix "),
+    "fig evolve": Text("hg evolve"),
+    "fig next": Text("hg next"),
     "(soft|sym) link": Text("ln -s "),
     "list": Text("ls -l "),
     "make dear": Text("mkdir "),
