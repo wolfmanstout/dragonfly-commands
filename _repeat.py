@@ -803,9 +803,9 @@ for i, window in enumerate(windows):
         windows_mapping["(" + words + ") " + windows_suffix] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
 
 final_action_map = utils.combine_maps(windows_mapping, {
-    "[work] terminal win": FocusWindow(executable="nxclient.bin", title=" - Terminal"),
-    "[work] emacs win": FocusWindow(executable="nxclient.bin", title=" - Emacs editor"),
-    "[work] studio win": FocusWindow(executable="nxclient.bin", title=" - Android Studio"),
+    # "[work] terminal win": FocusWindow(executable="nxclient.bin", title=" - Terminal"),
+    # "[work] emacs win": FocusWindow(executable="nxclient.bin", title=" - Emacs editor"),
+    # "[work] studio win": FocusWindow(executable="nxclient.bin", title=" - Android Studio"),
     "[<n>] swap": utils.SwitchWindows("%(n)d"),
 })
 final_element_map = {
@@ -1050,7 +1050,7 @@ shell_command_map = utils.combine_maps({
     "fig checkout": Text("hg checkout "),
     "fig checkout P4 head": Text("hg checkout p4head "),
     "fig add": Text("hg add "),
-    "fig commit": Text("hg commit -e"),
+    "fig commit": Text("hg commit -e "),
     "fig diff": Text("hg diff "),
     "fig P diff": Text("hg pdiff "),
     "fig amend": Text("hg amend "),
@@ -1059,8 +1059,8 @@ shell_command_map = utils.combine_maps({
     "fig submit": Text("hg submit "),
     "fig status": Text("hg status "),
     "fig fix": Text("hg fix "),
-    "fig evolve": Text("hg evolve"),
-    "fig next": Text("hg next"),
+    "fig evolve": Text("hg evolve "),
+    "fig next": Text("hg next "),
     "(soft|sym) link": Text("ln -s "),
     "list": Text("ls -l "),
     "make dear": Text("mkdir "),
@@ -1186,12 +1186,12 @@ emacs_repeatable_action_map = {
     "redo": Key("c-question"),
 
     # Movement
-    "layer forward": Key("ca-f"),
-    "layer back": Key("ca-b"),
+    "layer preev": Key("ca-f"),
+    "layer next": Key("ca-b"),
     "layer down": Key("ca-d"),
     "layer up": Key("ca-u"),
-    "exper forward": Key("c-c, c, c-f"),
-    "exper back": Key("c-c, c, c-b"),
+    "exper preev": Key("c-c, c, c-f"),
+    "exper next": Key("c-c, c, c-b"),
     "word preev": Key("a-p"),
     "word next": Key("a-n"),
     "error preev": Key("f11"),
@@ -1494,6 +1494,12 @@ emacs_python_environment = MyEnvironment(name="EmacsPython",
 
 ### Emacs: Org-Mode
 
+emacs_org_repeatable_action_map = {
+    "heading preev": Key("c-c, c-b"),
+    "heading next": Key("c-c, c-f"),
+    "heading up": Key("c-c, c-u"),
+}
+
 emacs_org_action_map = {
     "new heading above": Key("c-a, a-enter"),
     "new heading": Key("c-e, a-enter"),
@@ -1541,6 +1547,7 @@ emacs_org_environment = MyEnvironment(name="EmacsOrg",
                                       parent=emacs_environment,
                                       context=linux.UniversalAppContext(title="- Org -"),
                                       action_map=emacs_org_action_map,
+                                      repeatable_action_map=emacs_org_repeatable_action_map,
                                       element_map=emacs_org_element_map)
 
 
@@ -1864,7 +1871,7 @@ gmail_action_map = {
     "reply all": Key("plus, a"),
     "forward": Key("plus, f"),
     "important": Key("plus, plus"),
-    "this starred": Key("plus, s"),
+    "this star": Key("plus, s"),
     "this important": Key("plus, plus"),
     "this not important": Key("plus, minus"),
     "label waiting": Key("plus, l/50") + Text("waiting") + Key("enter"),
@@ -1874,7 +1881,7 @@ gmail_action_map = {
     "label wedding": Key("plus, l/50") + Text("wedding") + Key("enter"),
     "this select": Key("plus, x"),
     "<n> select": Key("plus, x, plus, j") * Repeat(extra="n"),
-    "messages reload": Key("plus, N"),
+    "(message|messages) reload": Key("plus, N"),
     "go inbox|going box": Key("plus, g, i"),
     "go starred": Key("plus, g, s"),
     "go sent": Key("plus, g, t"),
@@ -1965,10 +1972,12 @@ notepad_environment = MyEnvironment(name="Notepad",
 # TODO Figure out either how to integrate this with the repeating rule or move out.
 linux_action_map = utils.combine_maps(
     {
-        "create terminal": Key("ca-t"),
-        "go to Emacs": linux.ActivateLinuxWindow("Emacs editor"),
-        "go to terminal": linux.ActivateLinuxWindow(" - Terminal"),
-        "go to Firefox": linux.ActivateLinuxWindow("Mozilla Firefox"),
+        "terminal new": Key("ca-t"),
+        "[work] terminal win": linux.ActivateLinuxWindow(" - Terminal"),
+        "[work] emacs win": linux.ActivateLinuxWindow(" - Emacs editor"),
+        "[work] studio win": linux.ActivateLinuxWindow(" - Android Studio"),
+        "remote firefox win": linux.ActivateLinuxWindow("Mozilla Firefox"),
+        "remote chrome win": linux.ActivateLinuxWindow("Google Chrome"),
     })
 run_local_hook("AddLinuxCommands", linux_action_map)
 linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
