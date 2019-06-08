@@ -803,9 +803,9 @@ for i, window in enumerate(windows):
         windows_mapping["(" + words + ") " + windows_suffix] = Key("win:down, %d:%d/20, win:up" % (i + 1, j + 1))
 
 final_action_map = utils.combine_maps(windows_mapping, {
-    # "[work] terminal win": FocusWindow(executable="nxclient.bin", title=" - Terminal"),
-    # "[work] emacs win": FocusWindow(executable="nxclient.bin", title=" - Emacs editor"),
-    # "[work] studio win": FocusWindow(executable="nxclient.bin", title=" - Android Studio"),
+    "[work] terminal win": FocusWindow(executable="nxclient.bin", title=" - Terminal"),
+    "[work] emacs win": FocusWindow(executable="nxclient.bin", title=" - Emacs editor"),
+    "[work] studio win": FocusWindow(executable="nxclient.bin", title=" - Android Studio"),
     "[<n>] swap": utils.SwitchWindows("%(n)d"),
 })
 final_element_map = {
@@ -1686,7 +1686,7 @@ chrome_action_map = {
     "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
     "tab reopen":         Key("cs-t"),
     "tab dupe": Key("c-l/15, a-enter"),
-    "workspace open": Key("a-s"),
+    "workspace open": Key("c-1/15, a-s"),
     "workspace tab new": Key("as-f"),
     "workspace close": Key("a-w"),
     "workspace new": Key("a-n"),
@@ -1973,9 +1973,9 @@ notepad_environment = MyEnvironment(name="Notepad",
 linux_action_map = utils.combine_maps(
     {
         "terminal new": Key("ca-t"),
-        "[work] terminal win": linux.ActivateLinuxWindow(" - Terminal"),
-        "[work] emacs win": linux.ActivateLinuxWindow(" - Emacs editor"),
-        "[work] studio win": linux.ActivateLinuxWindow(" - Android Studio"),
+        # "[work] terminal win": linux.ActivateLinuxWindow(" - Terminal"),
+        # "[work] emacs win": linux.ActivateLinuxWindow(" - Emacs editor"),
+        # "[work] studio win": linux.ActivateLinuxWindow(" - Android Studio"),
         "remote firefox win": linux.ActivateLinuxWindow("Mozilla Firefox"),
         "remote chrome win": linux.ActivateLinuxWindow("Google Chrome"),
     })
