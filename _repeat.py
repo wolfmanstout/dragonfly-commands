@@ -1186,12 +1186,12 @@ emacs_repeatable_action_map = {
     "redo": Key("c-question"),
 
     # Movement
-    "layer preev": Key("ca-f"),
-    "layer next": Key("ca-b"),
+    "layer preev": Key("ca-b"),
+    "layer next": Key("ca-f"),
     "layer down": Key("ca-d"),
     "layer up": Key("ca-u"),
-    "exper preev": Key("c-c, c, c-f"),
-    "exper next": Key("c-c, c, c-b"),
+    "exper preev": Key("c-c, c, c-b"),
+    "exper next": Key("c-c, c, c-f"),
     "word preev": Key("a-p"),
     "word next": Key("a-n"),
     "error preev": Key("f11"),
