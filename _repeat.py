@@ -1686,7 +1686,7 @@ chrome_action_map = {
     "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
     "tab reopen":         Key("cs-t"),
     "tab dupe": Key("c-l/15, a-enter"),
-    "workspace open": Key("c-1/15, a-s"),
+    "workspace open": Mouse("[0.8, 0.8]") + Key("c-1/15, a-s"),
     "workspace tab new": Key("as-f"),
     "workspace close": Key("a-w"),
     "workspace new": Key("a-n"),
@@ -1734,7 +1734,9 @@ chrome_terminal_action_map = utils.combine_maps(
     {
         "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Key("enter"),
         "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
+        "history search": Key("c-l/15") + Text("history") + Key("tab"),
         "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
+        "moma search": Key("c-l/15") + Text("moma") + Key("tab"),
         "<link>":          Text("%(link)s"),
     })
 
@@ -1982,7 +1984,7 @@ linux_action_map = utils.combine_maps(
 run_local_hook("AddLinuxCommands", linux_action_map)
 linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
                                (AppContext(title="Oracle VM VirtualBox") |
-                                AppContext(title=" - Chrome Remote Desktop")))
+                                AppContext(title="<remotedesktop.corp.google.com>")))
 
 
 #-------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ class UniversalAppContext(AppContext):
         if AppContext.matches(self, executable, title, handle):
             return True
         # Only check Linux if it is active.
-        if title.find("Oracle VM VirtualBox") != -1 or title.find(" - Chrome Remote Desktop") != -1:
+        if title.find("Oracle VM VirtualBox") != -1 or title.find("<remotedesktop.corp.google.com>") != -1:
             remote_title = linux_helper.GetActiveWindowTitle().lower()
             found = any(remote_title.find(match) != -1 for match in self._title)
             if self._exclude != found:
