@@ -88,7 +88,7 @@ def _printable_to_key_action_spec(printable):
     if printable == "%":
         return "%%"
     return printable
-        
+
 
 def text_map_to_key_action_map(text_map):
     """Converts string values in a map to key actions."""
