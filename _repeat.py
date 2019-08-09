@@ -1080,7 +1080,7 @@ shell_command_map = utils.combine_maps({
     "pseudo": Text("sudo "),
     "apt get": Text("apt-get "),
 }, dict((command, Text(command + " ")) for command in [
-    "echo", 
+    "echo",
     "grep",
     "ssh",
     "diff",
@@ -1779,7 +1779,7 @@ amazon_action_map = {
 }
 
 amazon_environment = MyEnvironment(name="Amazon",
-                                   parent=chrome_environment, 
+                                   parent=chrome_environment,
                                    context=(AppContext(title="<www.amazon.com>") |
                                             AppContext(title="<smile.amazon.com>")),
                                    action_map=amazon_action_map)
@@ -1830,7 +1830,7 @@ calendar_action_map = {
     "day": Key("d"),
     "week": Key("w"),
     "month": Key("m"),
-    "agenda": Key("a"), 
+    "agenda": Key("a"),
 }
 calendar_environment = MyEnvironment(name="Calendar",
                                      parent=chrome_environment,
@@ -1922,7 +1922,7 @@ docs_action_map = {
     "add comment": Key("ca-m"),
     "preev comment": Key("ctrl:down, alt:down, p, c, ctrl:up, alt:up"),
     "next comment": Key("ctrl:down, alt:down, n, c, ctrl:up, alt:up"),
-    "enter comment": Key("ctrl:down, alt:down, e, c, ctrl:up, alt:up"), 
+    "enter comment": Key("ctrl:down, alt:down, e, c, ctrl:up, alt:up"),
     "(new|insert) row above": Key("a-i/15, r"),
     "(new|insert) row [below]": Key("a-i/15, b"),
     "dupe row": Key("s-space:2, c-c/15, a-i/15, b, c-v/30, up/30, down"),
