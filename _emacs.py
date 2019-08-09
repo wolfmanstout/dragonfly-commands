@@ -1,12 +1,6 @@
 # (c) Copyright 2015 by James Stout
 # Licensed under the LGPL, see <http://www.gnu.org/licenses/>
 
-try:
-    import pkg_resources
-    pkg_resources.require("dragonfly >= 0.6.5beta1.dev-r76")
-except ImportError:
-    pass
-
 from dragonfly import (
     Dictation,
     Grammar,
@@ -33,10 +27,12 @@ class CommandRule(MappingRule):
         "Foreclosure previous": Exec("4clojure-previous-question"),
         "Foreclosure check": Exec("4clojure-check-answers"),
         "confirm": Text("yes") + Key("enter"),
+        "confirm short": Text("y"),
         "deny": Text("no") + Key("enter"),
+        "deny short": Text("n"),
         "relative line numbers": Exec("linum-relative-toggle"),
-        "revert buffer": Exec("revert-buffer"),
-        "exit out of Emacs": Key("c-x, c-c"),
+        "buff revert": Exec("revert-buffer"),
+        "emacs close now": Key("c-x, c-c"),
         }
     extras = [
         IntegerRef("n", 1, 20),

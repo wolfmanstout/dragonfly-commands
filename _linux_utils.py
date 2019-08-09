@@ -4,7 +4,7 @@
 
 """Functions and classes to help with manipulating a remote Linux instance."""
 
-import xmlrpclib
+from six.moves import xmlrpc_client
 import time
 
 from dragonfly import (
@@ -17,7 +17,7 @@ class LinuxHelper(object):
     """Helper to access Linux."""
 
     def __init__(self):
-        self.server = xmlrpclib.ServerProxy("http://127.0.0.1:12400", allow_none=True)
+        self.server = xmlrpc_client.ServerProxy("http://127.0.0.1:12400", allow_none=True)
         self.last_update = None
 
     def GetActiveWindowTitle(self):
@@ -50,9 +50,9 @@ class UniversalAppContext(AppContext):
         if AppContext.matches(self, executable, title, handle):
             return True
         # Only check Linux if it is active.
-        if title.find("Oracle VM VirtualBox") != -1 or title.find(" - Chrome Remote Desktop") != -1:
+        if title.find("Oracle VM VirtualBox") != -1 or title.find("<remotedesktop.corp.google.com>") != -1:
             remote_title = linux_helper.GetActiveWindowTitle().lower()
-            found = remote_title.find(self._title) != -1
+            found = any(remote_title.find(match) != -1 for match in self._title)
             if self._exclude != found:
                 return True
         return False

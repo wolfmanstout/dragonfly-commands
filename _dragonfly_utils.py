@@ -13,10 +13,13 @@ DLL_DIRECTORY: Path to directory containing DLLs used in this module. Missing
 CHROME_DRIVER_PATH: Path to chrome driver executable.
 """
 
+from collections import OrderedDict
+import copy
 import json
 import os
 import os.path
 import platform
+from six import text_type
 import tempfile
 
 from dragonfly import (
@@ -50,18 +53,47 @@ import _dragonfly_local as local
 # on the fly without defining a new class.
 
 def combine_maps(*maps):
-    """Merge the contents of multiple maps, giving precedence to later maps."""
-    result = {}
+    """Merge the contents of multiple maps, giving precedence to later maps. Skips
+    empty maps and deletes entries with value None."""
+    # Use OrderedDict to maintain possible ordering in the source maps.
+    result = OrderedDict()
     for map in maps:
-        if map:
-            result.update(map)
+        if not map:
+            continue
+        for key, value in map.items():
+            if value is None and key in result:
+                del result[key]
+            else:
+                result[key] = value
     return result
 
 
 def text_map_to_action_map(text_map):
     """Converts string values in a map to text actions."""
     return dict((k, Text(v.replace("%", "%%")))
-                for (k, v) in text_map.iteritems())
+                for (k, v) in text_map.items())
+
+
+def _printable_to_key_action_spec(printable):
+    if len(printable) != 1:
+        raise ValueError("Printable must have a single character: %s" % printable)
+    if printable == "/":
+        return "slash"
+    if printable == ":":
+        return "colon"
+    if printable == ",":
+        return "comma"
+    if printable == "-":
+        return "minus"
+    if printable == "%":
+        return "%%"
+    return printable
+        
+
+def text_map_to_key_action_map(text_map):
+    """Converts string values in a map to key actions."""
+    return dict((k, Key(_printable_to_key_action_spec(v)))
+                for (k, v) in text_map.items())
 
 
 class JoinedRepetition(Repetition):
@@ -86,26 +118,21 @@ class JoinedSequence(Sequence):
         self.delimiter = delimiter
 
     def value(self, node):
-        return self.delimiter.join(str(v)
+        return self.delimiter.join(text_type(v)
                                    for v in Sequence.value(self, node)
                                    if v)
 
 
-class ElementWrapper(Sequence):
-    """Identity function on element, useful for renaming."""
-
-    def __init__(self, name, child):
-        Sequence.__init__(self, (child, ), name)
-
-    def value(self, node):
-        return Sequence.value(self, node)[0]
-
+def renamed_element(name, element):
+    element_copy = copy.copy(element)
+    element_copy.name = name
+    return element_copy
 
 def element_map_to_extras(element_map):
     """Converts an element map to a standard named element list that may be used in
     MappingRule.
     """
-    return [ElementWrapper(name, element[0] if isinstance(element, tuple) else element)
+    return [renamed_element(name, element[0] if isinstance(element, tuple) else element)
             for (name, element) in element_map.items()]
 
 
@@ -139,6 +166,18 @@ def combine_contexts(context1, context2):
     return context1 & context2
 
 
+class ModifiedAction(ActionBase):
+    def __init__(self, name, action):
+        ActionBase.__init__(self)
+        self.name = name
+        self.action = action
+
+    def _execute(self, data=None):
+        modifier = data[self.name]
+        modified_action = modifier(self.action)
+        modified_action.execute(data)
+
+
 class SwitchWindows(DynStrActionBase):
     """Simulates the effects of alt-tab. The constructor argument should be a string
     representing the number of times to effectively press the "tab" button if
@@ -155,11 +194,11 @@ class SwitchWindows(DynStrActionBase):
             os.startfile("C:/Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch/Window Switcher.lnk")
             Pause("10").execute()
             if platform.release() == "8":
-                Key("tab:%d/25, enter" % (repeat - 1)).execute()
+                Key("tab:%d/10, enter" % (repeat - 1)).execute()
             else:
-                Key("right:%d/25, enter" % repeat).execute()
+                Key("right:%d/10, enter" % repeat).execute()
         else:
-            Key("alt:down, tab:%d/25, alt:up" % repeat).execute()
+            Key("alt:down, tab:%d/10, alt:up" % repeat).execute()
 
 
 class RunApp(ActionBase):
@@ -230,22 +269,10 @@ def capitalize_text_action(spec):
     return FormattedText(spec, lambda text: text.capitalize())
 
 
-def byteify(input):
-    """Convert unicode to str. Dragonfly grammars don't play well with Unicode."""
-    if isinstance(input, dict):
-        return dict((byteify(key), byteify(value)) for key,value in input.iteritems())
-    elif isinstance(input, list):
-        return [byteify(element) for element in input]
-    elif isinstance(input, unicode):
-        return input.encode('utf-8')
-    else:
-        return input
-
-
 def load_json(filename):
     try:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)) as json_file:
-            return byteify(json.load(json_file))
+            return json.load(json_file)
     except IOError:
-        print filename + " not found"
+        print(filename + " not found")
         return None

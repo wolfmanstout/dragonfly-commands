@@ -14,74 +14,89 @@ import _text_utils as text
 # Format: some_words
 def format_score(dictation):          # Function name must start with "format_".
     """ score <dictation> """         # Docstring defining spoken-form.
-    return "_".join(text.split_dictation(dictation))  # Put underscores between words.
+    return u"_".join(text.split_dictation(dictation))  # Put underscores between words.
 
 # Format: some_words_
-def format_field(dictation):
+def format_trail_score(dictation):
     """ trail score <dictation> """
-    return "_".join(text.split_dictation(dictation)) + "_"
+    return u"_".join(text.split_dictation(dictation)) + u"_"
+
+# Format: _some_words
+def format_pre_score(dictation):
+    """ pre score <dictation> """
+    return u"_" + u"_".join(text.split_dictation(dictation))
 
 # Format: some_words()
 def format_under_function(dictation):
     """ func score <dictation> """
-    return "_".join(text.split_dictation(dictation)) + "()"
+    return u"_".join(text.split_dictation(dictation)) + u"()"
 
 # Format: FLAGS_some_words
 def format_flag(dictation):
     """ flag score <dictation> """
-    return "FLAGS_" + "_".join(text.split_dictation(dictation))
+    return u"FLAGS_" + u"_".join(text.split_dictation(dictation))
+
+# Format: some_words::
+def format_namespace(dictation):
+    """ namespace <dictation> """
+    return u"_".join(text.split_dictation(dictation)) + u"::"
 
 # Format: SomeWords
 def format_studley(dictation):
     """ studley <dictation> """
     words = [word.capitalize() for words in text.split_dictation(dictation)
              for word in re.findall(r"(\W+|\w+)", words)]
-    return "".join(words)
+    return u"".join(words)
 
 # Format: kSomeWords
 def format_k_studley(dictation):
     """ K studley <dictation> """
     words = [word.capitalize() for words in text.split_dictation(dictation)
              for word in re.findall(r"(\W+|\w+)", words)]
-    return "k" + "".join(words)
+    return u"k" + u"".join(words)
 
 # Format: QSomeWords
 def format_q_studley(dictation):
     """ Q studley <dictation> """
     words = [word.capitalize() for words in text.split_dictation(dictation)
              for word in re.findall(r"(\W+|\w+)", words)]
-    return "Q" + "".join(words)
+    return u"Q" + u"".join(words)
 
 # Format: somewords
-def format_one_word(dictation):
-    """ [all] one word <dictation> """
-    return "".join(text.split_dictation(dictation))
+def format_compound(dictation):
+    """ [all] compound <dictation> """
+    return u"".join(text.split_dictation(dictation))
 
 # Format: SOMEWORDS
-def format_upper_one_word(dictation):
-    """ upper one word <dictation> """
+def format_upper_compound(dictation):
+    """ upper compound <dictation> """
     words = [word.upper() for word in text.split_dictation(dictation)]
-    return "".join(words)
+    return u"".join(words)
 
 # Format: SOME_WORDS
 def format_upper_score(dictation):
     """ upper score <dictation> """
     words = [word.upper() for word in text.split_dictation(dictation)]
-    return "_".join(words)
+    return u"_".join(words)
 
 # Format: someWords
-def format_java_method(dictation):
+def format_camel(dictation):
     """ camel <dictation> """
     words = text.split_dictation(dictation)
-    return words[0] + "".join(w.capitalize() for w in words[1:])
+    return words[0] + u"".join(w.capitalize() for w in words[1:])
 
 # Format: some-words
 def format_dashes(dictation):
     """ dashes <dictation> """
-    return "-".join(text.split_dictation(dictation))
+    return u"-".join(text.split_dictation(dictation))
 
 # Format: some words
 def format_spaces(dictation):
     """ spaces <dictation> """
-    return " ".join(text.split_dictation(dictation))
+    return u" ".join(text.split_dictation(dictation))
+
+# Format:  some words 
+def format_padded(dictation):
+    """ padded <dictation> """
+    return u" " + " ".join(text.split_dictation(dictation)) + " "
 
