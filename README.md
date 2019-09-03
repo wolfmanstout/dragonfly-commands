@@ -45,5 +45,5 @@ integration). Here is how to integrate eye tracking:
 4. Set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the directory used
    in the previous step.
 
-Please check out [my blog](handsfreecoding.org) for instructions integrating
+Please check out [my blog](http://handsfreecoding.org) for instructions integrating
 other optional features.
