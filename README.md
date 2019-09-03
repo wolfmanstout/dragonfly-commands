@@ -33,6 +33,17 @@ If you do choose to use this code directly, here are the basic steps:
 
 Those are the basic steps needed to get the code to run without errors. Some
 interesting functionality will still be missing (e.g. eye tracking, WebDriver
-integration). Please check out my blog for instructions on integrating these
-features (hint: you will need to update ```_dragonfly_local.py``` if you wish to
-use my built-in grammars for these features).
+integration). Here is how to integrate eye tracking:
+
+1. Download the [latest
+   Tobii.Interaction](https://www.nuget.org/packages/Tobii.Interaction/) package
+   from NuGet (these instructions have been tested on 0.7.3).
+2. Rename the file extension to .zip and expand the contents.
+3. Copy these 3 DLLs to a directory of your choice:
+   build/AnyCPU/Tobii.EyeX.Client.dll, lib/net45/Tobii.Interaction.Model.dll,
+   lib/net45/Tobii.Interaction.Net.dll.
+4. Set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the directory used
+   in the previous step.
+
+Please check out [my blog](handsfreecoding.org) for instructions integrating
+other optional features.

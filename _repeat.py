@@ -68,6 +68,9 @@ import _linux_utils as linux
 import _text_utils as text
 import _webdriver_utils as webdriver
 
+# Instantiate the tracker so we can refer to it (we will connect to it later).
+tracker = eye_tracker.get_tracker()
+
 # Load local hooks if defined.
 try:
     import _dragonfly_local_hooks as local_hooks
@@ -504,24 +507,22 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
-        "(I|eye) connect": Function(eye_tracker.connect),
-        "(I|eye) disconnect": Function(eye_tracker.disconnect),
-        "(I|eye) print position": Function(eye_tracker.print_position),
-        "(I|eye) move": Function(eye_tracker.move_to_position),
-        "(I|eye) act": Function(eye_tracker.activate_position),
-        "(I|eye) pan": Function(eye_tracker.panning_step_position),
-        "(I|eye) (touch|click)": Function(eye_tracker.move_to_position) + Mouse("left"),
-        "(I|eye) (touch|click) right": Function(eye_tracker.move_to_position) + Mouse("right"),
-        "(I|eye) (touch|click) middle": Function(eye_tracker.move_to_position) + Mouse("middle"),
-        "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
-        "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
-        "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelup:8"),
-        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelup:4"),
-        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -40))) + Mouse("wheeldown:8"),
-        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -40))) + Mouse("wheeldown:4"),
-        "scroll left": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelleft:8"),
-        "scroll right": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelright:8"),
+        "(I|eye) connect": Function(tracker.connect),
+        "(I|eye) disconnect": Function(tracker.disconnect),
+        "(I|eye) print position": Function(tracker.print_position),
+        "(I|eye) move": Function(tracker.move_to_position),
+        "(I|eye) (touch|click)": Function(tracker.move_to_position) + Mouse("left"),
+        "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
+        "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
+        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
+        "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
+        "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
+        "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:8"),
+        "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
+        "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:8"),
+        "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
+        "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:8"),
+        "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:8"),
         "(touch|click) [left]": Mouse("left"),
         "(touch|click) right": Mouse("right"),
         "(touch|click) middle": Mouse("middle"),
@@ -1296,7 +1297,7 @@ emacs_action_map = odict[
     "other screen up": Key("c-minus, ca-v"),
     "other screen down": Key("ca-v"),
     "other <n1> enter": Key("c-x, o") + jump_to_line("%(n1)s") + Key("enter"),
-    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
+    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: tracker.type_position("%d\n%d\n")),
 
     # Editing
     "delete": Key("c-c, c, c-w"),
@@ -2095,7 +2096,8 @@ server_thread.start()
 webdriver.create_driver()
 
 # Connect to eye tracker if possible.
-eye_tracker.connect()
+if tracker.is_available:
+    tracker.connect()
 
 print("Loaded _repeat.py")
 
@@ -2106,7 +2108,8 @@ def unload():
     global grammars, server, server_thread, timer
     for grammar in grammars:
         grammar.unload()
-    eye_tracker.disconnect()
+    if tracker.is_available:
+        tracker.disconnect()
     webdriver.quit_driver()
     timer.stop()
     server.shutdown()
