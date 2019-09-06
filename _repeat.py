@@ -12,12 +12,15 @@ https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedi
 """
 
 from collections import OrderedDict
+import os.path
 import re
 import socket
+import sys
 import threading
 import time
 import webbrowser
 import win32clipboard
+import yappi
 
 from odictliteral import odict
 from six.moves import BaseHTTPServer
@@ -62,6 +65,7 @@ from dragonfly import (
 import dragonfly.log
 from selenium.webdriver.common.by import By
 
+import _dragonfly_local as local
 import _dragonfly_utils as utils
 import _eye_tracker_utils as eye_tracker
 import _linux_utils as linux
@@ -468,6 +472,28 @@ accessibility_commands = odict[
 # Action maps to be used in rules.
 
 
+def start_cpu_profiling():
+    yappi.set_clock_type("cpu")
+    yappi.start()
+
+
+def start_wall_profiling():
+    yappi.set_clock_type("wall")
+    yappi.start()
+
+
+def stop_profiling():
+    yappi.stop()
+    yappi.get_func_stats().print_all()
+    yappi.get_thread_stats().print_all()
+    has_argv = hasattr(sys, "argv")
+    if not has_argv:
+        sys.argv = [""]
+    profile_path = os.path.join(local.HOME, "yappi_{}.callgrind.out".format(time.time()))
+    yappi.get_func_stats().save(profile_path, "callgrind")
+    yappi.clear_stats()
+
+
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
@@ -534,6 +560,10 @@ command_action_map = utils.combine_maps(
         "webdriver close": Function(webdriver.quit_driver),
 
         "(hey|OK) google <text>": Function(lambda text: None),
+
+        "dragonfly CPU profiling start": Function(start_cpu_profiling),
+        "dragonfly wall [time] profiling start": Function(start_wall_profiling),
+        "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
     })
 
 # Actions for speaking out sequences of characters.
