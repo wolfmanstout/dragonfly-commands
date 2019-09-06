@@ -77,6 +77,7 @@ class Tracker(object):
             return False
         x = max(0, int(self.last_gaze_point[0]) + offset[0])
         y = max(0, int(self.last_gaze_point[1]) + offset[1])
+        print("Moving to last gaze: {}".format(self.last_gaze_point))
         Mouse("[%d, %d]" % (x, y)).execute()
         return True
 
