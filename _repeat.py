@@ -2126,8 +2126,8 @@ server_thread.start()
 webdriver.create_driver()
 
 # Connect to eye tracker if possible.
-if tracker.is_available:
-    tracker.connect()
+tracker_thread = threading.Thread(target=tracker.connect)
+tracker_thread.start()
 
 print("Loaded _repeat.py")
 

@@ -10,30 +10,31 @@ import sys
 from dragonfly import (Mouse, Text)
 import _dragonfly_local as local
 
-# Attempt to load eye tracker DLLs.
-tracker_available = False
-try:
-    import clr
-    from System import Action, Double
-    sys.path.append(local.DLL_DIRECTORY)
-    clr.AddReference("Tobii.Interaction.Model")
-    clr.AddReference("Tobii.Interaction.Net")
-    from Tobii.Interaction import Host
-    from Tobii.Interaction.Framework import GazeTracking
-    tracker_available = True
-except:
-    print("Tracker not available.")
-
 
 class Tracker(object):
 
     def __init__(self):
-        self.is_available = tracker_available
+        self.is_available = False
         self.host = None
         self.last_gaze_point = None
         self.gaze_state = None
 
     def connect(self):
+        if not self.is_available:
+            # Attempt to load eye tracker DLLs.
+            try:
+                import clr
+                from System import Action, Double
+                sys.path.append(local.DLL_DIRECTORY)
+                clr.AddReference("Tobii.Interaction.Model")
+                clr.AddReference("Tobii.Interaction.Net")
+                from Tobii.Interaction import Host
+                from Tobii.Interaction.Framework import GazeTracking
+                self.is_available = True
+            except:
+                print("Tracker not available.")
+                return False
+
         if self.host:
             print("Tracker already connected.")
             return True
