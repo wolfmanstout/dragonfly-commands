@@ -22,6 +22,7 @@ class Tracker(object):
     def connect(self):
         if not self.is_available:
             # Attempt to load eye tracker DLLs.
+            global clr, Action, Double, Host, GazeTracking
             try:
                 import clr
                 from System import Action, Double
