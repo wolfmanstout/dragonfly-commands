@@ -2129,6 +2129,22 @@ webdriver.create_driver()
 tracker_thread = threading.Thread(target=tracker.connect)
 tracker_thread.start()
 
+# Force NatLink to schedule background threads frequently by regularly waking up
+# a dummy thread.
+shutdown_dummy_thread_event = threading.Event()
+def run_dummy_thread():
+    while not shutdown_dummy_thread_event.is_set():
+        time.sleep(1)
+
+dummy_thread = threading.Thread(target=run_dummy_thread)
+dummy_thread.start()
+
+# Initialise a dragonfly timer to manually yield control to the thread.
+def wake_dummy_thread():
+    dummy_thread.join(0.002)
+
+wake_dummy_thread_timer = get_engine().create_timer(wake_dummy_thread, 0.02)
+
 print("Loaded _repeat.py")
 
 
@@ -2145,4 +2161,7 @@ def unload():
     server.shutdown()
     server_thread.join()
     server.server_close()
+    wake_dummy_thread_timer.stop()
+    shutdown_dummy_thread_event.set()
+    dummy_thread.join()
     print("Unloaded _repeat.py")
