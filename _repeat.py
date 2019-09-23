@@ -421,6 +421,8 @@ standalone_key_action_map = utils.combine_maps(
         "escape": Key("escape"),
         "backspace": Key("backspace"),
         "delete key": Key("del"),
+        "home key": Key("home"),
+        "end key": Key("end"),
     })
 
 full_key_action_map = utils.combine_maps(
@@ -1426,8 +1428,8 @@ emacs_action_map = odict[
     "closure namespace": Key("c-c, a-n"),
 
     # Lisp
-    "function eval": Key("ca-x"),
-    "this eval": Exec("eval-region"),
+    "function run": Key("ca-x"),
+    "this run": Exec("eval-region"),
 
     # Version control
     "magit open": Key("c-c, m"),
@@ -1989,6 +1991,29 @@ analog_environment = MyEnvironment(name="Analog",
                                    parent=chrome_environment,
                                    context=AppContext(title="<analog.corp.google.com>"),
                                    action_map=analog_action_map)
+
+
+### Chrome: Colab
+
+colab_repeatable_action_map = {
+    "[cell] next": Key("c-m, n"),
+    "[cell] preev": Key("c-m, p"),
+}
+colab_action_map = {
+    "save": Key("c-s"),
+    "cell run": Key("c-enter"),
+    "cell (expand|collapse)": Key("c-apostrophe"),
+    "cell open down": Key("c-m, b"),
+    "cell open up": Key("c-m, a"),
+    "cell delete": Key("c-m, d"),
+    "this run": Key("cs-enter"),
+    "this comment": Key("c-slash"),
+}
+colab_environment = MyEnvironment(name="Colab",
+                                  parent=chrome_environment,
+                                  context=AppContext(title="<colab.sandbox.google.com>"),
+                                  action_map=colab_action_map,
+                                  repeatable_action_map=colab_repeatable_action_map)
 
 
 ### Notepad
