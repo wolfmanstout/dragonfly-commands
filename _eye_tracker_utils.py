@@ -4,7 +4,7 @@
 
 """Eye tracker functions."""
 
-import win32gui
+# import win32gui
 import sys
 
 from aenea.lax import (
