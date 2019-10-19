@@ -12,12 +12,15 @@ https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedi
 """
 
 from collections import OrderedDict
+import os.path
 import re
 import socket
+import sys
 import threading
 import time
 import webbrowser
 # import win32clipboard
+import yappi
 
 from odictliteral import odict
 from six.moves import BaseHTTPServer
@@ -64,11 +67,15 @@ from aenea.lax import (
 import dragonfly.log
 from selenium.webdriver.common.by import By
 
+import _dragonfly_local as local
 import _dragonfly_utils as utils
 import _eye_tracker_utils as eye_tracker
 import _linux_utils as linux
 import _text_utils as text
 import _webdriver_utils as webdriver
+
+# Instantiate the tracker so we can refer to it (we will connect to it later).
+tracker = eye_tracker.get_tracker()
 
 # Load local hooks if defined.
 try:
@@ -416,6 +423,8 @@ standalone_key_action_map = utils.combine_maps(
         "escape": Key("escape"),
         "backspace": Key("backspace"),
         "delete key": Key("del"),
+        "home key": Key("home"),
+        "end key": Key("end"),
     })
 
 full_key_action_map = utils.combine_maps(
@@ -467,6 +476,28 @@ accessibility_commands = odict[
 # Action maps to be used in rules.
 
 
+def start_cpu_profiling():
+    yappi.set_clock_type("cpu")
+    yappi.start()
+
+
+def start_wall_profiling():
+    yappi.set_clock_type("wall")
+    yappi.start()
+
+
+def stop_profiling():
+    yappi.stop()
+    yappi.get_func_stats().print_all()
+    yappi.get_thread_stats().print_all()
+    has_argv = hasattr(sys, "argv")
+    if not has_argv:
+        sys.argv = [""]
+    profile_path = os.path.join(local.HOME, "yappi_{}.callgrind.out".format(time.time()))
+    yappi.get_func_stats().save(profile_path, "callgrind")
+    yappi.clear_stats()
+
+
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
@@ -506,24 +537,22 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
-        "(I|eye) connect": Function(eye_tracker.connect),
-        "(I|eye) disconnect": Function(eye_tracker.disconnect),
-        "(I|eye) print position": Function(eye_tracker.print_position),
-        "(I|eye) move": Function(eye_tracker.move_to_position),
-        "(I|eye) act": Function(eye_tracker.activate_position),
-        "(I|eye) pan": Function(eye_tracker.panning_step_position),
-        "(I|eye) (touch|click)": Function(eye_tracker.move_to_position) + Mouse("left"),
-        "(I|eye) (touch|click) right": Function(eye_tracker.move_to_position) + Mouse("right"),
-        "(I|eye) (touch|click) middle": Function(eye_tracker.move_to_position) + Mouse("middle"),
-        "(I|eye) (touch|click) [left] twice": Function(eye_tracker.move_to_position) + Mouse("left:2"),
-        "(I|eye) (touch|click) hold": Function(eye_tracker.move_to_position) + Mouse("left:down"),
-        "(I|eye) (touch|click) release": Function(eye_tracker.move_to_position) + Mouse("left:up"),
-        "scroll up": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelup:8"),
-        "scroll up half": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelup:4"),
-        "scroll down": Function(lambda: eye_tracker.move_to_position((0, -40))) + Mouse("wheeldown:8"),
-        "scroll down half": Function(lambda: eye_tracker.move_to_position((0, -40))) + Mouse("wheeldown:4"),
-        "scroll left": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelleft:8"),
-        "scroll right": Function(lambda: eye_tracker.move_to_position((0, 40))) + Mouse("wheelright:8"),
+        "(I|eye) connect": Function(tracker.connect),
+        "(I|eye) disconnect": Function(tracker.disconnect),
+        "(I|eye) print position": Function(tracker.print_position),
+        "(I|eye) move": Function(tracker.move_to_position),
+        "(I|eye) (touch|click)": Function(tracker.move_to_position) + Mouse("left"),
+        "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
+        "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
+        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
+        "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
+        "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
+        "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:8"),
+        "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
+        "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:8"),
+        "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
+        "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:8"),
+        "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:8"),
         "(touch|click) [left]": Mouse("left"),
         "(touch|click) right": Mouse("right"),
         "(touch|click) middle": Mouse("middle"),
@@ -535,6 +564,10 @@ command_action_map = utils.combine_maps(
         "webdriver close": Function(webdriver.quit_driver),
 
         "(hey|OK) google <text>": Function(lambda text: None),
+
+        "dragonfly CPU profiling start": Function(start_cpu_profiling),
+        "dragonfly wall [time] profiling start": Function(start_wall_profiling),
+        "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
     })
 
 # Actions for speaking out sequences of characters.
@@ -1062,7 +1095,10 @@ shell_command_map = utils.combine_maps({
     "fig status": Text("hg status "),
     "fig fix": Text("hg fix "),
     "fig evolve": Text("hg evolve "),
+    "fig preev": Text("hg prev "),
     "fig next": Text("hg next "),
+    "fig shelve": Text("hg shelve "),
+    "fig unshelve": Text("hg unshelve "),
     "(soft|sym) link": Text("ln -s "),
     "list": Text("ls -l "),
     "make dear": Text("mkdir "),
@@ -1296,7 +1332,7 @@ emacs_action_map = odict[
     "other screen up": Key("c-minus, ca-v"),
     "other screen down": Key("ca-v"),
     "other <n1> enter": Key("c-x, o") + jump_to_line("%(n1)s") + Key("enter"),
-    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: eye_tracker.type_position("%d\n%d\n")),
+    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: tracker.type_position("%d\n%d\n")),
 
     # Editing
     "delete": Key("c-c, c, c-w"),
@@ -1395,8 +1431,8 @@ emacs_action_map = odict[
     "closure namespace": Key("c-c, a-n"),
 
     # Lisp
-    "function eval": Key("ca-x"),
-    "this eval": Exec("eval-region"),
+    "function run": Key("ca-x"),
+    "this run": Exec("eval-region"),
 
     # Version control
     "magit open": Key("c-c, m"),
@@ -1879,11 +1915,11 @@ gmail_action_map = {
     "this star": Key("plus, s"),
     "this important": Key("plus, plus"),
     "this not important": Key("plus, minus"),
-    "label waiting": Key("plus, l/50") + Text("waiting") + Key("enter"),
-    "label snooze": Key("plus, l/50") + Text("snooze") + Key("enter"),
-    "snooze": Key("plus, l/50") + Text("snooze") + Key("enter") + Key("+, ["),
-    "label candidates": Key("plus, l/50") + Text("candidates") + Key("enter"),
-    "label wedding": Key("plus, l/50") + Text("wedding") + Key("enter"),
+    "label waiting": Pause("50") + Key("plus, l/50") + Text("waiting") + Pause("50") + Key("enter"),
+    "label snooze": Pause("50") + Key("plus, l/50") + Text("snooze") + Pause("50") + Key("enter"),
+    "snooze": Pause("50") + Key("plus, l/50") + Text("snooze") + Pause("50") + Key("enter") + Pause("50") + Key("+, ["),
+    "label vacation": Pause("50") + Key("plus, l/50") + Text("vacation") + Pause("50") + Key("enter"),
+    "label house": Pause("50") + Key("plus, l/50") + Text("house") + Pause("50") + Key("enter"),
     "this select": Key("plus, x"),
     "<n> select": Key("plus, x, plus, j") * Repeat(extra="n"),
     "(message|messages) reload": Key("plus, N"),
@@ -1958,6 +1994,29 @@ analog_environment = MyEnvironment(name="Analog",
                                    parent=chrome_environment,
                                    context=AppContext(title="<analog.corp.google.com>"),
                                    action_map=analog_action_map)
+
+
+### Chrome: Colab
+
+colab_repeatable_action_map = {
+    "[cell] next": Key("c-m, n"),
+    "[cell] preev": Key("c-m, p"),
+}
+colab_action_map = {
+    "save": Key("c-s"),
+    "cell run": Key("c-enter"),
+    "cell (expand|collapse)": Key("c-apostrophe"),
+    "cell open down": Key("c-m, b"),
+    "cell open up": Key("c-m, a"),
+    "cell delete": Key("c-m, d"),
+    "this run": Key("cs-enter"),
+    "this comment": Key("c-slash"),
+}
+colab_environment = MyEnvironment(name="Colab",
+                                  parent=chrome_environment,
+                                  context=AppContext(title="<colab.sandbox.google.com>"),
+                                  action_map=colab_action_map,
+                                  repeatable_action_map=colab_repeatable_action_map)
 
 
 ### Notepad
@@ -2095,7 +2154,24 @@ server_thread.start()
 webdriver.create_driver()
 
 # Connect to eye tracker if possible.
-eye_tracker.connect()
+tracker_thread = threading.Thread(target=tracker.connect)
+tracker_thread.start()
+
+# Force NatLink to schedule background threads frequently by regularly waking up
+# a dummy thread.
+shutdown_dummy_thread_event = threading.Event()
+def run_dummy_thread():
+    while not shutdown_dummy_thread_event.is_set():
+        time.sleep(1)
+
+dummy_thread = threading.Thread(target=run_dummy_thread)
+dummy_thread.start()
+
+# Initialise a dragonfly timer to manually yield control to the thread.
+def wake_dummy_thread():
+    dummy_thread.join(0.002)
+
+wake_dummy_thread_timer = get_engine().create_timer(wake_dummy_thread, 0.02)
 
 print("Loaded _repeat.py")
 
@@ -2106,10 +2182,14 @@ def unload():
     global grammars, server, server_thread, timer
     for grammar in grammars:
         grammar.unload()
-    eye_tracker.disconnect()
+    if tracker.is_available:
+        tracker.disconnect()
     webdriver.quit_driver()
     timer.stop()
     server.shutdown()
     server_thread.join()
     server.server_close()
+    wake_dummy_thread_timer.stop()
+    shutdown_dummy_thread_event.set()
+    dummy_thread.join()
     print("Unloaded _repeat.py")

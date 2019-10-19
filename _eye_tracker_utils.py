@@ -4,7 +4,8 @@
 
 """Eye tracker functions."""
 
-from ctypes import (byref, c_double, CDLL)
+import win32gui
+import sys
 
 from aenea.lax import (
     Mouse,
@@ -12,61 +13,88 @@ from aenea.lax import (
 )
 import _dragonfly_local as local
 
-# Attempt to load eye tracker DLLs.
-try:
-    import win32gui
-    eyex_dll = CDLL(local.DLL_DIRECTORY + "/Tobii.EyeX.Client.dll")
-    tracker_dll = CDLL(local.DLL_DIRECTORY + "/Tracker.dll")
-except:
-    print("Tracker not loaded.")
+
+class Tracker(object):
+
+    def __init__(self):
+        self.is_available = False
+        self.host = None
+        self.last_gaze_point = None
+        self.gaze_state = None
+
+    def connect(self):
+        if not self.is_available:
+            # Attempt to load eye tracker DLLs.
+            global clr, Action, Double, Host, GazeTracking
+            try:
+                import clr
+                from System import Action, Double
+                sys.path.append(local.DLL_DIRECTORY)
+                clr.AddReference("Tobii.Interaction.Model")
+                clr.AddReference("Tobii.Interaction.Net")
+                from Tobii.Interaction import Host
+                from Tobii.Interaction.Framework import GazeTracking
+                self.is_available = True
+            except:
+                print("Tracker not available.")
+                return False
+
+        if self.host:
+            print("Tracker already connected.")
+            return True
+        self.host = Host()
+        gaze_points = self.host.Streams.CreateGazePointDataStream()
+        action = Action[Double, Double, Double](self.handle_gaze_point)
+        gaze_points.GazePoint(action)
+        gaze_state = self.host.States.CreateGazeTrackingObserver()
+        gaze_state.Changed += self.handle_gaze_state
+        print("Tracker connected.")
+        return True
+
+    def disconnect(self):
+        self.host.DisableConnection()
+        self.host = None
+        print("Tracker disconnected.")
+
+    def handle_gaze_point(self, x, y, timestamp):
+        self.last_gaze_point = (x, y, timestamp)
+
+    def handle_gaze_state(self, sender, state):
+        if not state.IsValid:
+            print("Invalid gaze state")
+            return
+        self.gaze_state = state.Value
+
+    def has_gaze_point(self):
+        return self.gaze_state == GazeTracking.GazeTracked and self.last_gaze_point
+
+    def screen_to_foreground(self, position):
+        return win32gui.ScreenToClient(win32gui.GetForegroundWindow(), position)
+
+    def print_position(self):
+        if not self.has_gaze_point():
+            return False
+        print("(%f, %f)" % self.last_gaze_point[:2])
+        return True
+
+    def move_to_position(self, offset=(0, 0)):
+        if not self.has_gaze_point():
+            return False
+        x = max(0, int(self.last_gaze_point[0]) + offset[0])
+        y = max(0, int(self.last_gaze_point[1]) + offset[1])
+        print("Moving to last gaze: {}".format(self.last_gaze_point))
+        Mouse("[%d, %d]" % (x, y)).execute()
+        return True
+
+    def type_position(self, format):
+        if not self.has_gaze_point():
+            return False
+        Text(format % (self.last_gaze_point[0], self.last_gaze_point[1])).execute()
+        return True
 
 
-def connect():
-    try:
-        result = tracker_dll.connect()
-        print("connect: %d" % result)
-    except:
-        print("Could not connect to tracker.")
+tracker = Tracker()
 
 
-def disconnect():
-    try:
-        result = tracker_dll.disconnect()
-        print("disconnect: %d" % result)
-    except:
-        print("Could not disconnect from tracker.")
-
-
-def get_position():
-    x = c_double()
-    y = c_double()
-    tracker_dll.last_position(byref(x), byref(y))
-    return (x.value, y.value)
-
-
-def screen_to_foreground(position):
-    return win32gui.ScreenToClient(win32gui.GetForegroundWindow(), position);
-
-
-def print_position():
-    print("(%f, %f)" % get_position())
-
-
-def move_to_position(offset=(0, 0)):
-    position = get_position()
-    x = max(0, int(position[0]) + offset[0])
-    y = max(0, int(position[1]) + offset[1])
-    Mouse("[%d, %d]" % (x, y)).execute()
-
-
-def type_position(format):
-    position = get_position()
-    Text(format % (position[0], position[1])).execute()
-
-
-def activate_position():
-    tracker_dll.activate()
-
-
-def panning_step_position():
-    tracker_dll.panning_step()
+def get_tracker():
+    return tracker
