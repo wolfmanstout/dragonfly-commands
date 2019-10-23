@@ -2011,7 +2011,8 @@ colab_action_map = {
 }
 colab_environment = MyEnvironment(name="Colab",
                                   parent=chrome_environment,
-                                  context=AppContext(title="<colab.sandbox.google.com>"),
+                                  context=(AppContext(title="<colab.sandbox.google.com>") |
+                                           AppContext(title="<colab.research.google.com>")),
                                   action_map=colab_action_map,
                                   repeatable_action_map=colab_repeatable_action_map)
 
