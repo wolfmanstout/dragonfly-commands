@@ -1959,6 +1959,7 @@ docs_action_map = {
     "dupe row": Key("s-space:2, c-c/15, a-i/15, b, c-v/30, up/30, down"),
     "delete row": Key("a-e/15, d"),
     "(click|touch) present": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Start presentation (Ctrl+F5)']"),
+    "file rename": Key("as-f/50, r"),
 }
 docs_environment = MyEnvironment(name="Docs",
                                  parent=chrome_environment,
