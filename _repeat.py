@@ -1092,6 +1092,7 @@ shell_command_map = utils.combine_maps({
     "fig submit": Text("hg submit "),
     "fig status": Text("hg status "),
     "fig fix": Text("hg fix "),
+    "fig lint": Text("hg lint"),
     "fig evolve": Text("hg evolve "),
     "fig preev": Text("hg prev "),
     "fig next": Text("hg next "),
