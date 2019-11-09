@@ -629,7 +629,8 @@ mixed_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, suffix_list)),
 ]))
 
-# Same as above, except no arbitrary dictation allowed.
+# Same as above, except no arbitrary dictation allowed and context phrases are
+# included.
 custom_dictation = RuleWrap(None, utils.JoinedSequence(" ", [
     Optional(ListRef(None, prefix_list)),
     Alternative([
@@ -1085,7 +1086,11 @@ shell_command_map = utils.combine_maps({
     "fig add": Text("hg add "),
     "fig commit": Text("hg commit -e "),
     "fig diff": Text("hg diff "),
+    "fig diff stat": Text("hg diff --stat "),
+    "fig diff no binary": Text("hg diff --no-binary "),
     "fig P diff": Text("hg pdiff "),
+    "fig P diff stat": Text("hg pdiff --stat "),
+    "fig P diff no binary": Text("hg pdiff --no-binary "),
     "fig amend": Text("hg amend "),
     "fig mail": Text("hg mail -m "),
     "fig upload": Text("hg uploadchain "),
