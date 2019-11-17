@@ -2102,7 +2102,9 @@ timer = get_engine().create_timer(RunCallbacks, 0.1)
 
 # Update the context phrases.
 def UpdateWords(phrases):
-    # Not currently used, and not working if enabled.
+    # Not currently used, and not working if enabled. Tests indicate that the
+    # list of words is being updated, but Dragon is only aware of the words that
+    # were initially loaded.
     # context_phrase_list.set(phrases)
     pass
 
