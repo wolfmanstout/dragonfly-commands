@@ -1769,6 +1769,10 @@ chrome_action_map = {
     "webdriver test": Function(webdriver.test_driver),
     "go search": webdriver.ClickElementAction(By.NAME, "q"),
     "bill new": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
+    "<text> touch": webdriver.SmartClickElementAction(By.XPATH,
+                                                      ("//a[.//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
+                                                       "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
+                                                      tracker),
 }
 
 chrome_terminal_action_map = utils.combine_maps(

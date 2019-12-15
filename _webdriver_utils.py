@@ -77,6 +77,47 @@ class ClickElementAction(ElementAction):
         element.click()
 
 
+class SmartElementAction(DynStrActionBase):
+
+    def __init__(self, by, spec, tracker):
+        DynStrActionBase.__init__(self, spec)
+        self.by = by
+        self.tracker = tracker
+
+    def _parse_spec(self, spec):
+        return spec
+
+    def _execute_events(self, events):
+        # Get gaze location as early as possible.
+        gaze_location = self.tracker.get_gaze_point_or_default()
+        switch_to_active_tab()
+        elements = driver.find_elements(self.by, events)
+        if not elements:
+            print("No matching elements found")
+            return
+        nearest_element = None
+        nearest_element_distance_squared = float("inf")
+        for element in elements:
+            # Assume there is equal amount of browser chrome on the left and right sides of the screen.
+            canvas_x_offset = driver.execute_script("return window.screenX + (window.outerWidth - window.innerWidth) / 2 - window.scrollX;")
+            # Assume all the browser chrome is on the top of the screen and none on the bottom.
+            canvas_y_offset = driver.execute_script("return window.screenY + (window.outerHeight - window.innerHeight) - window.scrollY;")
+            element_location = (element.rect["x"] + canvas_x_offset + element.rect["width"] / 2,
+                                element.rect["y"] + canvas_y_offset + element.rect["height"] / 2)
+            offsets = (element_location[0] - gaze_location[0], element_location[1] - gaze_location[1])
+            distance_squared = offsets[0] * offsets[0] + offsets[1] * offsets[1]
+            if distance_squared < nearest_element_distance_squared:
+                nearest_element = element
+                nearest_element_distance_squared = distance_squared
+        self._execute_on_element(nearest_element)
+
+
+class SmartClickElementAction(SmartElementAction):
+
+    def _execute_on_element(self, element):
+        element.click()
+
+
 class DoubleClickElementAction(ElementAction):
 
     def _execute_on_element(self, element):

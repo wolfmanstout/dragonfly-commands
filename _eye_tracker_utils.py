@@ -7,7 +7,7 @@
 import win32gui
 import sys
 
-from dragonfly import (Mouse, Text)
+from dragonfly import (Mouse, Text, Window)
 import _dragonfly_local as local
 
 
@@ -65,6 +65,13 @@ class Tracker(object):
     def has_gaze_point(self):
         return self.gaze_state == GazeTracking.GazeTracked and self.last_gaze_point
 
+    def get_gaze_point_or_default(self):
+        if self.has_gaze_point():
+            return self.last_gaze_point[:2]
+        else:
+            window_position = Window.get_foreground().get_position()
+            return (window_position.x_center, window_position.y_center)
+
     def screen_to_foreground(self, position):
         return win32gui.ScreenToClient(win32gui.GetForegroundWindow(), position)
 
@@ -75,19 +82,15 @@ class Tracker(object):
         return True
 
     def move_to_position(self, offset=(0, 0)):
-        if not self.has_gaze_point():
-            return False
-        x = max(0, int(self.last_gaze_point[0]) + offset[0])
-        y = max(0, int(self.last_gaze_point[1]) + offset[1])
-        print("Moving to last gaze: {}".format(self.last_gaze_point))
+        gaze = self.get_gaze_point_or_default()
+        x = max(0, int(gaze[0]) + offset[0])
+        y = max(0, int(gaze[1]) + offset[1])
+        print("Moving to last gaze: {}".format(gaze))
         Mouse("[%d, %d]" % (x, y)).execute()
         return True
 
     def type_position(self, format):
-        if not self.has_gaze_point():
-            return False
-        Text(format % (self.last_gaze_point[0], self.last_gaze_point[1])).execute()
-        return True
+        Text(format % self.get_gaze_point_or_default()).execute()
 
 
 tracker = Tracker()
