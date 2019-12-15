@@ -2009,6 +2009,7 @@ colab_repeatable_action_map = {
 colab_action_map = {
     "save": Key("c-s"),
     "cell run": Key("c-enter"),
+    "all (cell|cells) run": Key("c-f9"),
     "cell (expand|collapse)": Key("c-apostrophe"),
     "cell open down": Key("c-m, b"),
     "cell open up": Key("c-m, a"),
