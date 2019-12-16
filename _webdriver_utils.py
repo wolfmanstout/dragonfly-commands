@@ -95,15 +95,19 @@ class SmartElementAction(DynStrActionBase):
         if not elements:
             print("No matching elements found")
             return
+        # Assume there is equal amount of browser chrome on the left and right sides of the screen.
+        canvas_left = driver.execute_script("return window.screenX + (window.outerWidth - window.innerWidth) / 2 - window.scrollX;")
+        # Assume all the browser chrome is on the top of the screen and none on the bottom.
+        canvas_top = driver.execute_script("return window.screenY + (window.outerHeight - window.innerHeight) - window.scrollY;")
+        canvas_bottom = driver.execute_script("return window.screenY + window.outerHeight - window.scrollY;")
         nearest_element = None
         nearest_element_distance_squared = float("inf")
         for element in elements:
-            # Assume there is equal amount of browser chrome on the left and right sides of the screen.
-            canvas_x_offset = driver.execute_script("return window.screenX + (window.outerWidth - window.innerWidth) / 2 - window.scrollX;")
-            # Assume all the browser chrome is on the top of the screen and none on the bottom.
-            canvas_y_offset = driver.execute_script("return window.screenY + (window.outerHeight - window.innerHeight) - window.scrollY;")
-            element_location = (element.rect["x"] + canvas_x_offset + element.rect["width"] / 2,
-                                element.rect["y"] + canvas_y_offset + element.rect["height"] / 2)
+            element_location = (element.rect["x"] + canvas_left + element.rect["width"] / 2,
+                                element.rect["y"] + canvas_top + element.rect["height"] / 2)
+            if not element.is_displayed() or element_location[1] < canvas_top or element_location[1] > canvas_bottom:
+                # Element is not visible onscreen.
+                continue
             offsets = (element_location[0] - gaze_location[0], element_location[1] - gaze_location[1])
             distance_squared = offsets[0] * offsets[0] + offsets[1] * offsets[1]
             if distance_squared < nearest_element_distance_squared:
@@ -115,7 +119,12 @@ class SmartElementAction(DynStrActionBase):
 class SmartClickElementAction(SmartElementAction):
 
     def _execute_on_element(self, element):
-        element.click()
+        try:
+            element.click()
+        except:
+            # Move then click to avoid Chrome unwillingness to send a click
+            # which reaches an overlapping element.
+            ActionChains(driver).move_to_element(element).click().perform()
 
 
 class DoubleClickElementAction(ElementAction):

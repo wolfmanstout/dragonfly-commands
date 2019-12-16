@@ -1770,7 +1770,7 @@ chrome_action_map = {
     "go search": webdriver.ClickElementAction(By.NAME, "q"),
     "bill new": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
     "<text> touch": webdriver.SmartClickElementAction(By.XPATH,
-                                                      ("//a[.//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
+                                                      ("//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
                                                        "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
                                                       tracker),
 }
