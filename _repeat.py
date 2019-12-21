@@ -978,7 +978,6 @@ class RepeatRule(CompoundRule):
                 terminal_command.execute()
         if final_command:
             final_command.execute()
-        global command_benchmark
         if command_benchmark.is_active():
             command_benchmark.record_and_replay_recognition()
 
@@ -2094,8 +2093,7 @@ callbacks = queue.Queue()
 
 
 def RunCallbacks():
-    global callbacks
-    while not callbacks.empty():
+    while callbacks and not callbacks.empty():
         callback = callbacks.get_nowait()
         try:
             callback()

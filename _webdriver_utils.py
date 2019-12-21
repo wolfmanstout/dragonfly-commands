@@ -11,44 +11,66 @@ from six.moves import urllib_error
 from dragonfly import (DynStrActionBase)
 import _dragonfly_local as local
 
+# Needed for marionette_driver.
+import sys
+has_argv = hasattr(sys, "argv")
+if not has_argv:
+    sys.argv = [""]
+# Native driver for Firefox; more reliable.
+import marionette_driver
+
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
 def create_driver():
-    global driver
+    global driver, browser
     driver = None
-    try:
-        urllib_request.urlopen("http://127.0.0.1:9222/json")
-    except urllib_error.URLError:
-        print("Unable to start WebDriver, Chrome is not responding.")
-        return
-    chrome_options = Options()
-    chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
-    driver = webdriver.Chrome(local.CHROME_DRIVER_PATH, chrome_options=chrome_options)
+    browser = local.DEFAULT_BROWSER
+    if browser == "chrome":
+        try:
+            urllib_request.urlopen("http://127.0.0.1:9222/json")
+        except urllib_error.URLError:
+            print("Unable to start WebDriver, Chrome is not responding.")
+            return
+        chrome_options = webdriver.chrome.options.Options()
+        chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
+        driver = webdriver.Chrome(local.CHROME_DRIVER_PATH, chrome_options=chrome_options)
+    elif browser == "firefox":
+        driver = marionette_driver.marionette.Marionette()
+    else:
+        print("Unknown browser: " + browser)
+        browser = None
 
 
 def quit_driver():
-    global driver
+    global driver, browser
     if driver:
-        driver.quit()
+        if browser == "chrome":
+            driver.quit()
+        elif browser == "firefox":
+            driver.delete_session()
     driver = None
+    browser = None
 
 
 def switch_to_active_tab():
-    tabs = json.load(urllib_request.urlopen("http://127.0.0.1:9222/json"))
-    # Chrome seems to order the tabs by when they were last updated, so we find
-    # the first one that is not an extension.
-    for tab in tabs:
-        if not tab["url"].startswith("chrome-extension://"):
-            active_tab = tab["id"]
-            break
-    for window in driver.window_handles:
-        # ChromeDriver adds to the raw ID, so we just look for substring match.
-        if active_tab in window:
-            driver.switch_to_window(window);
-            print("Switched to: " + driver.title.encode('ascii', 'backslashreplace'))
-            return
+    if browser == "chrome":
+        tabs = json.load(urllib_request.urlopen("http://127.0.0.1:9222/json"))
+        # Chrome seems to order the tabs by when they were last updated, so we find
+        # the first one that is not an extension.
+        for tab in tabs:
+            if not tab["url"].startswith("chrome-extension://"):
+                active_tab = tab["id"]
+                break
+        for window in driver.window_handles:
+            # ChromeDriver adds to the raw ID, so we just look for substring match.
+            if active_tab in window:
+                driver.switch_to_window(window);
+                print("Switched to: " + driver.title.encode('ascii', 'backslashreplace'))
+                return
+    elif browser == "firefox":
+        driver.delete_session()
+        driver.start_session()
 
 
 def test_driver():
@@ -105,7 +127,7 @@ class SmartElementAction(DynStrActionBase):
         for element in elements:
             element_location = (element.rect["x"] + canvas_left + element.rect["width"] / 2,
                                 element.rect["y"] + canvas_top + element.rect["height"] / 2)
-            if not element.is_displayed() or element_location[1] < canvas_top or element_location[1] > canvas_bottom:
+            if not element.is_displayed():
                 # Element is not visible onscreen.
                 continue
             offsets = (element_location[0] - gaze_location[0], element_location[1] - gaze_location[1])
@@ -113,32 +135,35 @@ class SmartElementAction(DynStrActionBase):
             if distance_squared < nearest_element_distance_squared:
                 nearest_element = element
                 nearest_element_distance_squared = distance_squared
+        if not nearest_element:
+            print("Matching elements were not visible")
+            return
         self._execute_on_element(nearest_element)
 
 
 class SmartClickElementAction(SmartElementAction):
 
     def _execute_on_element(self, element):
-        try:
+        if browser == "chrome":
+            try:
+                element.click()
+            except:
+                # Move then click to avoid Chrome unwillingness to send a click
+                # which reaches an overlapping element.
+                ActionChains(driver).move_to_element(element).click().perform()
+        elif browser == "firefox":
             element.click()
-        except:
-            # Move then click to avoid Chrome unwillingness to send a click
-            # which reaches an overlapping element.
-            ActionChains(driver).move_to_element(element).click().perform()
 
 
 class DoubleClickElementAction(ElementAction):
 
     def _execute_on_element(self, element):
-        ActionChains(driver).double_click(element).perform()
-
-
-class ClickElementOffsetAction(ElementAction):
-
-    def __init__(self, by, spec, xoffset, yoffset):
-        super(ClickElementOffsetAction, self).__init__(by, spec)
-        self.xoffset = xoffset
-        self.yoffset = yoffset
-
-    def _execute_on_element(self, element):
-        ActionChains(driver).move_to_element_with_offset(element, self.xoffset, self.yoffset).click().perform()
+        if browser == "chrome":
+            try:
+                element.double_click()
+            except:
+                # Move then click to avoid Chrome unwillingness to send a click
+                # which reaches an overlapping element.
+                ActionChains(driver).move_to_element(element).double_click().perform()
+        elif browser == "firefox":
+            element.double_click()
