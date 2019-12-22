@@ -43,7 +43,9 @@ integration). Here is how to integrate eye tracking:
 4. Copy these 3 DLLs to a directory of your choice:
    build/AnyCPU/Tobii.EyeX.Client.dll, lib/net45/Tobii.Interaction.Model.dll,
    lib/net45/Tobii.Interaction.Net.dll.
-5. Set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the directory used
+5. Ensure that the files are not blocked (right-click Properties, and if there
+   is a "Security" section at the bottom, check the "Unblock" box.)
+6. Set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the directory used
    in the previous step.
 
 Please check out [my blog](http://handsfreecoding.org) for instructions integrating
