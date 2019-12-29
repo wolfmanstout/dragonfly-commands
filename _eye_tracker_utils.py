@@ -23,15 +23,18 @@ class Tracker(object):
         if not self.is_available:
             # Attempt to load eye tracker DLLs.
             global clr, Action, Double, Host, GazeTracking
-            import clr
-            from System import Action, Double
-            sys.path.append(local.DLL_DIRECTORY)
-            clr.AddReference("Tobii.Interaction.Model")
-            clr.AddReference("Tobii.Interaction.Net")
-            from Tobii.Interaction import Host
-            from Tobii.Interaction.Framework import GazeTracking
-            self.is_available = True
-
+            try:
+                import clr
+                from System import Action, Double
+                sys.path.append(local.DLL_DIRECTORY)
+                clr.AddReference("Tobii.Interaction.Model")
+                clr.AddReference("Tobii.Interaction.Net")
+                from Tobii.Interaction import Host
+                from Tobii.Interaction.Framework import GazeTracking
+                self.is_available = True
+            except:
+                print("Tracker not available.")
+                return False
         if self.host:
             print("Tracker already connected.")
             return True
