@@ -1440,6 +1440,9 @@ emacs_action_map = odict[
     "magit open": Key("c-c, m"),
     "diff open": Key("c-x, v, equals"),
     "VC open": Key("c-x, v, d, enter"),
+
+    # GhostText
+    "ghost close": Key("c-c, c-c"),
 ]
 
 emacs_terminal_action_map = {
@@ -1772,6 +1775,7 @@ chrome_action_map = {
                                                       ("//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
                                                        "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
                                                       tracker),
+    "ghost open": Key("ca-k"),
 }
 
 chrome_terminal_action_map = utils.combine_maps(
