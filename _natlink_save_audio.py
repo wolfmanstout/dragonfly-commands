@@ -36,15 +36,6 @@ from natlinkutils import GrammarBase
 
 import _dragonfly_local as local
 
-# The directory to save .wav and .txt files into.
-# Must exist and be an absolute path.
-SAVE_DIR = local.SAVE_AUDIO_DIR
-if not os.path.isabs(SAVE_DIR):
-    raise ValueError("%s is not an absolute path!" % SAVE_DIR)
-
-if not os.path.isdir(SAVE_DIR):
-    raise ValueError("%s is not a directory!" % SAVE_DIR)
-
 
 class SaveAudioGrammar(GrammarBase):
 
@@ -129,9 +120,17 @@ class SaveAudioGrammar(GrammarBase):
             self.handleSelfResults(resObj)
 
 
-# Instantiate and load the grammar.
-grammar = SaveAudioGrammar()
-grammar.initialize()
+# The directory to save .wav and .txt files into.
+# Must exist and be an absolute path.
+SAVE_DIR = local.SAVE_AUDIO_DIR
+if not os.path.isabs(SAVE_DIR) or not os.path.isdir(SAVE_DIR):
+    grammar = None
+    print("Not saving audio.")
+else:
+    # Instantiate and load the grammar.
+    grammar = SaveAudioGrammar()
+    grammar.initialize()
+    print("Saving audio.")
 
 
 def unload():
