@@ -26,6 +26,7 @@ from odictliteral import odict
 from six.moves import BaseHTTPServer
 from six.moves import queue
 from six import string_types
+from concurrent import futures
 
 from dragonfly import (
     ActionBase,
@@ -75,6 +76,10 @@ import _webdriver_utils as webdriver
 
 # Instantiate the tracker so we can refer to it (we will connect to it later).
 tracker = eye_tracker.get_tracker()
+
+# Start a single-threaded threadpool for running OCR.
+ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
+ocr_future = None
 
 # Load local hooks if defined.
 try:
@@ -499,9 +504,11 @@ def stop_profiling():
 
 def click_word(text):
     word = str(text)
-    gaze_point = tracker.get_gaze_point_or_default()
-    nearby_words = ocr.find_nearby_words(gaze_point)
+    nearby_words, gaze_point = ocr_future.result()
     click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words)
+    if not click_position:
+        print("No matches found for word: {}".format(word))
+        return
     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
     Mouse("left").execute()
 
@@ -959,6 +966,21 @@ class RepeatRule(CompoundRule):
 
         CompoundRule.__init__(self, name=name, spec=spec,
                               extras=extras, defaults=defaults, exported=True)
+
+    def _process_begin(self):
+        # Start OCR now so that results are ready when the command completes (if
+        # it uses OCR). This also has the benefit of using the gaze from the
+        # time the user starts speaking.
+        global ocr_future
+        gaze_point = tracker.get_gaze_point_or_default()
+        # Don't enqueue multiple requests.
+        if ocr_future and not ocr_future.done():
+            canceled = ocr_future.cancel()
+            if canceled:
+                print("Canceled OCR future.")
+            else:
+                print("Unable to cancel OCR future.")
+        ocr_future = ocr_executor.submit(lambda: (ocr.find_nearby_words(gaze_point), gaze_point))
 
     # This method gets called when this rule is recognized.
     # Arguments:
@@ -2204,7 +2226,6 @@ print("Loaded _repeat.py")
 #-------------------------------------------------------------------------------
 # Unload function which will be called by NatLink.
 def unload():
-    global grammars, server, server_thread, timer
     for grammar in grammars:
         grammar.unload()
     if tracker.is_available:
@@ -2217,4 +2238,5 @@ def unload():
     wake_dummy_thread_timer.stop()
     shutdown_dummy_thread_event.set()
     dummy_thread.join()
+    ocr_executor.shutdown(wait=False)
     print("Unloaded _repeat.py")

@@ -34,6 +34,9 @@ def find_nearest_word_position(word, screen_position, ocr_results):
         if lowercase_word in text.lower():
             indices.append(index)
     possible_matches = ocr_results.loc[indices]
+    if possible_matches.empty:
+        return None
+
     possible_matches["center_x"] = possible_matches["left"] + possible_matches["width"] / 2
     possible_matches["center_y"] = possible_matches["top"] + possible_matches["height"] / 2
     possible_matches["distance_squared"] = distance_squared(possible_matches["center_x"],
