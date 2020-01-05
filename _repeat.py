@@ -69,6 +69,7 @@ import _dragonfly_local as local
 import _dragonfly_utils as utils
 import _eye_tracker_utils as eye_tracker
 import _linux_utils as linux
+import _ocr_utils as ocr
 import _text_utils as text
 import _webdriver_utils as webdriver
 
@@ -496,6 +497,15 @@ def stop_profiling():
     yappi.clear_stats()
 
 
+def click_word(text):
+    word = str(text)
+    gaze_point = tracker.get_gaze_point_or_default()
+    nearby_words = ocr.find_nearby_words(gaze_point)
+    click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words)
+    Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
+    Mouse("left").execute()
+
+
 # Actions of commonly used text navigation and mousing commands. These can be
 # used anywhere except after commands which include arbitrary dictation.
 # TODO: Better solution for holding shift during a single command. Think about whether this could enable a simpler grammar for other modifiers.
@@ -557,6 +567,7 @@ command_action_map = utils.combine_maps(
         "(touch|click) [left] twice": Mouse("left:2"),
         "(touch|click) hold": Mouse("left:down"),
         "(touch|click) release": Mouse("left:up"),
+        "<text> touch": Function(click_word),
 
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
@@ -1771,10 +1782,10 @@ chrome_action_map = {
     "webdriver test": Function(webdriver.test_driver),
     "go search": webdriver.ClickElementAction(By.NAME, "q"),
     "bill new": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
-    "<text> touch": webdriver.SmartClickElementAction(By.XPATH,
-                                                      ("//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
-                                                       "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
-                                                      tracker),
+    # "<text> touch": webdriver.SmartClickElementAction(By.XPATH,
+    #                                                   ("//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
+    #                                                    "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
+    #                                                   tracker),
     "ghost open": Key("ca-k"),
 }
 

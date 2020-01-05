@@ -1,5 +1,11 @@
 marionette-driver
+numpy
 odictliteral
+pandas
+pillow
+pytesseract
+scikit-image
+scipy
 selenium
 six
 yappi
