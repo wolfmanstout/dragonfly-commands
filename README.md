@@ -24,12 +24,13 @@ If you do choose to use this code directly, here are the basic steps:
    branch](https://github.com/wolfmanstout/dragonfly/tree/develop) that have not
    yet been integrated upstream.
 2. Install dependencies: `pip install -r requirements.txt`
-3. (Optional) Update Chrome to listen on port 9222
+3. Install [Tesseract for Windows](https://github.com/UB-Mannheim/tesseract/wiki) to support OCR.
+4. (Optional) Update Chrome to listen on port 9222
    ([instructions](http://handsfreecoding.org/2015/02/21/custom-web-commands-with-webdriver/)).
-4. Copy the contents of this repository into your macros directory (typically
+5. Copy the contents of this repository into your macros directory (typically
    the MacroSystem directory).
-5. Rename ```_dragonfly_local.py.template``` to ```_dragonfly_local.py```.
-6. Restart Dragon.
+6. Rename ```_dragonfly_local.py.template``` to ```_dragonfly_local.py```.
+7. Restart Dragon.
 
 Those are the basic steps needed to get the code to run without errors. Some
 interesting functionality will still be missing (e.g. eye tracking, WebDriver
