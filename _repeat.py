@@ -502,15 +502,14 @@ def stop_profiling():
     yappi.clear_stats()
 
 
-def click_word(text):
+def move_to_word(text):
     word = str(text)
     nearby_words, gaze_point = ocr_future.result()
     click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words)
     if not click_position:
-        print("No matches found for word: {}".format(word))
-        return
+        # Raise an exception so that the action returns False.
+        raise RuntimeError("No matches found for word: {}".format(word))
     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
-    Mouse("left").execute()
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -556,7 +555,7 @@ command_action_map = utils.combine_maps(
         "(I|eye) disconnect": Function(tracker.disconnect),
         "(I|eye) print position": Function(tracker.print_position),
         "(I|eye) move": Function(tracker.move_to_position),
-        "(I|eye) (touch|click)": Function(tracker.move_to_position) + Mouse("left"),
+        "(I|eye) (touch|click) [left]": Function(tracker.move_to_position) + Mouse("left"),
         "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
         "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
         "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
@@ -574,7 +573,13 @@ command_action_map = utils.combine_maps(
         "(touch|click) [left] twice": Mouse("left:2"),
         "(touch|click) hold": Mouse("left:down"),
         "(touch|click) release": Mouse("left:up"),
-        "<text> touch": Function(click_word),
+        "<text> (touch|click)": Function(move_to_word) + Mouse("left"),
+        "<text> (touch|click) right": Function(move_to_word) + Mouse("right"),
+        "<text> (touch|click) middle": Function(move_to_word) + Mouse("middle"),
+        "<text> (touch|click) [left] twice": Function(move_to_word) + Mouse("left:2"),
+        "<text> (touch|click) hold": Function(move_to_word) + Mouse("left:down"),
+        "<text> (touch|click) release": Function(move_to_word) + Mouse("left:up"),
+        "<text> control (touch|click)": Function(move_to_word) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
