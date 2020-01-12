@@ -504,8 +504,14 @@ def stop_profiling():
 
 def move_to_word(text):
     word = str(text)
-    nearby_words, gaze_point = ocr_future.result()
+    (nearby_words, image), gaze_point = ocr_future.result()
     click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words)
+    if local.SAVE_OCR_DATA_DIR:
+        file_name_prefix = "{}_{:2f}".format("success" if click_position else "failure", time.time())
+        file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
+        image.save(file_path_prefix + ".png")
+        with open(file_path_prefix + ".txt", "w") as file:
+            file.write(word)
     if not click_position:
         # Raise an exception so that the action returns False.
         raise RuntimeError("No matches found for word: {}".format(word))

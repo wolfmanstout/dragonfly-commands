@@ -20,7 +20,7 @@ def find_nearby_words(screen_position):
     # Adjust bounding box offsets based on screenshot offset.
     results["left"] = results["left"] + bounding_box[0]
     results["top"] = results["top"] + bounding_box[1]
-    return results
+    return results, image
 
 
 def find_nearest_word_position(word, screen_position, ocr_results):
