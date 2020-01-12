@@ -1206,12 +1206,16 @@ class OpenClipboardUrlAction(ActionBase):
 class MarkLinesAction(ActionBase):
     """Mark several lines within a range."""
 
-    def __init__(self, tight=False):
+    def __init__(self, tight=False, tree=False):
         super(MarkLinesAction, self).__init__()
         self.tight = tight
+        self.tree = tree
 
     def _execute(self, data=None):
         jump_to_line("%(n1)d" % data).execute()
+        if self.tree:
+            Key("a-h").execute()
+            return
         if self.tight:
             Key("a-m").execute()
         Key("c-space").execute()
@@ -1226,12 +1230,13 @@ class MarkLinesAction(ActionBase):
 class UseLinesAction(ActionBase):
     """Make use of lines within a range."""
 
-    def __init__(self, pre_action, post_action, tight=False, other_buffer=False):
+    def __init__(self, pre_action, post_action, tight=False, other_buffer=False, tree=False):
         super(UseLinesAction, self).__init__()
         self.pre_action = pre_action
         self.post_action = post_action
         self.tight = tight
         self.other_buffer = other_buffer
+        self.tree = tree
 
     def _execute(self, data=None):
         if self.other_buffer:
@@ -1239,7 +1244,7 @@ class UseLinesAction(ActionBase):
         else:
             # Set mark without activating.
             Key("c-backslash").execute()
-        MarkLinesAction(self.tight).execute(data)
+        MarkLinesAction(tight=self.tight, tree=self.tree).execute(data)
         self.pre_action.execute(data)
         # Jump back to the beginning of the selection.
         Key("c-langle").execute()
@@ -1418,7 +1423,7 @@ emacs_action_map = odict[
     "paste": Key("c-y"),
     "paste other": Key("a-y"),
     "<n1> through [<n2>]": MarkLinesAction(),
-    "<n1> through [<n2>] short": MarkLinesAction(True),
+    "<n1> through [<n2>] short": MarkLinesAction(tight=True),
     "<n1> through [<n2>] copy here": UseLinesAction(Key("a-w"), Key("c-y")),
     "<n1> through [<n2>] short copy here": UseLinesAction(Key("a-w"), Key("c-y"), tight=True),
     "<n1> through [<n2>] move here": UseLinesAction(Key("c-w"), Key("c-y")),
@@ -1612,6 +1617,11 @@ emacs_org_action_map = {
     "move tree down": Key("as-down"),
     "move tree up": Key("as-up"),
     "tree select": Key("a-h"),
+    "<n1> tree": MarkLinesAction(tree=True),
+    "<n1> tree copy here": UseLinesAction(Key("a-w"), Key("c-y"), tree=True),
+    "<n1> tree move here": UseLinesAction(Key("c-w"), Key("c-y"), tree=True),
+    "other <n1> tree copy here": UseLinesAction(Key("a-w"), Key("c-y"), other_buffer=True, tree=True),
+    "other <n1> tree move here": UseLinesAction(Key("c-w"), Key("c-y"), other_buffer=True, tree=True),
     "open org link": Key("c-c, c-o"),
     "show to do's": Key("c-c, slash, t"),
     "archive": Key("c-c, c-x, c-a"),
