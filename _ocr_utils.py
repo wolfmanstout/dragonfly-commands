@@ -4,6 +4,7 @@
 
 """Actions for understanding and manipulating the screen using OCR."""
 
+import enum
 import pytesseract
 import numpy as np
 from PIL import Image, ImageGrab, ImageOps
@@ -23,7 +24,20 @@ def find_nearby_words(screen_position):
     return results, image
 
 
-def find_nearest_word_position(word, screen_position, ocr_results):
+class CursorPosition(enum.Enum):
+    """The cursor position relative to a range of text."""
+
+    BEFORE = 1
+    """The position before the text."""
+
+    MIDDLE = 2
+    """The position in the middle of the text."""
+
+    AFTER = 3
+    """The position after the text."""
+    
+
+def find_nearest_word_position(word, screen_position, ocr_results, cursor_position):
     lowercase_word = word.lower()
     # TODO Investigate why this is >10X faster than the following:
     # possible_matches = ocr_results[ocr_results.text.str.contains(word, case=False, na=False, regex=False)]
@@ -44,7 +58,13 @@ def find_nearest_word_position(word, screen_position, ocr_results):
                                                             screen_position[0],
                                                             screen_position[1])
     best_match = possible_matches.loc[possible_matches["distance_squared"].idxmin()]
-    return (best_match["center_x"], best_match["center_y"])
+    if cursor_position == CursorPosition.BEFORE:
+        x_position = best_match["left"]
+    elif cursor_position == CursorPosition.MIDDLE:
+        x_position = best_match["center_x"]
+    elif cursor_position == CursorPosition.AFTER:
+        x_position = best_match["left"] + best_match["width"]
+    return (x_position, best_match["center_y"])
 
 
 def distance_squared(x1, y1, x2, y2):
@@ -85,9 +105,8 @@ def find_words_in_image(image):
     results = pytesseract.image_to_data(preprocessed_image,
                                         config=tessdata_dir_config,
                                         output_type=pytesseract.Output.DATAFRAME)
-    results[["top", "left", "width", "height"]] = ((results[["top", "left", "width", "height"]]
-                                                    - margin)
-                                                   / resize_factor)
+    results[["top", "left"]] = (results[["top", "left"]] - margin) / resize_factor
+    results[["width", "height"]] = results[["width", "height"]] / resize_factor
     return results
 
 

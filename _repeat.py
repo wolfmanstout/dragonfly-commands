@@ -463,17 +463,18 @@ repeatable_action_map = utils.combine_maps(
 
 accessibility = get_accessibility_controller()
 
-accessibility_commands = odict[
-    "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-        text_position_query, CursorPosition.BEFORE)),
-    "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-        text_position_query, CursorPosition.AFTER)),
-    # Note that the delete command is declared first so that it has higher
-    # priority than the selection variant.
-    "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
-    "words <text_query>": Function(accessibility.select_text),
-    "replace <text_query> with <replacement>": Function(accessibility.replace_text),
-]
+accessibility_commands = {}
+# = odict[
+#     "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+#         text_position_query, CursorPosition.BEFORE)),
+#     "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+#         text_position_query, CursorPosition.AFTER)),
+#     # Note that the delete command is declared first so that it has higher
+#     # priority than the selection variant.
+#     "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
+#     "words <text_query>": Function(accessibility.select_text),
+#     "replace <text_query> with <replacement>": Function(accessibility.replace_text),
+# ]
 
 
 #-------------------------------------------------------------------------------
@@ -502,10 +503,10 @@ def stop_profiling():
     yappi.clear_stats()
 
 
-def move_to_word(text):
+def move_to_text(text, cursor_position=ocr.CursorPosition.MIDDLE):
     word = str(text)
     (nearby_words, image), gaze_point = ocr_future.result()
-    click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words)
+    click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
     if local.SAVE_OCR_DATA_DIR:
         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
         file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
@@ -516,6 +517,21 @@ def move_to_word(text):
         # Raise an exception so that the action returns False.
         raise RuntimeError("No matches found for word: {}".format(word))
     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
+
+
+def select_text(text, text2=None):
+    move_to_text(text, ocr.CursorPosition.BEFORE)
+    Mouse("left:down").execute()
+    if not text2:
+        text2 = text
+    move_to_text(text2, ocr.CursorPosition.AFTER)
+    Pause("5").execute()
+    Mouse("left:up").execute()
+
+
+def replace_text(text, replacement):
+    select_text(text)
+    Text(replacement.replace("%", "%%")).execute()
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -579,13 +595,20 @@ command_action_map = utils.combine_maps(
         "(touch|click) [left] twice": Mouse("left:2"),
         "(touch|click) hold": Mouse("left:down"),
         "(touch|click) release": Mouse("left:up"),
-        "(touch|click) <text>": Function(move_to_word) + Mouse("left"),
-        "(touch|click) right <text>": Function(move_to_word) + Mouse("right"),
-        "(touch|click) middle <text>": Function(move_to_word) + Mouse("middle"),
-        "(touch|click) [left] twice <text>": Function(move_to_word) + Mouse("left:2"),
-        "(touch|click) hold <text>": Function(move_to_word) + Mouse("left:down"),
-        "(touch|click) release <text>": Function(move_to_word) + Mouse("left:up"),
-        "control (touch|click) <text>": Function(move_to_word) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+        "(touch|click) <text>": Function(move_to_text) + Mouse("left"),
+        "(touch|click) right <text>": Function(move_to_text) + Mouse("right"),
+        "(touch|click) middle <text>": Function(move_to_text) + Mouse("middle"),
+        "(touch|click) [left] twice <text>": Function(move_to_text) + Mouse("left:2"),
+        "(touch|click) hold <text>": Function(move_to_text) + Mouse("left:down"),
+        "(touch|click) release <text>": Function(move_to_text) + Mouse("left:up"),
+        "control (touch|click) <text>": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+        "go before <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.BEFORE)) + Mouse("left"),
+        "go after <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.AFTER)) + Mouse("left"),
+        # Note that the delete command is declared first so that it has higher
+        # priority than the selection variant.
+        "words <text> [through <text2>] delete": Function(select_text) + Key("backspace"),
+        "words <text> [through <text2>]": Function(select_text),
+        "replace <text> with <replacement>": Function(replace_text),
 
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
@@ -1288,8 +1311,13 @@ emacs_repeatable_action_map = {
     "error next": Key("f12"),
 }
 
-emacs_action_map = odict[
+emacs_action_map = odict[    
     # Overrides
+    "go before <text>": None,
+    "go after <text>": None,
+    "words <text> [through <text2>] delete": None,
+    "words <text> [through <text2>]": None,
+    "replace <text> with <replacement>": None,
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
     "[<n>] down": Key("c-u") + Text("%(n)s") + Key("down"),
     "all select": Key("c-x, h"),
