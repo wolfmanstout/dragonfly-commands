@@ -86,11 +86,11 @@ def screenshot_nearby(screen_position, radius=100):
 
 def find_words_in_image(image):
     threshold_function = lambda data: filters.threshold_otsu(data)
-    correction_block_size = 71
-    margin = 30
+    correction_block_size = 41
+    margin = 50
     resize_factor = 2
     convert_grayscale = True
-    shift_channels = False
+    shift_channels = True
     label_components = False
     preprocessed_image = preprocess(image,
                                     threshold_function=threshold_function,
