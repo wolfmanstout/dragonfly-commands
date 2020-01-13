@@ -503,7 +503,9 @@ def stop_profiling():
     yappi.clear_stats()
 
 
-def move_to_text(text, cursor_position=ocr.CursorPosition.MIDDLE):
+def move_to_text(text, cursor_position=None):
+    if not cursor_position:
+        cursor_position = ocr.CursorPosition.MIDDLE
     word = str(text)
     (nearby_words, image), gaze_point = ocr_future.result()
     click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
