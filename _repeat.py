@@ -547,7 +547,7 @@ command_action_map = utils.combine_maps(
     # functionality; to add these commands to a specific application, just merge
     # in the map without a prefix.
     OrderedDict([("my " + k, v) for k, v in accessibility_commands.items()]),
-    {
+    odict[
         "delete": Key("del"),
         "go home|[go] west": Key("home"),
         "go end|[go] east": Key("end"),
@@ -597,13 +597,13 @@ command_action_map = utils.combine_maps(
         "here (touch|click) [left] twice": Mouse("left:2"),
         "here (touch|click) hold": Mouse("left:down"),
         "here (touch|click) release": Mouse("left:up"),
-        "(touch|click) <text>": Function(move_to_text) + Mouse("left"),
-        "(touch|click) right <text>": Function(move_to_text) + Mouse("right"),
-        "(touch|click) middle <text>": Function(move_to_text) + Mouse("middle"),
-        "(touch|click) [left] twice <text>": Function(move_to_text) + Mouse("left:2"),
-        "(touch|click) hold <text>": Function(move_to_text) + Mouse("left:down"),
-        "(touch|click) release <text>": Function(move_to_text) + Mouse("left:up"),
-        "control (touch|click) <text>": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+        "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
+        "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
+        "<text> (touch|click) middle": Function(move_to_text) + Mouse("middle"),
+        "<text> (touch|click) [left] twice": Function(move_to_text) + Mouse("left:2"),
+        "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
+        "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
+        "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
         "go before <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.BEFORE)) + Mouse("left"),
         "go after <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.AFTER)) + Mouse("left"),
         # Note that the delete command is declared first so that it has higher
@@ -620,7 +620,7 @@ command_action_map = utils.combine_maps(
         "dragonfly CPU profiling start": Function(start_cpu_profiling),
         "dragonfly wall [time] profiling start": Function(start_wall_profiling),
         "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
-    })
+    ])
 
 # Actions for speaking out sequences of characters.
 character_action_map = {
