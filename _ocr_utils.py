@@ -146,7 +146,11 @@ def shift_channel(data, channel_index):
 def binarize_channel(data, channel_index, threshold_function, correction_block_size, label_components, save_debug_images):
     if save_debug_images:
         Image.fromarray(data).save("debug_before_{}.png".format(channel_index))
-    threshold = threshold_function(data)
+    # Necessary to avoid ValueError from Otsu threshold.
+    if data.min() == data.max():
+        threshold = np.uint8(0)
+    else:
+        threshold = threshold_function(data)
     if save_debug_images:
         if threshold.ndim == 2:
             Image.fromarray(threshold.astype(np.uint8)).save("debug_threshold_{}.png".format(channel_index))
