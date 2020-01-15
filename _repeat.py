@@ -597,6 +597,7 @@ command_action_map = utils.combine_maps(
         "here (touch|click) [left] twice": Mouse("left:2"),
         "here (touch|click) hold": Mouse("left:down"),
         "here (touch|click) release": Mouse("left:up"),
+        "<text> move": Function(move_to_text),
         "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
         "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
         "<text> (touch|click) middle": Function(move_to_text) + Mouse("middle"),
