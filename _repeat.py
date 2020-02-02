@@ -507,7 +507,7 @@ def move_to_text(text, cursor_position=None):
     if not cursor_position:
         cursor_position = ocr.CursorPosition.MIDDLE
     word = str(text)
-    (nearby_words, image), gaze_point = ocr_future.result()
+    (nearby_words, image), gaze_point, ocr_timestamp = ocr_future.result()
     click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
     if local.SAVE_OCR_DATA_DIR:
         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
@@ -517,7 +517,7 @@ def move_to_text(text, cursor_position=None):
             file.write(word)
     if not click_position:
         # Raise an exception so that the action returns False.
-        raise RuntimeError("No matches found for word: {}".format(word))
+        raise RuntimeError("No matches found after delay {:.2f} for word: {}".format(time.time() - ocr_timestamp, word))
     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
 
 
@@ -1010,6 +1010,7 @@ class RepeatRule(CompoundRule):
         # time the user starts speaking.
         global ocr_future
         gaze_point = tracker.get_gaze_point_or_default()
+        timestamp = time.time()
         # Don't enqueue multiple requests.
         if ocr_future and not ocr_future.done():
             canceled = ocr_future.cancel()
@@ -1017,7 +1018,7 @@ class RepeatRule(CompoundRule):
                 print("Canceled OCR future.")
             else:
                 print("Unable to cancel OCR future.")
-        ocr_future = ocr_executor.submit(lambda: (ocr.find_nearby_words(gaze_point), gaze_point))
+        ocr_future = ocr_executor.submit(lambda: (ocr.find_nearby_words(gaze_point), gaze_point, timestamp))
 
     # This method gets called when this rule is recognized.
     # Arguments:
