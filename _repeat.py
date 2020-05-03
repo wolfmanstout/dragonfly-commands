@@ -204,6 +204,7 @@ namespace = config.load()
 #     "question [mark]": "?",
 # }
 
+# Common names for symbols and combinations of symbols.
 symbols_map = {
     "plus": "+",
     "plus sign": "+",
@@ -289,6 +290,7 @@ symbols_map = {
     "question mark": "?",
 }
 
+# Individual symbols which can be typed without any modifier keys.
 symbol_keys_map = {
     "minus|dash": "-",
     ",": ",",
@@ -301,6 +303,7 @@ symbol_keys_map = {
     "single quote": "'",
 }
 
+# Numbers and numeric formatting symbols.
 numbers_map = {
     "zero": "0",
     "one": "1",
@@ -319,6 +322,7 @@ numbers_map = {
     ",": ",",
 }
 
+# Single-syllable names for letters.
 quick_letters_map = {
     "arch": "a",
     "brov": "b",
@@ -379,17 +383,21 @@ quick_letters_map = {
 #     "dot": ".",
 # }
 
+# Common variable prefixes.
 prefixes = [
     "num",
     "min",
 ]
 
+# Common variable suffixes.
 suffixes = [
     "bytes",
 ]
 
+# All supported letter names.
 letters_map = utils.combine_maps(quick_letters_map)
 
+# Letters, numbers, and symbol combinations.
 chars_map = utils.combine_maps(letters_map, numbers_map, symbols_map)
 
 # Load commonly misrecognized words saved to a file.
@@ -405,15 +413,27 @@ except:
     print("Unable to open: " + text.WORDS_PATH)
 
 
+# Keys that can be interleaved with dictation and repeated.
 dictation_key_action_map = {
     "enter|slap": Key("enter"),
     "space|spooce|spacebar": Key("space"),
     "tab-key": Key("tab"),
 }
 
-dictation_action_map = utils.combine_maps(dictation_key_action_map,
-                                          utils.text_map_to_action_map(utils.combine_maps(letters_map, symbols_map)))
+# Actions that can be interleaved with dictation but not repeated.
+nonrepeatable_dictation_action_map = utils.combine_maps(
+    utils.text_map_to_action_map(utils.combine_maps(letters_map, symbols_map)),
+    {
+        "number <numeral>": Text(u"%(numeral)s"),
+        "upper <letter>": Function(lambda letter: Text(letter.upper()).execute()),
+    })
 
+
+# Actions that can be interleaved with dictation.
+dictation_action_map = utils.combine_maps(dictation_key_action_map,
+                                          nonrepeatable_dictation_action_map)
+
+# Key names that can be spoken with or without modifiers and can be repeated.
 standalone_key_action_map = utils.combine_maps(
     dictation_key_action_map,
     {
@@ -431,6 +451,7 @@ standalone_key_action_map = utils.combine_maps(
         "end key": Key("end"),
     })
 
+# Key names that can be spoken with modifiers keys.
 full_key_action_map = utils.combine_maps(
     standalone_key_action_map,
     utils.text_map_to_key_action_map(utils.combine_maps(letters_map, numbers_map, symbol_keys_map)),
@@ -441,6 +462,7 @@ full_key_action_map = utils.combine_maps(
         "delete": Key("del"),
     })
 
+# Actions that can be repeated by prefixing with a number modifier.
 repeatable_action_map = utils.combine_maps(
     standalone_key_action_map,
     {
@@ -547,6 +569,7 @@ command_action_map = utils.combine_maps(
     # functionality; to add these commands to a specific application, just merge
     # in the map without a prefix.
     OrderedDict([("my " + k, v) for k, v in accessibility_commands.items()]),
+    nonrepeatable_dictation_action_map,
     odict[
         "delete": Key("del"),
         "go home|[go] west": Key("home"),
@@ -622,14 +645,6 @@ command_action_map = utils.combine_maps(
         "dragonfly wall [time] profiling start": Function(start_wall_profiling),
         "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
     ])
-
-# Actions for speaking out sequences of characters.
-character_action_map = {
-    "<chars> short": Text(u"%(chars)s"),
-    "number <numerals>": Text(u"%(numerals)s"),
-    "letter <letters>": Text(u"%(letters)s"),
-    "upper letter <letters>": Function(lambda letters: Text(letters.upper()).execute()),
-}
 
 # Here we prepare the action map of formatting functions from the config file.
 # Retrieve text-formatting functions from this module's config file. Each of
@@ -714,6 +729,8 @@ command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
     "text": Dictation(),
     "text2": Dictation(),
+    "numeral": number_element,
+    "letter": letter_element,
     "char": char_element,
     "custom_text": RuleWrap(None, Alternative([
         Dictation(),
@@ -812,16 +829,19 @@ dictation_rule = utils.create_rule(
     }
 )
 
-# Rule for printing single characters.
-single_character_rule = utils.create_rule(
-    "SingleCharacterRule",
+# Rule for printing a sequence of characters.
+character_rule = utils.create_rule(
+    "CharacterRule",
     {
-        "number <numeral>": Text(u"%(numeral)s"),
-        "upper <letter>": Function(lambda letter: Text(letter.upper()).execute()),
+        "<chars> short": Text(u"%(chars)s"),
+        "number <numerals>": Text(u"%(numerals)s"),
+        "letter <letters>": Text(u"%(letters)s"),
+        "upper letter <letters>": Function(lambda letters: Text(letters.upper()).execute()),
     },
     {
-        "numeral": number_element,
-        "letter": letter_element,
+        "numerals": numbers_element,
+        "letters": letters_element,
+        "chars": chars_element,
     }
 )
 
@@ -834,16 +854,6 @@ single_character_rule = utils.create_rule(
 #     {"dictation": letters_element}
 # )
 
-# Rule for printing a sequence of characters.
-character_rule = utils.create_rule(
-    "CharacterRule",
-    character_action_map,
-    {
-        "numerals": numbers_element,
-        "letters": letters_element,
-        "chars": chars_element,
-    }
-)
 
 #-------------------------------------------------------------------------------
 # Elements that are composed of rules. Note that the value of these elements are
@@ -863,7 +873,6 @@ dictation_element = RuleWrap(None, Alternative([
     RuleRef(rule=utils.create_rule("DictationActionRule",
                                    dictation_action_map,
                                    command_element_map)),
-    RuleRef(rule=single_character_rule),
 ]))
 
 
