@@ -571,25 +571,41 @@ command_action_map = utils.combine_maps(
     OrderedDict([("my " + k, v) for k, v in accessibility_commands.items()]),
     nonrepeatable_dictation_action_map,
     odict[
+        # Semantic names for common keypresses.
         "delete": Key("del"),
+        "paste": Key("c-v"),
+        "copy": Key("c-c"),
+        "cut": Key("c-x"),
+        "all select": Key("c-a"),
         "go home|[go] west": Key("home"),
         "go end|[go] east": Key("end"),
         "go top|[go] north": Key("c-home"),
         "go bottom|[go] south": Key("c-end"),
+        "save": Key("c-s"),
+        "window new": Key("c-w"),
+        "window close": Key("c-w"),
+        "find": Key("c-f"),
+        "this bold": Key("c-b"),
+        "this italics": Key("c-i"),
+
+        # Globally-available Windows commands.
         "volume [<n>] up": Key("volumeup/5:%(n)d"),
         "volume [<n>] down": Key("volumedown/5:%(n)d"),
         "volume (mute|unmute)": Key("volumemute"),
         "track next": Key("tracknext"),
         "track preev": Key("trackprev"),
         "track (pause|play)": Key("playpause"),
+        "windows search": Key("w-s"),
+        "windows run": Key("w-r"),
+        "windows desktop": Key("w-d"),
+        "windows explorer": Key("w-e"),
 
-        "paste": Key("c-v"),
-        "copy": Key("c-c"),
-        "cut": Key("c-x"),
-        "all select":                       Key("c-a"),
+        # Notepad text editing.
         "here edit": utils.RunApp("notepad"),
         "all edit": Key("c-a, c-x") + utils.RunApp("notepad") + Key("c-v"),
         "this edit": Key("c-x") + utils.RunApp("notepad") + Key("c-v"),
+
+        # Control keys.
         "shift hold":                     Key("shift:down"),
         "shift release":                    Key("shift:up"),
         "control hold":                   Key("ctrl:down"),
@@ -598,6 +614,7 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
+        # Scrolling and clicking.
         "(I|eye) connect": Function(tracker.connect),
         "(I|eye) disconnect": Function(tracker.disconnect),
         "(I|eye) print position": Function(tracker.print_position),
@@ -636,11 +653,14 @@ command_action_map = utils.combine_maps(
         "words <text> [through <text2>]": Function(select_text),
         "replace <text> with <replacement>": Function(replace_text),
 
+        # Webdriver control (used for Chrome but can be started and stopped from anywhere).
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
 
+        # No-op for Google commands.
         "(hey|OK) google <text>": Function(lambda text: None),
 
+        # Profiling.
         "dragonfly CPU profiling start": Function(start_cpu_profiling),
         "dragonfly wall [time] profiling start": Function(start_wall_profiling),
         "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
@@ -1799,7 +1819,7 @@ cmder_environment = MyEnvironment(name="Cmder",
                                   element_map=cmder_element_map)
 
 
-### Chrome
+### Chrome and Firefox
 
 chrome_repeatable_action_map = {
     "tab right":           Key("c-tab"),
@@ -1813,7 +1833,6 @@ chrome_action_map = {
     "(link|links) background [tab]": Key("a-f"),
     "tab new":            Key("c-t"),
     "tab incognito":            Key("cs-n"),
-    "window new": Key("c-n"),
     "go address":        Key("c-l"),
     "go [<n>] back":               Key("a-left/15:%(n)d"),
     "go [<n>] forward":            Key("a-right/15:%(n)d"),
@@ -1830,7 +1849,6 @@ chrome_action_map = {
     "workspace close": Key("a-w"),
     "workspace new": Key("a-n"),
     "workspace [tab] save": Key("a-d"),
-    "find":               Key("c-f"),
     "<link> go":          Text("%(link)s"),
     "(caret|carrot) browsing": Key("f7"),
     "code search (voice access|VA)": Key("c-l/15") + Text("csva") + Key("tab"),
@@ -1852,7 +1870,6 @@ chrome_action_map = {
     "this strikethrough": Key("as-5"),
     "this numbers": Key("cs-7"),
     "this bullets": Key("cs-8"),
-    "this bold": Key("c-b"),
     "this link": Key("c-k"),
     "insert text box": Key("a-i/15, t"),
     "paste raw": Key("cs-v"),
@@ -1943,7 +1960,6 @@ critique_action_map = {
     "comment": Key("c"),
     "resolve": Key("c-j"),
     "done": Key("d"),
-    "save": Key("c-s"),
     "expand|collapse": Key("e"),
     "reply": Key("r"),
     "comment <line_n>": webdriver.DoubleClickElementAction(
@@ -2112,7 +2128,6 @@ colab_repeatable_action_map = {
     "[cell] preev": Key("c-m, p"),
 }
 colab_action_map = {
-    "save": Key("c-s"),
     "cell run": Key("c-enter"),
     "all (cell|cells) run": Key("c-f9"),
     "cell (expand|collapse)": Key("c-apostrophe"),
