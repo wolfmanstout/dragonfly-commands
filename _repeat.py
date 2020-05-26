@@ -1976,7 +1976,8 @@ critique_element_map = {
 }
 critique_environment = MyEnvironment(name="Critique",
                                      parent=chrome_environment,
-                                     context=AppContext(title="<critique.corp.google.com>"),
+                                     context=(AppContext(title="<critique.corp.google.com>") |
+                                              AppContext(title="<critique-ng.corp.google.com>")),
                                      action_map=critique_action_map,
                                      element_map=critique_element_map)
 
