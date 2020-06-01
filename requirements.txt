@@ -1,4 +1,5 @@
 futures; python_version < "3.2"
+git+https://github.com/wolfmanstout/screen-ocr.git#egg=screen-ocr
 marionette-driver
 numpy
 odictliteral

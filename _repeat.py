@@ -14,6 +14,7 @@ https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedi
 from collections import OrderedDict
 import os.path
 import re
+import screen_ocr
 import socket
 import sys
 import threading
@@ -70,7 +71,6 @@ import _dragonfly_local as local
 import _dragonfly_utils as utils
 import _eye_tracker_utils as eye_tracker
 import _linux_utils as linux
-import _ocr_utils as ocr
 import _text_utils as text
 import _webdriver_utils as webdriver
 
@@ -527,10 +527,10 @@ def stop_profiling():
 
 def move_to_text(text, cursor_position=None):
     if not cursor_position:
-        cursor_position = ocr.CursorPosition.MIDDLE
+        cursor_position = screen_ocr.CursorPosition.MIDDLE
     word = str(text)
     (nearby_words, image), gaze_point, ocr_timestamp = ocr_future.result()
-    click_position = ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
+    click_position = screen_ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
     if local.SAVE_OCR_DATA_DIR:
         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
         file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
@@ -544,11 +544,11 @@ def move_to_text(text, cursor_position=None):
 
 
 def select_text(text, text2=None):
-    move_to_text(text, ocr.CursorPosition.BEFORE)
+    move_to_text(text, screen_ocr.CursorPosition.BEFORE)
     Mouse("left:down").execute()
     if not text2:
         text2 = text
-    move_to_text(text2, ocr.CursorPosition.AFTER)
+    move_to_text(text2, screen_ocr.CursorPosition.AFTER)
     Pause("5").execute()
     Mouse("left:up").execute()
 
@@ -649,8 +649,8 @@ command_action_map = utils.combine_maps(
         "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
         "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
         "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
-        "go before <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.BEFORE)) + Mouse("left"),
-        "go after <text>": Function(lambda text: move_to_text(text, ocr.CursorPosition.AFTER)) + Mouse("left"),
+        "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
+        "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
         "words <text> [through <text2>] delete": Function(select_text) + Key("backspace"),
@@ -1051,7 +1051,7 @@ class RepeatRule(CompoundRule):
                 print("Canceled OCR future.")
             else:
                 print("Unable to cancel OCR future.")
-        ocr_future = ocr_executor.submit(lambda: (ocr.find_nearby_words(gaze_point), gaze_point, timestamp))
+        ocr_future = ocr_executor.submit(lambda: (screen_ocr.find_nearby_words(gaze_point), gaze_point, timestamp))
 
     # This method gets called when this rule is recognized.
     # Arguments:
