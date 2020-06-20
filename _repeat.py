@@ -629,6 +629,7 @@ command_action_map = utils.combine_maps(
         "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
         "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
         "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
+        "(I|eye) control (touch|click)": Function(tracker.move_to_position) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
         "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:7"),
         "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
         "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:7"),
