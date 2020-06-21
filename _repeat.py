@@ -80,6 +80,7 @@ tracker = eye_tracker.get_tracker()
 # Start a single-threaded threadpool for running OCR.
 ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
 ocr_future = None
+ocr_reader = screen_ocr.Reader()
 
 # Load local hooks if defined.
 try:
@@ -529,12 +530,12 @@ def move_to_text(text, cursor_position=None):
     if not cursor_position:
         cursor_position = screen_ocr.CursorPosition.MIDDLE
     word = str(text)
-    (nearby_words, image), gaze_point, ocr_timestamp = ocr_future.result()
-    click_position = screen_ocr.find_nearest_word_position(word, gaze_point, nearby_words, cursor_position)
+    screen_contents, gaze_point, ocr_timestamp = ocr_future.result()
+    click_position = screen_contents.find_nearest_word_coordinates(word, cursor_position)
     if local.SAVE_OCR_DATA_DIR:
         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
         file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
-        image.save(file_path_prefix + ".png")
+        screen_contents.screenshot.save(file_path_prefix + ".png")
         with open(file_path_prefix + ".txt", "w") as file:
             file.write(word)
     if not click_position:
@@ -1052,7 +1053,7 @@ class RepeatRule(CompoundRule):
                 print("Canceled OCR future.")
             else:
                 print("Unable to cancel OCR future.")
-        ocr_future = ocr_executor.submit(lambda: (screen_ocr.find_nearby_words(gaze_point), gaze_point, timestamp))
+        ocr_future = ocr_executor.submit(lambda: (ocr_reader.read_nearby(gaze_point), gaze_point, timestamp))
 
     # This method gets called when this rule is recognized.
     # Arguments:
