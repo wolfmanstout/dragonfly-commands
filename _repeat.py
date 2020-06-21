@@ -619,40 +619,6 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
-        # Scrolling and clicking.
-        "(I|eye) connect": Function(tracker.connect),
-        "(I|eye) disconnect": Function(tracker.disconnect),
-        "(I|eye) print position": Function(tracker.print_position),
-        "(I|eye) move": Function(tracker.move_to_position),
-        "(I|eye) (touch|click) [left]": Function(tracker.move_to_position) + Mouse("left"),
-        "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
-        "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
-        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
-        "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
-        "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
-        "(I|eye) control (touch|click)": Function(tracker.move_to_position) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
-        "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:7"),
-        "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
-        "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:7"),
-        "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
-        "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:7"),
-        "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:7"),
-        "here (touch|click) [left]": Mouse("left"),
-        "here (touch|click) right": Mouse("right"),
-        "here (touch|click) middle": Mouse("middle"),
-        "here (touch|click) [left] twice": Mouse("left:2"),
-        "here (touch|click) hold": Mouse("left:down"),
-        "here (touch|click) release": Mouse("left:up"),
-        "<text> move": Function(move_to_text),
-        "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
-        "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
-        "<text> (touch|click) middle": Function(move_to_text) + Mouse("middle"),
-        "<text> (touch|click) [left] twice": Function(move_to_text) + Mouse("left:2"),
-        "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
-        "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
-        "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
-        "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
-        "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
         "words <text> [through <text2>] delete": Function(select_text) + Key("backspace"),
@@ -671,6 +637,43 @@ command_action_map = utils.combine_maps(
         "dragonfly wall [time] profiling start": Function(start_wall_profiling),
         "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
     ])
+
+terminal_command_action_map = odict[
+    # Scrolling and clicking.
+    "(I|eye) connect": Function(tracker.connect),
+    "(I|eye) disconnect": Function(tracker.disconnect),
+    "(I|eye) print position": Function(tracker.print_position),
+    "(I|eye) move": Function(tracker.move_to_position),
+    "(I|eye) (touch|click) [left]": Function(tracker.move_to_position) + Mouse("left"),
+    "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
+    "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
+    "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
+    "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
+    "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
+    "(I|eye) control (touch|click)": Function(tracker.move_to_position) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+    "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:7"),
+    "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
+    "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:7"),
+    "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
+    "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:7"),
+    "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:7"),
+    "here (touch|click) [left]": Mouse("left"),
+    "here (touch|click) right": Mouse("right"),
+    "here (touch|click) middle": Mouse("middle"),
+    "here (touch|click) [left] twice": Mouse("left:2"),
+    "here (touch|click) hold": Mouse("left:down"),
+    "here (touch|click) release": Mouse("left:up"),
+    "<text> move": Function(move_to_text),
+    "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
+    "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
+    "<text> (touch|click) middle": Function(move_to_text) + Mouse("middle"),
+    "<text> (touch|click) [left] twice": Function(move_to_text) + Mouse("left:2"),
+    "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
+    "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
+    "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+    "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
+    "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
+]    
 
 # Here we prepare the action map of formatting functions from the config file.
 # Retrieve text-formatting functions from this module's config file. Each of
@@ -1174,6 +1177,7 @@ class MyEnvironment(object):
 global_environment = MyEnvironment(name="Global",
                                    action_map=command_action_map,
                                    repeatable_action_map=repeatable_action_map,
+                                   terminal_action_map=terminal_command_action_map,
                                    element_map=command_element_map)
 
 
@@ -1562,7 +1566,7 @@ emacs_action_map = odict[
     "ghost close": Key("c-c, c-c"),
 ]
 
-emacs_terminal_action_map = {
+emacs_terminal_action_map = utils.combine_maps(terminal_command_action_map, {
     "go before [preev] <custom_text>": Key("c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
     "go after preev <custom_text>": Key("left, c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("c-s, enter"),
     "go before next <custom_text>": Key("right, c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("c-r, enter"),
@@ -1575,7 +1579,7 @@ emacs_terminal_action_map = {
     "replace <custom_text> with <custom_text2>": (Key("c-c, c, as-5")
                                                  + utils.lowercase_text_action("%(custom_text)s") + Key("enter")
                                                  + utils.lowercase_text_action("%(custom_text2)s") + Key("enter")),
-}
+})
 
 templates = {
     "beginend": "beginend",
@@ -1898,6 +1902,7 @@ chrome_action_map = {
 }
 
 chrome_terminal_action_map = utils.combine_maps(
+    terminal_command_action_map,
     accessibility_commands,
     {
         "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Key("enter"),
