@@ -530,7 +530,7 @@ def move_to_text(text, cursor_position=None):
     if not cursor_position:
         cursor_position = screen_ocr.CursorPosition.MIDDLE
     word = str(text)
-    screen_contents, gaze_point, ocr_timestamp = ocr_future.result()
+    screen_contents, ocr_timestamp = ocr_future.result()
     click_position = screen_contents.find_nearest_word_coordinates(word, cursor_position)
     if local.SAVE_OCR_DATA_DIR:
         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
@@ -1053,11 +1053,11 @@ class RepeatRule(CompoundRule):
         # Don't enqueue multiple requests.
         if ocr_future and not ocr_future.done():
             canceled = ocr_future.cancel()
-            if canceled:
-                print("Canceled OCR future.")
-            else:
-                print("Unable to cancel OCR future.")
-        ocr_future = ocr_executor.submit(lambda: (ocr_reader.read_nearby(gaze_point), gaze_point, timestamp))
+            # if canceled:
+            #     print("Canceled OCR future.")
+            # else:
+            #     print("Unable to cancel OCR future.")
+        ocr_future = ocr_executor.submit(lambda: (ocr_reader.read_nearby(gaze_point), timestamp))
 
     # This method gets called when this rule is recognized.
     # Arguments:
@@ -2295,8 +2295,7 @@ server_thread.start()
 webdriver.create_driver()
 
 # Connect to eye tracker if possible.
-tracker_thread = threading.Thread(target=tracker.connect)
-tracker_thread.start()
+tracker.connect()
 
 # Force NatLink to schedule background threads frequently by regularly waking up
 # a dummy thread.
