@@ -619,6 +619,9 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
+        # OCR-based commands.
+        "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
+        "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
         "words <text> [through <text2>] delete": Function(select_text) + Key("backspace"),
@@ -671,8 +674,6 @@ terminal_command_action_map = odict[
     "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
     "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
     "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
-    "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
-    "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
 ]    
 
 # Here we prepare the action map of formatting functions from the config file.
