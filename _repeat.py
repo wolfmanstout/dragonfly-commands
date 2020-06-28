@@ -80,7 +80,7 @@ tracker = eye_tracker.get_tracker()
 # Start a single-threaded threadpool for running OCR.
 ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
 ocr_future = None
-ocr_reader = screen_ocr.Reader()
+ocr_reader = screen_ocr.Reader.create_quality_reader()
 
 # Load local hooks if defined.
 try:
