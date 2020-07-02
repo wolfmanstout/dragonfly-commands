@@ -80,7 +80,10 @@ tracker = eye_tracker.get_tracker()
 # Start a single-threaded threadpool for running OCR.
 ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
 ocr_future = None
-ocr_reader = screen_ocr.Reader.create_quality_reader()
+if local.USE_FAST_OCR_READER:
+    ocr_reader = screen_ocr.Reader.create_fast_reader()
+else:
+    ocr_reader = screen_ocr.Reader.create_quality_reader()
 
 # Load local hooks if defined.
 try:
@@ -619,6 +622,14 @@ command_action_map = utils.combine_maps(
         "(meta|alt) release":                  Key("alt:up"),
         "all release":                    Key("shift:up, ctrl:up, alt:up"),
 
+        # Scrolling and clicking.
+        "here (touch|click) [left]": Mouse("left"),
+        "here (touch|click) right": Mouse("right"),
+        "here (touch|click) middle": Mouse("middle"),
+        "here (touch|click) [left] twice": Mouse("left:2"),
+        "here (touch|click) hold": Mouse("left:down"),
+        "here (touch|click) release": Mouse("left:up"),
+
         # OCR-based commands.
         "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
         "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
@@ -660,12 +671,6 @@ terminal_command_action_map = odict[
     "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
     "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:7"),
     "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:7"),
-    "here (touch|click) [left]": Mouse("left"),
-    "here (touch|click) right": Mouse("right"),
-    "here (touch|click) middle": Mouse("middle"),
-    "here (touch|click) [left] twice": Mouse("left:2"),
-    "here (touch|click) hold": Mouse("left:down"),
-    "here (touch|click) release": Mouse("left:up"),
     "<text> move": Function(move_to_text),
     "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
     "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
