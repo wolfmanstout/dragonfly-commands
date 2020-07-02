@@ -75,7 +75,7 @@ import _text_utils as text
 import _webdriver_utils as webdriver
 
 # Instantiate the tracker so we can refer to it (we will connect to it later).
-tracker = eye_tracker.get_tracker()
+tracker = eye_tracker.Tracker.get_connected_instance()
 
 # Start a single-threaded threadpool for running OCR.
 ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -629,14 +629,14 @@ command_action_map = utils.combine_maps(
         "here (touch|click) [left] twice": Mouse("left:2"),
         "here (touch|click) hold": Mouse("left:down"),
         "here (touch|click) release": Mouse("left:up"),
-        "(I|eye) move": Function(tracker.move_to_position),
-        "(I|eye) (touch|click) [left]": Function(tracker.move_to_position) + Mouse("left"),
-        "(I|eye) (touch|click) right": Function(tracker.move_to_position) + Mouse("right"),
-        "(I|eye) (touch|click) middle": Function(tracker.move_to_position) + Mouse("middle"),
-        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_position) + Mouse("left:2"),
-        "(I|eye) (touch|click) hold": Function(tracker.move_to_position) + Mouse("left:down"),
-        "(I|eye) (touch|click) release": Function(tracker.move_to_position) + Mouse("left:up"),
-        "(I|eye) control (touch|click)": Function(tracker.move_to_position) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+        "(I|eye) move": Function(tracker.move_to_gaze_point),
+        "(I|eye) (touch|click) [left]": Function(tracker.move_to_gaze_point) + Mouse("left"),
+        "(I|eye) (touch|click) right": Function(tracker.move_to_gaze_point) + Mouse("right"),
+        "(I|eye) (touch|click) middle": Function(tracker.move_to_gaze_point) + Mouse("middle"),
+        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_gaze_point) + Mouse("left:2"),
+        "(I|eye) (touch|click) hold": Function(tracker.move_to_gaze_point) + Mouse("left:down"),
+        "(I|eye) (touch|click) release": Function(tracker.move_to_gaze_point) + Mouse("left:up"),
+        "(I|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
         # OCR-based commands.
         "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
@@ -664,13 +664,13 @@ terminal_command_action_map = odict[
     # Scrolling and clicking.
     "(I|eye) connect": Function(tracker.connect),
     "(I|eye) disconnect": Function(tracker.disconnect),
-    "(I|eye) print position": Function(tracker.print_position),
-    "scroll up": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:7"),
-    "scroll up half": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
-    "scroll down": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:7"),
-    "scroll down half": Function(lambda: tracker.move_to_position((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
-    "scroll left": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:7"),
-    "scroll right": Function(lambda: tracker.move_to_position((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:7"),
+    "(I|eye) print position": Function(tracker.print_gaze_point),
+    "scroll up": Function(lambda: tracker.move_to_gaze_point((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:7"),
+    "scroll up half": Function(lambda: tracker.move_to_gaze_point((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelup:4"),
+    "scroll down": Function(lambda: tracker.move_to_gaze_point((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:7"),
+    "scroll down half": Function(lambda: tracker.move_to_gaze_point((0, -40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheeldown:4"),
+    "scroll left": Function(lambda: tracker.move_to_gaze_point((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelleft:7"),
+    "scroll right": Function(lambda: tracker.move_to_gaze_point((0, 40)) or Mouse("(0.5, 0.5)").execute()) + Mouse("wheelright:7"),
     "scroll start [down]": Mimic(*"start scrolling down".split()) + Mimic(*"scroll faster".split()) * 2,
     "[scroll] stop": Mimic(*"stop scrolling".split()),
     "<text> move": Function(move_to_text),
@@ -1462,7 +1462,7 @@ emacs_action_map = odict[
     "other screen up": Key("c-minus, ca-v"),
     "other screen down": Key("ca-v"),
     "other <n1> enter": Key("c-x, o") + jump_to_line("%(n1)s") + Key("enter"),
-    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: tracker.type_position("%d\n%d\n")),
+    "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: tracker.type_gaze_point("%d\n%d\n")),
 
     # Editing
     "delete": Key("c-c, c, c-w"),
@@ -2301,9 +2301,6 @@ server_thread.start()
 # Connect to Chrome WebDriver if possible.
 webdriver.create_driver()
 
-# Connect to eye tracker if possible.
-tracker.connect()
-
 # Force NatLink to schedule background threads frequently by regularly waking up
 # a dummy thread.
 shutdown_dummy_thread_event = threading.Event()
@@ -2328,7 +2325,7 @@ print("Loaded _repeat.py")
 def unload():
     for grammar in grammars:
         grammar.unload()
-    if tracker.is_available:
+    if tracker.is_connected:
         tracker.disconnect()
     webdriver.quit_driver()
     timer.stop()
