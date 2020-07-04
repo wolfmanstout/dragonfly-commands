@@ -34,20 +34,10 @@ If you do choose to use this code directly, here are the basic steps:
 
 Those are the basic steps needed to get the code to run without errors. Some
 interesting functionality will still be missing (e.g. eye tracking, WebDriver
-integration). Here is how to integrate eye tracking:
-
-1. Run `pip install pythonnet`.
-2. Download the [latest
-   Tobii.Interaction](https://www.nuget.org/packages/Tobii.Interaction/) package
-   from NuGet (these instructions have been tested on 0.7.3).
-3. Rename the file extension to .zip and expand the contents.
-4. Copy these 3 DLLs to a directory of your choice:
-   build/AnyCPU/Tobii.EyeX.Client.dll, lib/net45/Tobii.Interaction.Model.dll,
-   lib/net45/Tobii.Interaction.Net.dll.
-5. Ensure that the files are not blocked (right-click Properties, and if there
-   is a "Security" section at the bottom, check the "Unblock" box.)
-6. Set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the directory used
-   in the previous step.
+integration). Follow the [gaze-ocr
+instructions](https://github.com/wolfmanstout/gaze-ocr) to install support for
+eye tracking, then set `DLL_DIRECTORY` in `_dragonfly_local.py` to point to the
+eye tracker DLL directory.
 
 Please check out [my blog](http://handsfreecoding.org) for instructions integrating
 other optional features.

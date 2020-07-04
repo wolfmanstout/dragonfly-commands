@@ -11,23 +11,25 @@ This is heavily modified from _multiedit.py, found here:
 https://github.com/t4ngo/dragonfly-modules/blob/master/command-modules/_multiedit.py
 """
 
-from collections import OrderedDict
 import os.path
 import re
-import screen_ocr
 import socket
 import sys
 import threading
 import time
 import webbrowser
+from collections import OrderedDict
+from concurrent import futures
+
+import gaze_ocr
+import screen_ocr
 import win32clipboard
 import yappi
-
+from gaze_ocr import eye_tracking
 from odictliteral import odict
+from six import string_types
 from six.moves import BaseHTTPServer
 from six.moves import queue
-from six import string_types
-from concurrent import futures
 
 from dragonfly import (
     ActionBase,
@@ -69,21 +71,16 @@ from selenium.webdriver.common.by import By
 
 import _dragonfly_local as local
 import _dragonfly_utils as utils
-import _eye_tracker_utils as eye_tracker
 import _linux_utils as linux
 import _text_utils as text
 import _webdriver_utils as webdriver
 
-# Instantiate the tracker so we can refer to it (we will connect to it later).
-tracker = eye_tracker.Tracker.get_connected_instance()
-
-# Start a single-threaded threadpool for running OCR.
-ocr_executor = futures.ThreadPoolExecutor(max_workers=1)
-ocr_future = None
+tracker = eye_tracking.EyeTracker.get_connected_instance(local.DLL_DIRECTORY)
 if local.USE_FAST_OCR_READER:
     ocr_reader = screen_ocr.Reader.create_fast_reader()
 else:
     ocr_reader = screen_ocr.Reader.create_quality_reader()
+gaze_ocr_controller = gaze_ocr.Controller(ocr_reader, tracker)
 
 # Load local hooks if defined.
 try:
@@ -529,37 +526,23 @@ def stop_profiling():
     yappi.clear_stats()
 
 
-def move_to_text(text, cursor_position=None):
-    if not cursor_position:
-        cursor_position = screen_ocr.CursorPosition.MIDDLE
-    word = str(text)
-    screen_contents, ocr_timestamp = ocr_future.result()
-    click_position = screen_contents.find_nearest_word_coordinates(word, cursor_position)
-    if local.SAVE_OCR_DATA_DIR:
-        file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
-        file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
-        screen_contents.screenshot.save(file_path_prefix + ".png")
-        with open(file_path_prefix + ".txt", "w") as file:
-            file.write(word)
-    if not click_position:
-        # Raise an exception so that the action returns False.
-        raise RuntimeError("No matches found after delay {:.2f} for word: {}".format(time.time() - ocr_timestamp, word))
-    Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
-
-
-def select_text(text, text2=None):
-    move_to_text(text, screen_ocr.CursorPosition.BEFORE)
-    Mouse("left:down").execute()
-    if not text2:
-        text2 = text
-    move_to_text(text2, screen_ocr.CursorPosition.AFTER)
-    Pause("5").execute()
-    Mouse("left:up").execute()
-
-
-def replace_text(text, replacement):
-    select_text(text)
-    Text(replacement.replace("%", "%%")).execute()
+# TODO Remove after adding support for saving OCR data.
+# def move_to_text(text, cursor_position=None):
+#     if not cursor_position:
+#         cursor_position = screen_ocr.CursorPosition.MIDDLE
+#     word = str(text)
+#     screen_contents, ocr_timestamp = ocr_future.result()
+#     click_position = screen_contents.find_nearest_word_coordinates(word, cursor_position)
+#     if local.SAVE_OCR_DATA_DIR:
+#         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
+#         file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
+#         screen_contents.screenshot.save(file_path_prefix + ".png")
+#         with open(file_path_prefix + ".txt", "w") as file:
+#             file.write(word)
+#     if not click_position:
+#         # Raise an exception so that the action returns False.
+#         raise RuntimeError("No matches found after delay {:.2f} for word: {}".format(time.time() - ocr_timestamp, word))
+#     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
@@ -639,13 +622,13 @@ command_action_map = utils.combine_maps(
         "(I|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
         # OCR-based commands.
-        "go before <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.BEFORE)) + Mouse("left"),
-        "go after <text>": Function(lambda text: move_to_text(text, screen_ocr.CursorPosition.AFTER)) + Mouse("left"),
+        "go before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.BEFORE) + Mouse("left"),
+        "go after <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.AFTER) + Mouse("left"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
-        "words <text> [through <text2>] delete": Function(select_text) + Key("backspace"),
-        "words <text> [through <text2>]": Function(select_text),
-        "replace <text> with <replacement>": Function(replace_text),
+        "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
+        "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
+        "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
 
         # Webdriver control (used for Chrome but can be started and stopped from anywhere).
         "webdriver open": Function(webdriver.create_driver),
@@ -673,14 +656,14 @@ terminal_command_action_map = odict[
     "scroll right": Function(lambda: tracker.move_to_gaze_point((-40, 0))) + Mouse("wheelright:7"),
     "scroll start [down]": Mimic(*"start scrolling down".split()) + Mimic(*"scroll faster".split()) * 2,
     "[scroll] stop": Mimic(*"stop scrolling".split()),
-    "<text> move": Function(move_to_text),
-    "<text> (touch|click) [left]": Function(move_to_text) + Mouse("left"),
-    "<text> (touch|click) right": Function(move_to_text) + Mouse("right"),
-    "<text> (touch|click) middle": Function(move_to_text) + Mouse("middle"),
-    "<text> (touch|click) [left] twice": Function(move_to_text) + Mouse("left:2"),
-    "<text> (touch|click) hold": Function(move_to_text) + Mouse("left:down"),
-    "<text> (touch|click) release": Function(move_to_text) + Mouse("left:up"),
-    "<text> control (touch|click)": Function(move_to_text) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+    "<text> move": gaze_ocr_controller.move_cursor_to_word_action("%(text)s"),
+    "<text> (touch|click) [left]": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left"),
+    "<text> (touch|click) right": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("right"),
+    "<text> (touch|click) middle": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("middle"),
+    "<text> (touch|click) [left] twice": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:2"),
+    "<text> (touch|click) hold": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:down"),
+    "<text> (touch|click) release": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:up"),
+    "<text> control (touch|click)": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 ]    
 
 # Here we prepare the action map of formatting functions from the config file.
@@ -1054,17 +1037,7 @@ class RepeatRule(CompoundRule):
         # Start OCR now so that results are ready when the command completes (if
         # it uses OCR). This also has the benefit of using the gaze from the
         # time the user starts speaking.
-        global ocr_future
-        gaze_point = tracker.get_gaze_point_or_default()
-        timestamp = time.time()
-        # Don't enqueue multiple requests.
-        if ocr_future and not ocr_future.done():
-            canceled = ocr_future.cancel()
-            # if canceled:
-            #     print("Canceled OCR future.")
-            # else:
-            #     print("Unable to cancel OCR future.")
-        ocr_future = ocr_executor.submit(lambda: (ocr_reader.read_nearby(gaze_point), timestamp))
+        gaze_ocr_controller.start_reading_nearby()
 
     # This method gets called when this rule is recognized.
     # Arguments:
