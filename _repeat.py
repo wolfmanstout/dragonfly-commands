@@ -624,6 +624,8 @@ command_action_map = utils.combine_maps(
         # OCR-based commands.
         "go before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.BEFORE) + Mouse("left"),
         "go after <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.AFTER) + Mouse("left"),
+        "words before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.BEFORE) + Key("shift:down") + Mouse("left") + Key("shift:up"),
+        "words after <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", screen_ocr.CursorPosition.AFTER) + Key("shift:down") + Mouse("left") + Key("shift:up"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
         "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
