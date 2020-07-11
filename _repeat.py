@@ -80,7 +80,9 @@ if local.USE_FAST_OCR_READER:
     ocr_reader = screen_ocr.Reader.create_fast_reader()
 else:
     ocr_reader = screen_ocr.Reader.create_quality_reader()
-gaze_ocr_controller = gaze_ocr.Controller(ocr_reader, tracker)
+gaze_ocr_controller = gaze_ocr.Controller(ocr_reader,
+                                          tracker,
+                                          save_data_directory=local.SAVE_OCR_DATA_DIR)
 
 # Load local hooks if defined.
 try:
@@ -524,25 +526,6 @@ def stop_profiling():
     profile_path = os.path.join(local.HOME, "yappi_{}.callgrind.out".format(time.time()))
     yappi.get_func_stats().save(profile_path, "callgrind")
     yappi.clear_stats()
-
-
-# TODO Remove after adding support for saving OCR data.
-# def move_to_text(text, cursor_position=None):
-#     if not cursor_position:
-#         cursor_position = screen_ocr.CursorPosition.MIDDLE
-#     word = str(text)
-#     screen_contents, ocr_timestamp = ocr_future.result()
-#     click_position = screen_contents.find_nearest_word_coordinates(word, cursor_position)
-#     if local.SAVE_OCR_DATA_DIR:
-#         file_name_prefix = "{}_{:.2f}".format("success" if click_position else "failure", time.time())
-#         file_path_prefix = os.path.join(local.SAVE_OCR_DATA_DIR, file_name_prefix)
-#         screen_contents.screenshot.save(file_path_prefix + ".png")
-#         with open(file_path_prefix + ".txt", "w") as file:
-#             file.write(word)
-#     if not click_position:
-#         # Raise an exception so that the action returns False.
-#         raise RuntimeError("No matches found after delay {:.2f} for word: {}".format(time.time() - ocr_timestamp, word))
-#     Mouse("[{}, {}]".format(int(click_position[0]), int(click_position[1]))).execute()
 
 
 # Actions of commonly used text navigation and mousing commands. These can be
