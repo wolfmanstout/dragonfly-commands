@@ -595,14 +595,14 @@ command_action_map = utils.combine_maps(
         "here (touch|click) [left] twice": Mouse("left:2"),
         "here (touch|click) hold": Mouse("left:down"),
         "here (touch|click) release": Mouse("left:up"),
-        "(I|eye) move": Function(tracker.move_to_gaze_point),
-        "(I|eye) (touch|click) [left]": Function(tracker.move_to_gaze_point) + Mouse("left"),
-        "(I|eye) (touch|click) right": Function(tracker.move_to_gaze_point) + Mouse("right"),
-        "(I|eye) (touch|click) middle": Function(tracker.move_to_gaze_point) + Mouse("middle"),
-        "(I|eye) (touch|click) [left] twice": Function(tracker.move_to_gaze_point) + Mouse("left:2"),
-        "(I|eye) (touch|click) hold": Function(tracker.move_to_gaze_point) + Mouse("left:down"),
-        "(I|eye) (touch|click) release": Function(tracker.move_to_gaze_point) + Mouse("left:up"),
-        "(I|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+        "(I\\pronoun|eye) move": Function(tracker.move_to_gaze_point),
+        "(I\\pronoun|eye) (touch|click) [left]": Function(tracker.move_to_gaze_point) + Mouse("left"),
+        "(I\\pronoun|eye) (touch|click) right": Function(tracker.move_to_gaze_point) + Mouse("right"),
+        "(I\\pronoun|eye) (touch|click) middle": Function(tracker.move_to_gaze_point) + Mouse("middle"),
+        "(I\\pronoun|eye) (touch|click) [left] twice": Function(tracker.move_to_gaze_point) + Mouse("left:2"),
+        "(I\\pronoun|eye) (touch|click) hold": Function(tracker.move_to_gaze_point) + Mouse("left:down"),
+        "(I\\pronoun|eye) (touch|click) release": Function(tracker.move_to_gaze_point) + Mouse("left:up"),
+        "(I\\pronoun|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
         # OCR-based commands.
         "go before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", "before") + Mouse("left"),
@@ -630,9 +630,9 @@ command_action_map = utils.combine_maps(
 
 terminal_command_action_map = odict[
     # Scrolling and clicking.
-    "(I|eye) connect": Function(tracker.connect),
-    "(I|eye) disconnect": Function(tracker.disconnect),
-    "(I|eye) print position": Function(tracker.print_gaze_point),
+    "(I\\pronoun|eye) connect": Function(tracker.connect),
+    "(I\\pronoun|eye) disconnect": Function(tracker.disconnect),
+    "(I\\pronoun|eye) print position": Function(tracker.print_gaze_point),
     "scroll up": Function(lambda: tracker.move_to_gaze_point((0, 40))) + Mouse("wheelup:7"),
     "scroll up half": Function(lambda: tracker.move_to_gaze_point((0, 40))) + Mouse("wheelup:4"),
     "scroll down": Function(lambda: tracker.move_to_gaze_point((0, -40))) + Mouse("wheeldown:7"),
