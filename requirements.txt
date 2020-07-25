@@ -1,8 +1,8 @@
 futures; python_version < "3.2"
-git+https://github.com/wolfmanstout/gaze-ocr.git#egg=gaze-ocr
-git+https://github.com/wolfmanstout/screen-ocr.git#egg=screen-ocr
+gaze-ocr
 marionette-driver
 odictliteral
+screen-ocr
 selenium
 six
 yappi
