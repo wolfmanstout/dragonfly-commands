@@ -2297,5 +2297,5 @@ def unload():
     wake_dummy_thread_timer.stop()
     shutdown_dummy_thread_event.set()
     dummy_thread.join()
-    ocr_executor.shutdown(wait=False)
+    gaze_ocr_controller.shutdown(wait=False)
     print("Unloaded _repeat.py")

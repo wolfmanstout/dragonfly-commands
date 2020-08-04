@@ -66,7 +66,7 @@ def switch_to_active_tab():
             # ChromeDriver adds to the raw ID, so we just look for substring match.
             if active_tab in window:
                 driver.switch_to_window(window);
-                print("Switched Chrome to: " + driver.title.encode('ascii', 'backslashreplace'))
+                print("Switched Chrome to: " + driver.title.encode('ascii', 'backslashreplace').decode())
                 return
         print("Did not find active tab in Chrome.")
     elif browser == "firefox":
