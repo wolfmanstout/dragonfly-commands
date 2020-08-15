@@ -59,8 +59,9 @@ def combine_maps(*maps):
         if not map:
             continue
         for key, value in map.items():
-            if value is None and key in result:
-                del result[key]
+            if value is None:
+                if key in result:
+                    del result[key]
             else:
                 result[key] = value
     return result
