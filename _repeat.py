@@ -1829,7 +1829,7 @@ chrome_action_map = {
     "workspace tab (open|new)": Key("as-c"),
     "workspace close": Key("a-w"),
     "workspace new": Key("a-n"),
-    "workspace [tab] save": Key("a-d"),
+    "workspace [tab] save": Key("as-d"),
     "<link> go":          Text("%(link)s"),
     "(caret|carrot) browsing": Key("f7"),
     "code search (voice access|VA)": Key("c-l/15") + Text("csva") + Key("tab"),
