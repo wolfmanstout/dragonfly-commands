@@ -1875,7 +1875,7 @@ chrome_terminal_action_map = utils.combine_maps(
     terminal_command_action_map,
     accessibility_commands,
     {
-        "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Key("enter"),
+        "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Pause("15") + Key("enter"),
         "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
         "history search": Key("c-l/15") + Text("history") + Key("tab"),
         "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
