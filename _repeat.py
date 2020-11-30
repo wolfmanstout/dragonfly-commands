@@ -76,12 +76,10 @@ import _text_utils as text
 import _webdriver_utils as webdriver
 
 tracker = eye_tracking.EyeTracker.get_connected_instance(local.DLL_DIRECTORY)
-if local.OCR_READER == "fast":
-    ocr_reader = screen_ocr.Reader.create_fast_reader()
+if local.OCR_READER == "fast" or local.OCR_READER == "winrt":
+    ocr_reader = screen_ocr.Reader.create_fast_reader(radius=150)
 elif local.OCR_READER == "quality":
-    ocr_reader = screen_ocr.Reader.create_quality_reader()
-elif local.OCR_READER == "winrt":
-    ocr_reader = screen_ocr.Reader.create_reader(backend="winrt", radius=150)
+    ocr_reader = screen_ocr.Reader.create_quality_reader(radius=150)
 gaze_ocr_controller = gaze_ocr.Controller(ocr_reader,
                                           tracker,
                                           save_data_directory=local.SAVE_OCR_DATA_DIR)
