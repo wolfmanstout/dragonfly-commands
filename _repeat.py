@@ -621,8 +621,8 @@ command_action_map = utils.combine_maps(
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
 
-        # No-op for Google commands.
-        "(hey|OK) google <text>": Function(lambda text: None),
+        # No-op for Google/Siri commands.
+        "((hey|OK) google|hey Siri) <text>": Function(lambda text: None),
 
         # Profiling.
         "dragonfly CPU profiling start": Function(start_cpu_profiling),
