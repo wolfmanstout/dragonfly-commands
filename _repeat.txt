@@ -9,6 +9,9 @@
 #  See below for various examples.
 
 import re
+
+from six import text_type
+
 import _text_utils as text
 
 # Format: some_words
@@ -99,4 +102,3 @@ def format_spaces(dictation):
 def format_padded(dictation):
     """ padded <dictation> """
     return u" " + " ".join(text.split_dictation(dictation)) + " "
-

@@ -822,13 +822,11 @@ custom_format_rule = utils.create_rule(
 )
 
 # Rule for handling raw dictation.
-# TODO: Improve grammar.
 dictation_rule = utils.create_rule(
     "DictationRule",
     {
-        "(mim|mimic) text <text>": Text(u"%(text)s"),
-        "mim small <text>": utils.uncapitalize_text_action("%(text)s"),
-        "mim big <text>": utils.capitalize_text_action("%(text)s"),
+        "(say|speak|phrase) <text>": Text(u"%(text)s"),
+        "sentence <text>": utils.capitalize_text_action("%(text)s"),
         "mimic <text>": Mimic(extra="text"),
     },
     {
