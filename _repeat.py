@@ -606,17 +606,6 @@ command_action_map = utils.combine_maps(
         "(I\\pronoun|eye) (touch|click) release": Function(tracker.move_to_gaze_point) + Mouse("left:up"),
         "(I\\pronoun|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
-        # OCR-based commands.
-        "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
-        "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
-        "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
-        "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
-        # Note that the delete command is declared first so that it has higher
-        # priority than the selection variant.
-        "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
-        "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
-        "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
-
         # Webdriver control (used for Chrome but can be started and stopped from anywhere).
         "webdriver open": Function(webdriver.create_driver),
         "webdriver close": Function(webdriver.quit_driver),
@@ -651,7 +640,18 @@ terminal_command_action_map = odict[
     "<text> (touch|click) hold": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:down"),
     "<text> (touch|click) release": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:up"),
     "<text> control (touch|click)": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
-]    
+
+    # OCR-based commands.
+    "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
+    "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
+    "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
+    "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
+    # Note that the delete command is declared first so that it has higher
+    # priority than the selection variant.
+    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
+    "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
+    "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
+]
 
 # Here we prepare the action map of formatting functions from the config file.
 # Retrieve text-formatting functions from this module's config file. Each of
@@ -1320,13 +1320,7 @@ emacs_repeatable_action_map = {
     "error next": Key("f12"),
 }
 
-emacs_action_map = odict[    
-    # Overrides
-    "go before <text>": None,
-    "go after <text>": None,
-    "words <text> [through <text2>] delete": None,
-    "words <text> [through <text2>]": None,
-    "replace <text> with <replacement>": None,
+emacs_action_map = odict[
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
     "[<n>] down": Key("c-u") + Text("%(n)s") + Key("down"),
     "all select": Key("c-x, h"),
@@ -1533,6 +1527,13 @@ emacs_action_map = odict[
 ]
 
 emacs_terminal_action_map = utils.combine_maps(terminal_command_action_map, {
+    # Overrides
+    "go before <text>": None,
+    "go after <text>": None,
+    "words <text> [through <text2>] delete": None,
+    "words <text> [through <text2>]": None,
+    "replace <text> with <replacement>": None,
+
     "go before [preev] <custom_text>": Key("c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
     "go after preev <custom_text>": Key("left, c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("c-s, enter"),
     "go before next <custom_text>": Key("right, c-s") + utils.lowercase_text_action("%(custom_text)s") + Key("c-r, enter"),
