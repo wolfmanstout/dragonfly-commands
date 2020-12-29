@@ -1149,7 +1149,7 @@ global_environment = MyEnvironment(name="Global",
 
 ### Shell commands
 
-shell_command_map = utils.combine_maps({
+shell_command_map = utils.combine_maps(odict[
     "git commit": Text("git commit -am "),
     "git commit done": Text("git commit -am done "),
     "git checkout new": Text("git checkout -b "),
@@ -1194,7 +1194,7 @@ shell_command_map = utils.combine_maps({
     "reset terminal": Text("exec bash\n"),
     "pseudo": Text("sudo "),
     "apt get": Text("apt-get "),
-}, dict((command, Text(command + " ")) for command in [
+], OrderedDict((command, Text(command + " ")) for command in [
     "echo",
     "grep",
     "ssh",
@@ -1289,7 +1289,7 @@ class UseLinesAction(ActionBase):
             Key("c-a").execute()
         self.post_action.execute(data)
 
-emacs_repeatable_action_map = {
+emacs_repeatable_action_map = odict[
     # Overrides
     "afters": None,
     "befores": None,
@@ -1318,7 +1318,7 @@ emacs_repeatable_action_map = {
     "word next": Key("a-n"),
     "error preev": Key("f11"),
     "error next": Key("f12"),
-}
+]
 
 emacs_action_map = odict[
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
@@ -1526,7 +1526,7 @@ emacs_action_map = odict[
     "ghost close": Key("c-c, c-c"),
 ]
 
-emacs_terminal_action_map = utils.combine_maps(terminal_command_action_map, {
+emacs_terminal_action_map = odict[
     # Overrides
     "go before <text>": None,
     "go after <text>": None,
@@ -1546,7 +1546,7 @@ emacs_terminal_action_map = utils.combine_maps(terminal_command_action_map, {
     "replace <custom_text> with <custom_text2>": (Key("c-c, c, as-5")
                                                  + utils.lowercase_text_action("%(custom_text)s") + Key("enter")
                                                  + utils.lowercase_text_action("%(custom_text2)s") + Key("enter")),
-})
+]
 
 templates = {
     "beginend": "beginend",
@@ -1614,10 +1614,10 @@ emacs_environment = MyEnvironment(name="Emacs",
 
 ### Emacs: Python
 
-emacs_python_action_map = {
+emacs_python_action_map = odict[
     "[python] indent": Key("c-c, rangle"),
     "[python] dedent": Key("c-c, langle"),
-}
+]
 emacs_python_environment = MyEnvironment(name="EmacsPython",
                                          parent=emacs_environment,
                                          context=linux.UniversalAppContext(title="- Python -"),
@@ -1626,13 +1626,13 @@ emacs_python_environment = MyEnvironment(name="EmacsPython",
 
 ### Emacs: Org-Mode
 
-emacs_org_repeatable_action_map = {
+emacs_org_repeatable_action_map = odict[
     "heading preev": Key("c-c, c-b"),
     "heading next": Key("c-c, c-f"),
     "heading up": Key("c-c, c-u"),
-}
+]
 
-emacs_org_action_map = {
+emacs_org_action_map = odict[
     "new heading above": Key("c-a, a-enter"),
     "new heading": Key("c-e, a-enter"),
     "brand new heading": Key("c-e, a-enter, c-c, c, a-left"),
@@ -1666,7 +1666,7 @@ emacs_org_action_map = {
     "archive": Key("c-c, c-x, c-a"),
     "org (West|start)": Key("c-c, c, c-a"),
     "tag <tag>": Key("c-c, c-q") + Text(u"%(tag)s") + Key("enter"),
-}
+]
 tags = {
     "new": "new",
     "Q1": "q1",
@@ -1692,12 +1692,12 @@ emacs_org_environment = MyEnvironment(name="EmacsOrg",
 
 emacs_shell_action_map = utils.combine_maps(
     shell_command_map,
-    {
+    odict[
         "shell up": Key("a-p"),
         "shell down": Key("a-n"),
         "shell (preev|back)": Key("a-r"),
         "show output": Key("c-c, c-r"),
-    })
+    ])
 emacs_shell_environment = MyEnvironment(name="EmacsShell",
                                         parent=emacs_environment,
                                         context=linux.UniversalAppContext(title="- Shell -"),
@@ -1706,7 +1706,7 @@ emacs_shell_environment = MyEnvironment(name="EmacsShell",
 
 ### Shell
 
-shell_repeatable_action_map = {
+shell_repeatable_action_map = odict[
     "afters": None,
     "befores": None,
     "aheads": None,
@@ -1727,10 +1727,10 @@ shell_repeatable_action_map = {
     "next": Key("c-s"),
     "cancel": Key("c-g"),
     "tab close": Key("cs-w"),
-}
+]
 shell_action_map = utils.combine_maps(
     shell_command_map,
-    {
+    odict[
         "cut": Key("cs-x"),
         "copy": Key("cs-c"),
         "paste": Key("cs-v"),
@@ -1739,7 +1739,7 @@ shell_action_map = utils.combine_maps(
         "go tab <tab_n>": Key("a-%(tab_n)d"),
         "go tab last": Key("a-1, cs-left"),
         "tab new": Key("cs-t"),
-    })
+    ])
 
 shell_element_map = {
     "tab_n": IntegerRef(None, 1, 10),
@@ -1755,7 +1755,7 @@ shell_environment = MyEnvironment(name="Shell",
 
 ### Cmder
 
-cmder_repeatable_action_map = {
+cmder_repeatable_action_map = odict[
     "afters": None,
     "befores": None,
     "aheads": None,
@@ -1776,14 +1776,14 @@ cmder_repeatable_action_map = {
     "next": Key("c-s"),
     "cancel": Key("c-g"),
     "tab close": Key("c-w"),
-}
+]
 cmder_action_map = utils.combine_maps(
     shell_command_map,
-    {
+    odict[
         "tab new [cygwin]": Key("as-6"),
         "tab new ubuntu": Key("as-5"),
         "tab new dos": Key("as-2"),
-    })
+    ])
 
 cmder_element_map = {
     "tab_n": IntegerRef(None, 1, 10),
@@ -1799,13 +1799,13 @@ cmder_environment = MyEnvironment(name="Cmder",
 
 ### Chrome and Firefox
 
-chrome_repeatable_action_map = {
+chrome_repeatable_action_map = odict[
     "tab right":           Key("c-tab"),
     "tab left":           Key("cs-tab"),
     "tab close":          Key("c-w"),
-}
+]
 
-chrome_action_map = {
+chrome_action_map = odict[
     "link": Key("c-comma"),
     "link tab|tab [new] link": Key("c-dot"),
     "(link|links) background [tab]": Key("a-f"),
@@ -1866,19 +1866,18 @@ chrome_action_map = {
     #                                                    "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
     #                                                   tracker),
     "ghost open": Key("ca-k"),
-}
+]
 
 chrome_terminal_action_map = utils.combine_maps(
-    terminal_command_action_map,
     accessibility_commands,
-    {
+    odict[
         "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Pause("15") + Key("enter"),
         "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
         "history search": Key("c-l/15") + Text("history") + Key("tab"),
         "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
         "moma search": Key("c-l/15") + Text("moma") + Key("tab"),
         "<link>":          Text("%(link)s"),
-    })
+    ])
 
 link_chars_map = {
     "zero": "0",
@@ -1914,9 +1913,9 @@ chrome_environment = MyEnvironment(name="Chrome",
 
 ### Chrome: Amazon
 
-amazon_action_map = {
+amazon_action_map = odict[
     "go search": webdriver.ClickElementAction(By.NAME, "field-keywords"),
-}
+]
 
 amazon_environment = MyEnvironment(name="Amazon",
                                    parent=chrome_environment,
@@ -1927,7 +1926,7 @@ amazon_environment = MyEnvironment(name="Amazon",
 
 ### Chrome: Critique
 
-critique_action_map = {
+critique_action_map = odict[
     "preev": Key("p"),
     "next": Key("n"),
     "preev comment": Key("P"),
@@ -1949,7 +1948,7 @@ critique_action_map = {
     "(touch|click) action required": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Action required']"),
     "(touch|click) send": webdriver.ClickElementAction(By.XPATH, "//*[starts-with(@aria-label, 'Send')]"),
     "search bar": Key("slash"),
-}
+]
 critique_element_map = {
     "line_n": IntegerRef(None, 1, 10000),
 }
@@ -1963,7 +1962,7 @@ critique_environment = MyEnvironment(name="Critique",
 
 ### Chrome: Calendar
 
-calendar_action_map = {
+calendar_action_map = odict[
     "today": Key("t"),
     "preev": Key("k"),
     "next": Key("j"),
@@ -1971,7 +1970,7 @@ calendar_action_map = {
     "week": Key("w"),
     "month": Key("m"),
     "agenda": Key("a"),
-}
+]
 calendar_environment = MyEnvironment(name="Calendar",
                                      parent=chrome_environment,
                                      context=(AppContext(title="Google Calendar") |
@@ -1981,12 +1980,12 @@ calendar_environment = MyEnvironment(name="Calendar",
 
 ### Chrome: Code search
 
-code_search_action_map = {
+code_search_action_map = odict[
     "header open": Key("r/25, h"),
     "cc open": Key("r/25, c"),
     "directory open": Key("r/25, p"),
     "go search": Key("slash"),
-}
+]
 code_search_environment = MyEnvironment(name="CodeSearch",
                                         parent=chrome_environment,
                                         context=AppContext(title="<cs.corp.google.com>"),
@@ -1995,16 +1994,16 @@ code_search_environment = MyEnvironment(name="CodeSearch",
 
 ### Chrome: Gmail
 
-gmail_repeatable_action_map = {
+gmail_repeatable_action_map = odict[
     "preev": Key("plus, k"),
     "next": Key("plus, j"),
     "message preev": Key("plus, p"),
     "message next": Key("plus, n"),
     "section next": Key("plus, backtick"),
     "section preev": Key("plus, tilde"),
-}
+]
 
-gmail_action_map = {
+gmail_action_map = odict[
     "open": Key("plus, o"),
     "archive": Key("+, {"),
     "done": Key("+, ["),
@@ -2038,7 +2037,7 @@ gmail_action_map = {
     "chat open": Key("plus, q"),
     "this send": Key("c-enter"),
     "go search": Key("plus, slash"),
-}
+]
 
 gmail_environment = MyEnvironment(name="Gmail",
                                   parent=chrome_environment,
@@ -2052,7 +2051,7 @@ gmail_environment = MyEnvironment(name="Gmail",
 
 ### Chrome: docs
 
-docs_action_map = {
+docs_action_map = odict[
     "select column": Key("c-space:2"),
     "select row": Key("s-space:2"),
     "row up": Key("a-e/15, k"),
@@ -2069,7 +2068,7 @@ docs_action_map = {
     "delete row": Key("a-e/15, d"),
     "(click|touch) present": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Start presentation (Ctrl+F5)']"),
     "file rename": Key("as-f/50, r"),
-}
+]
 docs_environment = MyEnvironment(name="Docs",
                                  parent=chrome_environment,
                                  context=AppContext(title="<docs.google.com>"),
@@ -2078,7 +2077,7 @@ docs_environment = MyEnvironment(name="Docs",
 
 ### Chrome: Buganizer
 
-buganizer_action_map = {}
+buganizer_action_map = OrderedDict()
 run_local_hook("AddBuganizerCommands", buganizer_action_map)
 buganizer_environment = MyEnvironment(name="Buganizer",
                                       parent=chrome_environment,
@@ -2091,10 +2090,10 @@ buganizer_environment = MyEnvironment(name="Buganizer",
 
 ### Chrome: Analog
 
-analog_action_map = {
+analog_action_map = odict[
     "next": Key("n"),
     "preev": Key("p"),
-}
+]
 analog_environment = MyEnvironment(name="Analog",
                                    parent=chrome_environment,
                                    context=AppContext(title="<analog.corp.google.com>"),
@@ -2103,11 +2102,11 @@ analog_environment = MyEnvironment(name="Analog",
 
 ### Chrome: Colab
 
-colab_repeatable_action_map = {
+colab_repeatable_action_map = odict[
     "[cell] next": Key("c-m, n"),
     "[cell] preev": Key("c-m, p"),
-}
-colab_action_map = {
+]
+colab_action_map = odict[
     "cell run": Key("c-enter"),
     "all (cell|cells) run": Key("c-f9"),
     "cell (expand|collapse)": Key("c-apostrophe"),
@@ -2116,7 +2115,7 @@ colab_action_map = {
     "cell delete": Key("c-m, d"),
     "this run": Key("cs-enter"),
     "this comment": Key("c-slash"),
-}
+]
 colab_environment = MyEnvironment(name="Colab",
                                   parent=chrome_environment,
                                   context=(AppContext(title="<colab.sandbox.google.com>") |
@@ -2127,9 +2126,9 @@ colab_environment = MyEnvironment(name="Colab",
 
 ### Notepad
 
-notepad_action_map = {
+notepad_action_map = odict[
     "transfer out": Key("c-a, c-x, a-f4") + utils.UniversalPaste(),
-}
+]
 
 notepad_environment = MyEnvironment(name="Notepad",
                                     parent=global_environment,
@@ -2140,15 +2139,14 @@ notepad_environment = MyEnvironment(name="Notepad",
 ### Linux
 
 # TODO Figure out either how to integrate this with the repeating rule or move out.
-linux_action_map = utils.combine_maps(
-    {
-        "terminal new": Key("ca-t"),
-        # "[work] terminal win": linux.ActivateLinuxWindow(" - Terminal"),
-        # "[work] emacs win": linux.ActivateLinuxWindow(" - Emacs editor"),
-        # "[work] studio win": linux.ActivateLinuxWindow(" - Android Studio"),
-        "remote firefox (window|win)": linux.ActivateLinuxWindow("Mozilla Firefox"),
-        "remote chrome (window|win)": linux.ActivateLinuxWindow("Google Chrome"),
-    })
+linux_action_map = odict[
+    "terminal new": Key("ca-t"),
+    # "[work] terminal win": linux.ActivateLinuxWindow(" - Terminal"),
+    # "[work] emacs win": linux.ActivateLinuxWindow(" - Emacs editor"),
+    # "[work] studio win": linux.ActivateLinuxWindow(" - Android Studio"),
+    "remote firefox (window|win)": linux.ActivateLinuxWindow("Mozilla Firefox"),
+    "remote chrome (window|win)": linux.ActivateLinuxWindow("Google Chrome"),
+]
 run_local_hook("AddLinuxCommands", linux_action_map)
 linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
                                (AppContext(title="Oracle VM VirtualBox") |
