@@ -607,10 +607,10 @@ command_action_map = utils.combine_maps(
         "(I\\pronoun|eye) control (touch|click)": Function(tracker.move_to_gaze_point) + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
         # OCR-based commands.
-        "go before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", "before") + Mouse("left"),
-        "go after <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", "after") + Mouse("left"),
-        "words before <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", "before") + Key("shift:down") + Mouse("left") + Key("shift:up"),
-        "words after <text>": gaze_ocr_controller.move_cursor_to_word_action("%(text)s", "after") + Key("shift:down") + Mouse("left") + Key("shift:up"),
+        "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
+        "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
+        "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
+        "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
         # Note that the delete command is declared first so that it has higher
         # priority than the selection variant.
         "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
