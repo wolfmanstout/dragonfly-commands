@@ -825,7 +825,7 @@ custom_format_rule = utils.create_rule(
 dictation_rule = utils.create_rule(
     "DictationRule",
     {
-        "(say|speak|phrase) <text>": Text(u"%(text)s"),
+        "(say|speak) <text>": Text(u"%(text)s"),
         "sentence <text>": utils.capitalize_text_action("%(text)s"),
         "mimic <text>": Mimic(extra="text"),
     },

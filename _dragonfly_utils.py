@@ -263,7 +263,7 @@ def uncapitalize_text_action(spec):
 
 
 def capitalize_text_action(spec):
-    return FormattedText(spec, lambda text: text.capitalize())
+    return FormattedText(spec, lambda text: text[0].upper() + text[1:])
 
 
 def load_json(filename):
