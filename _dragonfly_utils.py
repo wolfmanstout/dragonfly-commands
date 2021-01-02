@@ -25,6 +25,8 @@ import tempfile
 from dragonfly import (
     ActionBase,
     DynStrActionBase,
+    Function,
+    Grammar,
     Key,
     MappingRule,
     Pause,
@@ -142,10 +144,11 @@ def element_map_to_defaults(element_map):
                  if isinstance(element, tuple)])
 
 
-def create_rule(name, action_map, element_map, exported=False, context=None):
+def create_rule(name, action_map, element_map=None, exported=False, context=None):
     """Creates a rule with the given name, binding the given element map to the
     action map.
     """
+    element_map = element_map if element_map else {}
     return MappingRule(name,
                        action_map,
                        element_map_to_extras(element_map),
@@ -273,3 +276,41 @@ def load_json(filename):
     except IOError:
         print(filename + " not found")
         return None
+
+
+class GrammarController(object):
+    """Wraps grammars so they can be turned on and off by command."""
+    
+    def __init__(self, name, grammars):
+        self._controlled_grammars = grammars
+        self.enabled = True
+        rule = create_rule(name + "_mode",
+                           {
+                               name + " (off|close)": Function(lambda: self.disable()),
+                               name + " (on|open)": Function(lambda: self.enable()),
+                           },
+                           exported=True)
+        self._command_grammar = Grammar(name + "_mode")
+        self._command_grammar.add_rule(rule)
+        
+    def enable(self):
+        if not self.enabled:
+            for grammar in self._controlled_grammars:
+                grammar.enable()
+        self.enabled = True
+
+    def disable(self):
+        if self.enabled:
+            for grammar in self._controlled_grammars:
+                grammar.disable()
+        self.enabled = False
+
+    def load(self):
+        for grammar in self._controlled_grammars:
+            grammar.load()
+        self._command_grammar.load()
+
+    def unload(self):
+        for grammar in self._controlled_grammars:
+            grammar.unload()
+        self._command_grammar.unload()

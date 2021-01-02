@@ -1093,17 +1093,16 @@ class Environment(object):
     def add_child(self, child):
         self.children.append(child)
 
-    def install(self, exported_rule_factory):
+    def create_grammars(self, exported_rule_factory):
         grammars = []
         exclusive_context = self.context
         for child in self.children:
-            grammars.extend(child.install(exported_rule_factory))
+            grammars.extend(child.create_grammars(exported_rule_factory))
             exclusive_context = utils.combine_contexts(exclusive_context, ~child.context)
         rule_map = dict([(key, RuleRef(rule=utils.create_rule(self.name + "_" + key, action_map, element_map)) if action_map else Empty())
                          for (key, (action_map, element_map)) in self.environment_map.items()])
         grammar = Grammar(self.name, context=exclusive_context)
         grammar.add_rule(exported_rule_factory(self.name + "_exported", **rule_map))
-        grammar.load()
         grammars.append(grammar)
         return grammars
 
@@ -1132,10 +1131,10 @@ class MyEnvironment(object):
     def add_child(self, child):
         self.environment.add_child(child.environment)
 
-    def install(self):
+    def create_grammars(self):
         def create_exported_rule(name, command, terminal_command, repeatable_command):
             return RepeatRule(name, command or Empty(), repeatable_command or Empty(), terminal_command or Empty())
-        return self.environment.install(create_exported_rule)
+        return self.environment.create_grammars(create_exported_rule)
 
 
 ### Global
@@ -2156,12 +2155,11 @@ linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
 #-------------------------------------------------------------------------------
 # Populate and load the grammars.
 
-grammars = global_environment.install()
+grammars = global_environment.create_grammars()
 
 # TODO Figure out either how to integrate this with the repeating rule or move out.
 linux_grammar = Grammar("linux")   # Create this module's grammar.
 linux_grammar.add_rule(linux_rule)
-linux_grammar.load()
 grammars.append(linux_grammar)
 
 class BenchmarkRule(MappingRule):
@@ -2173,9 +2171,10 @@ class BenchmarkRule(MappingRule):
 
 benchmark_grammar = Grammar("benchmark")
 benchmark_grammar.add_rule(BenchmarkRule())
-benchmark_grammar.load()
 grammars.append(benchmark_grammar)
 
+grammar_controller = utils.GrammarController("dragonfly", grammars)
+grammar_controller.load()
 
 #-------------------------------------------------------------------------------
 # Start a server which lets Emacs send us nearby text being edited, so we can
@@ -2265,8 +2264,7 @@ print("Loaded _repeat.py")
 #-------------------------------------------------------------------------------
 # Unload function which will be called by NatLink.
 def unload():
-    for grammar in grammars:
-        grammar.unload()
+    grammar_controller.unload()
     if tracker.is_connected:
         tracker.disconnect()
     webdriver.quit_driver()
