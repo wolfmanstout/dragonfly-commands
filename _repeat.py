@@ -2007,7 +2007,7 @@ gmail_action_map = odict[
     "archive": Key("+, {"),
     "done": Key("+, ["),
     "this unread": Key("+, _"),
-    "undo": Key("plus, z"),
+    "gmail undo": Key("plus, z"),
     "list": Key("plus, u"),
     "compose": Key("plus, c"),
     "reply": Key("plus, r"),
