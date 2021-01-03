@@ -1,5 +1,6 @@
 futures; python_version < "3.2"
 gaze-ocr
+git+https://github.com/wolfmanstout/head-scroll.git#egg=head-scroll
 marionette-driver
 odictliteral
 screen-ocr

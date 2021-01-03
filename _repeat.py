@@ -22,6 +22,7 @@ from collections import OrderedDict
 from concurrent import futures
 
 import gaze_ocr
+import head_scroll
 import screen_ocr
 import win32clipboard
 import yappi
@@ -83,6 +84,7 @@ elif local.OCR_READER == "quality":
 gaze_ocr_controller = gaze_ocr.Controller(ocr_reader,
                                           tracker,
                                           save_data_directory=local.SAVE_OCR_DATA_DIR)
+scroller = head_scroll.Scroller(tracker, gaze_ocr._dragonfly_wrappers.Mouse())
 
 # Load local hooks if defined.
 try:
@@ -630,8 +632,8 @@ terminal_command_action_map = odict[
     "scroll down half": Function(lambda: tracker.move_to_gaze_point((0, -40))) + Mouse("wheeldown:4"),
     "scroll left": Function(lambda: tracker.move_to_gaze_point((40, 0))) + Mouse("wheelleft:7"),
     "scroll right": Function(lambda: tracker.move_to_gaze_point((-40, 0))) + Mouse("wheelright:7"),
-    "scroll start [down]": Mimic(*"start scrolling down".split()) + Mimic(*"scroll faster".split()) * 2,
-    "[scroll] stop": Mimic(*"stop scrolling".split()),
+    "scroll start": Function(lambda: scroller.start()),
+    "[scroll] stop": Function(lambda: scroller.stop()),
     "<text> move": gaze_ocr_controller.move_cursor_to_word_action("%(text)s"),
     "<text> (touch|click) [left]": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left"),
     "<text> (touch|click) right": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("right"),
