@@ -1782,6 +1782,7 @@ cmder_action_map = utils.combine_maps(
         "tab new [cygwin]": Key("as-6"),
         "tab new ubuntu": Key("as-5"),
         "tab new dos": Key("as-2"),
+        "tab new [dos] admin": Key("as-1"),
     ])
 
 cmder_element_map = {
