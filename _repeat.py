@@ -998,10 +998,10 @@ class RepeatRule(CompoundRule):
                                              full_key_element],
                                      value_func=lambda node, extras: (((extras["modifier"])(extras["single_key"]) + Pause("5")) * Repeat(extras["n"])))
         extras = [
-            Repetition(RuleWrap(None, Alternative([command, repeated_command, combo_key_element])), min=1, max = 5, name="sequence"),
+            Repetition(RuleWrap(None, Alternative([command, repeated_command, combo_key_element])), min=1, max = 10, name="sequence"),
             Alternative([RuleRef(rule=character_rule)],
                         name="nested_repetitions"),
-            Repetition(dictation_element, min=1, max=5, name="dictation_sequence"),
+            Repetition(dictation_element, min=1, max=10, name="dictation_sequence"),
             utils.renamed_element("dictation", dictation_element),
             utils.renamed_element("terminal_command", terminal_command),
             IntegerRef("n", 1, 21),  # Times to repeat the sequence.
