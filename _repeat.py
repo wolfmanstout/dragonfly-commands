@@ -621,6 +621,10 @@ command_action_map = utils.combine_maps(
         "dragonfly [(CPU|wall [time])] profiling stop": Function(stop_profiling),
     ])
 
+def reset_scroller():
+    scroller.stop()
+    scroller.start()
+
 terminal_command_action_map = odict[
     # Scrolling and clicking.
     "(I\\pronoun|eye) connect": Function(tracker.connect),
@@ -634,6 +638,7 @@ terminal_command_action_map = odict[
     "scroll right": Function(lambda: tracker.move_to_gaze_point((-40, 0))) + Mouse("wheelright:7"),
     "scroll start": Function(lambda: scroller.start()),
     "[scroll] stop": Function(lambda: scroller.stop()),
+    "scroll reset": Function(lambda: reset_scroller()),
     "<text> move": gaze_ocr_controller.move_cursor_to_word_action("%(text)s"),
     "<text> (touch|click) [left]": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left"),
     "<text> (touch|click) right": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("right"),
