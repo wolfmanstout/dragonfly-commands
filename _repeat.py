@@ -741,8 +741,15 @@ chars_element = RuleWrap(None, utils.JoinedRepetition(
 # Simple element map corresponding to command action maps from earlier.
 command_element_map = {
     "n": (IntegerRef(None, 1, 21), 1),
-    "text": Dictation(),
-    "text2": Dictation(),
+    # Include IntegerRef to automatically convert spoken numbers to numeric format.
+    "text": RuleWrap(None, Alternative([
+        Dictation(),
+        IntegerRef(None, 1, 10)
+    ])),
+    "text2": RuleWrap(None, Alternative([
+        Dictation(),
+        IntegerRef(None, 1, 10)
+    ])),
     "numeral": number_element,
     "letter": letter_element,
     "char": char_element,
