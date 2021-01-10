@@ -52,19 +52,74 @@ import _dragonfly_local as local
 # different names to be used in multiple rules, and we can easily create rules
 # on the fly without defining a new class.
 
+class Override(object):
+    """Used as a dictionary key to override with combine_maps_checked."""
+
+    def __init__(self, key):
+        self.key = key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __str__(self):
+        return "Override(" + self.key + ")"
+
+
+class Delete(object):
+    """Used as a dictionary key to delete with combine_maps_checked."""
+
+    def __init__(self, key):
+        self.key = key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __str__(self):
+        return "Delete(" + self.key + ")"
+
+
 def combine_maps(*maps):
-    """Merge the contents of multiple maps, giving precedence to later maps. Skips
-    empty maps and deletes entries with value None."""
+    """Merge the contents of multiple maps.
+
+    Does not allow deletions or overrides. Skips empty maps.
+    """
     # Use OrderedDict to maintain possible ordering in the source maps.
     result = OrderedDict()
     for map in maps:
         if not map:
             continue
         for key, value in map.items():
-            if value is None:
-                if key in result:
-                    del result[key]
+            if key in result and result[key] != value:
+                raise ValueError("Key already exists: {}. Use combine_maps_checked to override.".format(key))
+            result[key] = value
+    return result
+
+
+def combine_maps_checked(*maps):
+    """Merge the contents of multiple maps allowing deletion and override.
+
+    Wrap keys in Override and Delete to perform those operations. Skips empty
+    maps.
+    """
+    # Use OrderedDict to maintain possible ordering in the source maps.
+    result = OrderedDict()
+    for map in maps:
+        if not map:
+            continue
+        for key, value in map.items():
+            if isinstance(key, Delete):
+                if value is not None:
+                    raise ValueError("Delete key has non-None value: {}".format(key))
+                if key.key not in result:
+                    raise ValueError("Delete key cannot be applied to missing key: {}".format(key))
+                del result[key.key]
+            elif isinstance(key, Override):
+                if key.key not in result:
+                    raise ValueError("Override key cannot be applied to missing key: {}".format(key))
+                result[key.key] = value
             else:
+                if key in result:
+                    raise ValueError("Key already exists: {}. Wrap key in Delete or Override.".format(key))
                 result[key] = value
     return result
 
@@ -89,7 +144,7 @@ def _printable_to_key_action_spec(printable):
     if printable == "%":
         return "%%"
     return printable
-        
+
 
 def text_map_to_key_action_map(text_map):
     """Converts string values in a map to key actions."""
@@ -280,7 +335,7 @@ def load_json(filename):
 
 class GrammarController(object):
     """Wraps grammars so they can be turned on and off by command."""
-    
+
     def __init__(self, name, grammars):
         self._controlled_grammars = grammars
         self.enabled = True
@@ -292,7 +347,7 @@ class GrammarController(object):
                            exported=True)
         self._command_grammar = Grammar(name + "_mode")
         self._command_grammar.add_rule(rule)
-        
+
     def enable(self):
         if not self.enabled:
             for grammar in self._controlled_grammars:

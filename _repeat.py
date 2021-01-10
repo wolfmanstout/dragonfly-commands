@@ -1098,8 +1098,8 @@ class Environment(object):
             for key in set(environment_map.keys()) | set(parent.environment_map.keys()):
                 action_map, element_map = environment_map.get(key, ({}, {}))
                 parent_action_map, parent_element_map = parent.environment_map.get(key, ({}, {}))
-                self.environment_map[key] = (utils.combine_maps(parent_action_map, action_map),
-                                             utils.combine_maps(parent_element_map, element_map))
+                self.environment_map[key] = (utils.combine_maps_checked(parent_action_map, action_map),
+                                             utils.combine_maps_checked(parent_element_map, element_map))
         else:
             self.context = context
             self.environment_map = environment_map
@@ -1195,7 +1195,7 @@ shell_command_map = utils.combine_maps(odict[
     "list": Text("ls -l "),
     "make dear": Text("mkdir "),
     "ps (a UX|aux)": Text("ps aux "),
-    "pipe": Text(" | "),
+    utils.Override("pipe"): Text(" | "),
     "CH mod": Text("chmod "),
     "TK diff": Text("tkdiff "),
     "MV": Text("mv "),
@@ -1304,19 +1304,19 @@ class UseLinesAction(ActionBase):
 
 emacs_repeatable_action_map = odict[
     # Overrides
-    "afters": None,
-    "befores": None,
-    "aheads": None,
-    "behinds": None,
-    "rights": None,
-    "lefts": None,
+    utils.Delete("afters"): None,
+    utils.Delete("befores"): None,
+    utils.Delete("aheads"): None,
+    utils.Delete("behinds"): None,
+    utils.Delete("rights"): None,
+    utils.Delete("lefts"): None,
 
     # Movement
     "preev": Key("c-r"),
     "next": Key("c-s"),
 
     # Undo
-    "cancel": Key("c-g"),
+    utils.Override("cancel"): Key("c-g"),
     "undo": Key("c-slash"),
     "redo": Key("c-question"),
 
@@ -1336,9 +1336,9 @@ emacs_repeatable_action_map = odict[
 emacs_action_map = odict[
     "[<n>] up": Key("c-u") + Text("%(n)s") + Key("up"),
     "[<n>] down": Key("c-u") + Text("%(n)s") + Key("down"),
-    "all select": Key("c-x, h"),
-    "all edit": Key("c-x, h, c-w") + utils.RunApp("notepad") + Key("c-v"),
-    "this edit": Key("c-w") + utils.RunApp("notepad") + Key("c-v"),
+    utils.Override("all select"): Key("c-x, h"),
+    utils.Override("all edit"): Key("c-x, h, c-w") + utils.RunApp("notepad") + Key("c-v"),
+    utils.Override("this edit"): Key("c-w") + utils.RunApp("notepad") + Key("c-v"),
 
     # General
     "exec": Key("a-x"),
@@ -1374,7 +1374,7 @@ emacs_action_map = odict[
     "buff right": Exec("windmove-right"),
 
     # Filesystem
-    "save": Key("c-x, c-s"),
+    utils.Override("save"): Key("c-x, c-s"),
     "save as": Key("c-x, c-w"),
     "save all": Key("c-x, s"),
     "save all now": Key("c-u, c-x, s"),
@@ -1430,7 +1430,7 @@ emacs_action_map = odict[
     "go eye <char>": Key("c-c, c, j") + Text(u"%(char)s") + Function(lambda: tracker.type_gaze_point("%d\n%d\n")),
 
     # Editing
-    "delete": Key("c-c, c, c-w"),
+    utils.Override("delete"): Key("c-c, c, c-w"),
     # Note that the delete commands are declared first so that they have higher
     # priority than the selection variants.
     "[<n>] afters delete": Key("c-del/5:%(n)d"),
@@ -1463,9 +1463,9 @@ emacs_action_map = odict[
     "replace": Key("as-5"),
     "regex replace": Key("cas-5"),
     "symbol replace": Key("a-apostrophe"),
-    "cut": Key("c-w"),
-    "copy": Key("a-w"),
-    "paste": Key("c-y"),
+    utils.Override("cut"): Key("c-w"),
+    utils.Override("copy"): Key("a-w"),
+    utils.Override("paste"): Key("c-y"),
     "paste other": Key("a-y"),
     "<n1> through [<n2>] [select]": MarkLinesAction(),
     "<n1> through [<n2>] short [select]": MarkLinesAction(tight=True),
@@ -1541,11 +1541,11 @@ emacs_action_map = odict[
 
 emacs_terminal_action_map = odict[
     # Overrides
-    "go before <text>": None,
-    "go after <text>": None,
-    "words <text> [through <text2>] delete": None,
-    "words <text> [through <text2>]": None,
-    "replace <text> with <replacement>": None,
+    utils.Delete("go before <text>"): None,
+    utils.Delete("go after <text>"): None,
+    utils.Delete("words <text> [through <text2>] delete"): None,
+    utils.Delete("words <text> [through <text2>]"): None,
+    utils.Delete("replace <text> with <replacement>"): None,
 
     "go before [preev] <custom_text>": Key("c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("enter"),
     "go after preev <custom_text>": Key("left, c-r") + utils.lowercase_text_action("%(custom_text)s") + Key("c-s, enter"),
@@ -1720,33 +1720,33 @@ emacs_shell_environment = MyEnvironment(name="EmacsShell",
 ### Shell
 
 shell_repeatable_action_map = odict[
-    "afters": None,
-    "befores": None,
-    "aheads": None,
-    "behinds": None,
-    "rights": None,
-    "lefts": None,
+    utils.Delete("afters"): None,
+    utils.Delete("befores"): None,
+    utils.Delete("aheads"): None,
+    utils.Delete("behinds"): None,
+    utils.Delete("rights"): None,
+    utils.Delete("lefts"): None,
     "afters delete": Key("a-d"),
     "befores delete": Key("a-backspace"),
     "aheads delete": Key("a-d"),
     "behinds delete": Key("a-backspace"),
     "rights delete": Key("del"),
     "lefts delete": Key("backspace"),
-    "screen up": Key("s-pgup"),
-    "screen down": Key("s-pgdown"),
+    utils.Override("screen up"): Key("s-pgup"),
+    utils.Override("screen down"): Key("s-pgdown"),
     "tab left": Key("cs-left"),
     "tab right": Key("cs-right"),
     "preev": Key("c-r"),
     "next": Key("c-s"),
-    "cancel": Key("c-g"),
+    utils.Override("cancel"): Key("c-g"),
     "tab close": Key("cs-w"),
 ]
 shell_action_map = utils.combine_maps(
     shell_command_map,
     odict[
-        "cut": Key("cs-x"),
-        "copy": Key("cs-c"),
-        "paste": Key("cs-v"),
+        utils.Override("cut"): Key("cs-x"),
+        utils.Override("copy"): Key("cs-c"),
+        utils.Override("paste"): Key("cs-v"),
         "tab move [<n>] left": Key("cs-pgup/5:%(n)d"),
         "tab move [<n>] right": Key("cs-pgdown/5:%(n)d"),
         "go tab <tab_n>": Key("a-%(tab_n)d"),
@@ -1769,25 +1769,25 @@ shell_environment = MyEnvironment(name="Shell",
 ### Cmder
 
 cmder_repeatable_action_map = odict[
-    "afters": None,
-    "befores": None,
-    "aheads": None,
-    "behinds": None,
-    "rights": None,
-    "lefts": None,
+    utils.Delete("afters"): None,
+    utils.Delete("befores"): None,
+    utils.Delete("aheads"): None,
+    utils.Delete("behinds"): None,
+    utils.Delete("rights"): None,
+    utils.Delete("lefts"): None,
     "afters delete": Key("a-d"),
     "befores delete": Key("a-backspace"),
     "aheads delete": Key("a-d"),
     "behinds delete": Key("a-backspace"),
     "rights delete": Key("del"),
     "lefts delete": Key("backspace"),
-    "screen up": Key("c-pgup"),
-    "screen down": Key("c-pgdown"),
+    utils.Override("screen up"): Key("c-pgup"),
+    utils.Override("screen down"): Key("c-pgdown"),
     "tab left": Key("cs-tab"),
     "tab right": Key("c-tab"),
     "preev": Key("c-r"),
     "next": Key("c-s"),
-    "cancel": Key("c-g"),
+    utils.Override("cancel"): Key("c-g"),
     "tab close": Key("c-w"),
 ]
 cmder_action_map = utils.combine_maps(
@@ -1910,7 +1910,6 @@ chrome_element_map = {
     "tab_n": IntegerRef(None, 1, 9),
     "link": utils.JoinedRepetition(
         "", DictListRef(None, link_chars_dict_list), min=1, max=5),
-    "replacement": Dictation(),
 }
 
 chrome_environment = MyEnvironment(name="Chrome",
@@ -1928,7 +1927,7 @@ chrome_environment = MyEnvironment(name="Chrome",
 ### Chrome: Amazon
 
 amazon_action_map = odict[
-    "go search": webdriver.ClickElementAction(By.NAME, "field-keywords"),
+    utils.Override("go search"): webdriver.ClickElementAction(By.NAME, "field-keywords"),
 ]
 
 amazon_environment = MyEnvironment(name="Amazon",
@@ -1998,7 +1997,7 @@ code_search_action_map = odict[
     "header open": Key("r/25, h"),
     "cc open": Key("r/25, c"),
     "directory open": Key("r/25, p"),
-    "go search": Key("slash"),
+    utils.Override("go search"): Key("slash"),
 ]
 code_search_environment = MyEnvironment(name="CodeSearch",
                                         parent=chrome_environment,
@@ -2050,7 +2049,7 @@ gmail_action_map = odict[
     "go field cc": Key("cs-c"),
     "chat open": Key("plus, q"),
     "this send": Key("c-enter"),
-    "go search": Key("plus, slash"),
+    utils.Override("go search"): Key("plus, slash"),
 ]
 
 gmail_environment = MyEnvironment(name="Gmail",
