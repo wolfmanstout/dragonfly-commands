@@ -2036,6 +2036,8 @@ gmail_action_map = odict[
     "snooze": Pause("50") + Key("plus, l/50") + Text("snooze") + Pause("50") + Key("enter") + Pause("50") + Key("+, ["),
     "label vacation": Pause("50") + Key("plus, l/50") + Text("vacation") + Pause("50") + Key("enter"),
     "label house": Pause("50") + Key("plus, l/50") + Text("house") + Pause("50") + Key("enter"),
+    "label taxes": Pause("50") + Key("plus, l/50") + Text("taxes") + Pause("50") + Key("enter"),
+    "label": Key("plus, l/50"),
     "this select": Key("plus, x"),
     "<n> select": Key("plus, x, plus, j") * Repeat(extra="n"),
     "(message|messages) reload": Key("plus, N"),
