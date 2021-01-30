@@ -578,6 +578,10 @@ command_action_map = utils.combine_maps(
         "windows desktop": Key("w-d"),
         "windows explorer": Key("w-e"),
 
+        # Dragon commands.
+        "dragon hide": Mimic(*"switch DragonBar to tray icon mode".split()),
+        "dragon show": Mimic(*"open DragonBar".split()),
+
         # Notepad text editing.
         "here edit": utils.RunApp("notepad"),
         "all edit": Key("c-a, c-x") + utils.RunApp("notepad") + Key("c-v"),
