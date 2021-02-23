@@ -653,11 +653,13 @@ terminal_command_action_map = odict[
     # OCR-based commands.
     "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
     "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
+    # Note that the delete commands is declared first so that it has higher
+    # priority than the selection variant.
+    "words before <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up") + Key("backspace"),
+    "words after <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up") + Key("backspace"),
+    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
     "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
     "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
-    # Note that the delete command is declared first so that it has higher
-    # priority than the selection variant.
-    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
     "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
     "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
 ]
