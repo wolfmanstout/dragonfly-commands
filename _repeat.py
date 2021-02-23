@@ -653,8 +653,8 @@ terminal_command_action_map = odict[
     # OCR-based commands.
     "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
     "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
-    # Note that the delete commands is declared first so that it has higher
-    # priority than the selection variant.
+    # Note that the delete commands are declared first so that they have higher
+    # priority than the selection variants.
     "words before <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up") + Key("backspace"),
     "words after <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up") + Key("backspace"),
     "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
