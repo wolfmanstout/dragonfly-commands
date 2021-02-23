@@ -489,21 +489,19 @@ repeatable_action_map = utils.combine_maps(
 
 
 
-accessibility_commands = {}
+accessibility = get_accessibility_controller()
 
-# accessibility = get_accessibility_controller()
-
-# accessibility_commands = odict[
-#     "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-#         text_position_query, CursorPosition.BEFORE)),
-#     "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-#         text_position_query, CursorPosition.AFTER)),
-#     # Note that the delete command is declared first so that it has higher
-#     # priority than the selection variant.
-#     "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
-#     "words <text_query>": Function(accessibility.select_text),
-#     "replace <text_query> with <replacement>": Function(accessibility.replace_text),
-# ]
+accessibility_commands = odict[
+    "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+        text_position_query, CursorPosition.BEFORE)),
+    "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+        text_position_query, CursorPosition.AFTER)),
+    # Note that the delete command is declared first so that it has higher
+    # priority than the selection variant.
+    "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
+    "words <text_query>": Function(accessibility.select_text),
+    "replace <text_query> with <replacement>": Function(accessibility.replace_text),
+]
 
 
 #-------------------------------------------------------------------------------
@@ -1886,16 +1884,14 @@ chrome_action_map = odict[
     "ghost open": Key("ca-k"),
 ]
 
-chrome_terminal_action_map = utils.combine_maps(
-    accessibility_commands,
-    odict[
-        "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Pause("15") + Key("enter"),
-        "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
-        "history search": Key("c-l/15") + Text("history") + Key("tab"),
-        "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
-        "moma search": Key("c-l/15") + Text("moma") + Key("tab"),
-        "<link>":          Text("%(link)s"),
-    ])
+chrome_terminal_action_map = odict[
+    "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Pause("15") + Key("enter"),
+    "history search <text>": Key("c-l/15") + Text("history") + Key("tab") + Text(u"%(text)s") + Key("enter"),
+    "history search": Key("c-l/15") + Text("history") + Key("tab"),
+    "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
+    "moma search": Key("c-l/15") + Text("moma") + Key("tab"),
+    "<link>":          Text("%(link)s"),
+]
 
 link_chars_map = {
     "zero": "0",
