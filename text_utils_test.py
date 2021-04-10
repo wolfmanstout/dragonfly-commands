@@ -33,7 +33,7 @@ class TextUtilsTestCase(unittest.TestCase):
     def test_split_dictation(self):
         self.assertEqual(["test", "word"], split_dictation("test word"))
         self.assertEqual(["test", "word", "ab"], split_dictation("test word A B"))
-        self.assertEqual(["test\word"], split_dictation("test\word"))
+        self.assertEqual(["test\\word"], split_dictation("test\\word"))
         self.assertEqual(["test", "word"], split_dictation("test-word"))
         self.assertEqual(["test/word"], split_dictation("test/word"))
         self.assertEqual(["test/word"], split_dictation("test / word"))

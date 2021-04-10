@@ -1146,9 +1146,6 @@ class MyEnvironment(object):
             context,
             parent.environment if parent else None)
 
-    def add_child(self, child):
-        self.environment.add_child(child.environment)
-
     def create_grammars(self):
         def create_exported_rule(name, command, terminal_command, repeatable_command):
             return RepeatRule(name, command or Empty(), repeatable_command or Empty(), terminal_command or Empty())
