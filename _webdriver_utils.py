@@ -5,10 +5,13 @@
 """Actions for manipulating Chrome via WebDriver."""
 
 import json
+import sys
 from six.moves import urllib_request
 from six.moves import urllib_error
 
 from dragonfly import (DynStrActionBase)
+
+sys.path.append(r"C:\Users\james\AppData\Roaming\talon\user\dragonfly\dragonfly_commands")
 import _dragonfly_local as local
 
 # Needed for marionette_driver.

@@ -25,7 +25,7 @@ import gaze_ocr
 import head_scroll
 import screen_ocr
 import win32clipboard
-import yappi
+# import yappi
 from gaze_ocr import eye_tracking
 from odictliteral import odict
 from six import string_types
@@ -70,6 +70,7 @@ from dragonfly import (
 import dragonfly.log
 from selenium.webdriver.common.by import By
 
+sys.path.append(r"C:\Users\james\AppData\Roaming\talon\user\dragonfly\dragonfly_commands")
 import _dragonfly_local as local
 import _dragonfly_utils as utils
 import _linux_utils as linux
@@ -489,20 +490,21 @@ repeatable_action_map = utils.combine_maps(
 
 
 
-accessibility = get_accessibility_controller()
+# accessibility = get_accessibility_controller()
 
-accessibility_commands = odict[
-    "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-        text_position_query, CursorPosition.BEFORE)),
-    "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
-        text_position_query, CursorPosition.AFTER)),
-    # Note that the delete command is declared first so that it has higher
-    # priority than the selection variant.
-    "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
-    "words <text_query>": Function(accessibility.select_text),
-    "replace <text_query> with <replacement>": Function(accessibility.replace_text),
-]
+# accessibility_commands = odict[
+#     "go before <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+#         text_position_query, CursorPosition.BEFORE)),
+#     "go after <text_position_query>": Function(lambda text_position_query: accessibility.move_cursor(
+#         text_position_query, CursorPosition.AFTER)),
+#     # Note that the delete command is declared first so that it has higher
+#     # priority than the selection variant.
+#     "words <text_query> delete": Function(lambda text_query: accessibility.replace_text(text_query, "")),
+#     "words <text_query>": Function(accessibility.select_text),
+#     "replace <text_query> with <replacement>": Function(accessibility.replace_text),
+# ]
 
+accessibility_commands = {}
 
 #-------------------------------------------------------------------------------
 # Action maps to be used in rules.
@@ -1109,7 +1111,8 @@ class Environment(object):
             self.environment_map = environment_map
 
     def add_child(self, child):
-        self.children.append(child)
+        pass
+        # self.children.append(child)
 
     def create_grammars(self, exported_rule_factory):
         grammars = []
@@ -2175,21 +2178,21 @@ linux_rule = utils.create_rule("LinuxRule", linux_action_map, {}, True,
 
 grammars = global_environment.create_grammars()
 
-# TODO Figure out either how to integrate this with the repeating rule or move out.
-linux_grammar = Grammar("linux")   # Create this module's grammar.
-linux_grammar.add_rule(linux_rule)
-grammars.append(linux_grammar)
+# # TODO Figure out either how to integrate this with the repeating rule or move out.
+# linux_grammar = Grammar("linux")   # Create this module's grammar.
+# linux_grammar.add_rule(linux_rule)
+# grammars.append(linux_grammar)
 
-class BenchmarkRule(MappingRule):
-    mapping = {
-        "benchmark [<n>] command <command>": Function(lambda command, n: command_benchmark.start(str(command), n)),
-        "benchmark reset": Function(reset_benchmark),
-    }
-    extras = [Dictation("command"), IntegerRef("n", 1, 10, default=1)]
+# class BenchmarkRule(MappingRule):
+#     mapping = {
+#         "benchmark [<n>] command <command>": Function(lambda command, n: command_benchmark.start(str(command), n)),
+#         "benchmark reset": Function(reset_benchmark),
+#     }
+#     extras = [Dictation("command"), IntegerRef("n", 1, 10, default=1)]
 
-benchmark_grammar = Grammar("benchmark")
-benchmark_grammar.add_rule(BenchmarkRule())
-grammars.append(benchmark_grammar)
+# benchmark_grammar = Grammar("benchmark")
+# benchmark_grammar.add_rule(BenchmarkRule())
+# grammars.append(benchmark_grammar)
 
 grammar_controller = utils.GrammarController("dragonfly", grammars)
 grammar_controller.load()
@@ -2213,7 +2216,7 @@ def RunCallbacks():
             traceback.print_exc()
 
 
-timer = get_engine().create_timer(RunCallbacks, 0.1)
+# timer = get_engine().create_timer(RunCallbacks, 0.1)
 
 # Update the context phrases.
 def UpdateWords(phrases):
@@ -2267,11 +2270,11 @@ class TextRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 # Start a single-threaded HTTP server in a separate thread. Bind the server to
 # localhost so it cannot be accessed outside the local computer (except by SSH
 # tunneling).
-HOST, PORT = "127.0.0.1", 9090
-server = BaseHTTPServer.HTTPServer((HOST, PORT), TextRequestHandler)
-server_thread = threading.Thread(target=server.serve_forever)
-server_thread.daemon = True
-server_thread.start()
+# HOST, PORT = "127.0.0.1", 9090
+# server = BaseHTTPServer.HTTPServer((HOST, PORT), TextRequestHandler)
+# server_thread = threading.Thread(target=server.serve_forever)
+# server_thread.daemon = True
+# server_thread.start()
 
 # Connect to Chrome WebDriver if possible.
 webdriver.create_driver()
@@ -2286,8 +2289,8 @@ def unload():
     if tracker.is_connected:
         tracker.disconnect()
     webdriver.quit_driver()
-    timer.stop()
-    server.shutdown()
-    server.server_close()
+    # timer.stop()
+    # server.shutdown()
+    # server.server_close()
     gaze_ocr_controller.shutdown(wait=False)
     print("Unloaded _repeat.py")

@@ -20,6 +20,7 @@ import os
 import os.path
 import platform
 from six import text_type
+import sys
 import tempfile
 
 from dragonfly import (
@@ -38,6 +39,7 @@ from dragonfly import (
 )
 from dragonfly.windows.window import Window
 
+sys.path.append(r"C:\Users\james\AppData\Roaming\talon\user\dragonfly\dragonfly_commands")
 import _dragonfly_local as local
 
 #-------------------------------------------------------------------------------

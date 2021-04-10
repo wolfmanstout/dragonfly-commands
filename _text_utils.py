@@ -6,6 +6,9 @@
 
 import re
 from six import text_type
+import sys
+
+sys.path.append(r"C:\Users\james\AppData\Roaming\talon\user\dragonfly\dragonfly_commands")
 import _dragonfly_local as local
 
 WORDS_PATH = local.HOME + "/dotfiles/words.txt"
