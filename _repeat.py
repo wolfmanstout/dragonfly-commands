@@ -657,7 +657,7 @@ terminal_command_action_map = odict[
     # priority than the selection variants.
     "words before <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up") + Key("backspace"),
     "words after <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up") + Key("backspace"),
-    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s") + Key("backspace"),
+    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s", for_deletion=True) + Key("backspace"),
     "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
     "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
     "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
