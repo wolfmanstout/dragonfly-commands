@@ -663,6 +663,11 @@ terminal_command_action_map = odict[
     "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
     "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
     "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
+
+    # Full-text dictation commands.
+    "speak <text>": Text(u"%(text)s"),
+    "sentence <text>": utils.capitalize_text_action("%(text)s"),
+    "mimic <text>": Mimic(extra="text"),
 ]
 
 # Here we prepare the action map of formatting functions from the config file.
@@ -840,19 +845,6 @@ custom_format_rule = utils.create_rule(
     {"dictation": custom_dictation}
 )
 
-# Rule for handling raw dictation.
-dictation_rule = utils.create_rule(
-    "DictationRule",
-    {
-        "speak <text>": Text(u"%(text)s"),
-        "sentence <text>": utils.capitalize_text_action("%(text)s"),
-        "mimic <text>": Mimic(extra="text"),
-    },
-    {
-        "text": Dictation()
-    }
-)
-
 # Rule for printing a sequence of characters.
 character_rule = utils.create_rule(
     "CharacterRule",
@@ -888,7 +880,6 @@ character_rule = utils.create_rule(
 # few custom commands should be included to avoid clashes with dictation
 # elements.
 dictation_element = RuleWrap(None, Alternative([
-    RuleRef(rule=dictation_rule),
     RuleRef(rule=format_rule),
     RuleRef(rule=symbol_format_rule),
     RuleRef(rule=pure_format_rule),
