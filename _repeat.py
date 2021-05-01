@@ -1467,7 +1467,7 @@ emacs_action_map = odict[
     utils.Override("cut"): Key("c-w"),
     utils.Override("copy"): Key("a-w"),
     utils.Override("paste"): Key("c-y"),
-    "paste other": Key("a-y"),
+    "paste (other|preev)": Key("a-y"),
     "<n1> through [<n2>] [select]": MarkLinesAction(),
     "<n1> through [<n2>] short [select]": MarkLinesAction(tight=True),
     "<n1> through [<n2>] copy here": UseLinesAction(Key("a-w"), Key("c-y")),
