@@ -5,6 +5,7 @@
 """Actions for manipulating Chrome via WebDriver."""
 
 import json
+import semantic_locators
 from six.moves import urllib_request
 from six.moves import urllib_error
 
@@ -22,6 +23,23 @@ import marionette_driver
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 
+
+class MarionetteWrapper(object):
+    """Wraps a Marionette driver instance to make it compatible with the WebDriver API."""
+
+    def __init__(self, delegate):
+        self.delegate = delegate
+
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(self, name)
+        except AttributeError:
+            return getattr(self.delegate, name)
+
+    def execute_script(self, script, *args):
+        return self.delegate.execute_script(script, args, new_sandbox=False)
+
+
 def create_driver():
     global driver, browser
     driver = None
@@ -36,7 +54,7 @@ def create_driver():
         chrome_options.experimental_options["debuggerAddress"] = "127.0.0.1:9222"
         driver = webdriver.Chrome(local.CHROME_DRIVER_PATH, chrome_options=chrome_options)
     elif browser == "firefox":
-        driver = marionette_driver.marionette.Marionette()
+        driver = MarionetteWrapper(marionette_driver.marionette.Marionette())
     else:
         print("Unknown browser: " + browser)
         browser = None
@@ -79,6 +97,71 @@ def test_driver():
     driver.get('http://www.google.com/xhtml');
 
 
+def find_nearest_element(get_elements_function, tracker):
+    # Get gaze location as early as possible.
+    gaze_location = tracker.get_gaze_point_or_default()
+    switch_to_active_tab()
+    elements = get_elements_function()
+    if not elements:
+        print("No matching elements found")
+        return
+    # Assume there is equal amount of browser chrome on the left and right sides of the screen.
+    canvas_left = driver.execute_script("return window.screenX + (window.outerWidth - window.innerWidth) / 2 - window.scrollX;")
+    # Assume all the browser chrome is on the top of the screen and none on the bottom.
+    canvas_top = driver.execute_script("return window.screenY + (window.outerHeight - window.innerHeight) - window.scrollY;")
+    canvas_bottom = driver.execute_script("return window.screenY + window.outerHeight - window.scrollY;")
+    nearest_element = None
+    nearest_element_distance_squared = float("inf")
+    for element in elements:
+        element_location = (element.rect["x"] + canvas_left + element.rect["width"] / 2,
+                            element.rect["y"] + canvas_top + element.rect["height"] / 2)
+        if not element.is_displayed():
+            # Element is not visible onscreen.
+            continue
+        offsets = (element_location[0] - gaze_location[0], element_location[1] - gaze_location[1])
+        distance_squared = offsets[0] * offsets[0] + offsets[1] * offsets[1]
+        if distance_squared < nearest_element_distance_squared:
+            nearest_element = element
+            nearest_element_distance_squared = distance_squared
+    if not nearest_element:
+        print("Matching elements were not visible")
+        return
+    return nearest_element
+
+
+def find_clickable_elements_by_name(name):
+    elements = []
+    for role in ("button", "tab"):
+        for name_candidate in (name, name.capitalize()):
+            elements.extend(semantic_locators.find_elements_by_semantic_locator(
+                driver, "{{{} '*{}*'}}".format(role, name_candidate)))
+    return elements
+
+
+def click_element(element):
+    if browser == "chrome":
+        try:
+            element.click()
+        except:
+            # Move then click to avoid Chrome unwillingness to send a click
+            # which reaches an overlapping element.
+            ActionChains(driver).move_to_element(element).click().perform()
+    elif browser == "firefox":
+        element.click()
+
+
+def double_click_element(element):
+    if browser == "chrome":
+        try:
+            element.double_click()
+        except:
+            # Move then click to avoid Chrome unwillingness to send a click
+            # which reaches an overlapping element.
+            ActionChains(driver).move_to_element(element).double_click().perform()
+    elif browser == "firefox":
+        element.double_click()
+
+
 class ElementAction(DynStrActionBase):
 
     def __init__(self, by, spec):
@@ -97,7 +180,7 @@ class ElementAction(DynStrActionBase):
 class ClickElementAction(ElementAction):
 
     def _execute_on_element(self, element):
-        element.click()
+        click_element(element)
 
 
 class SmartElementAction(DynStrActionBase):
@@ -111,60 +194,18 @@ class SmartElementAction(DynStrActionBase):
         return spec
 
     def _execute_events(self, events):
-        # Get gaze location as early as possible.
-        gaze_location = self.tracker.get_gaze_point_or_default()
-        switch_to_active_tab()
-        elements = driver.find_elements(self.by, events)
-        if not elements:
-            print("No matching elements found")
-            return
-        # Assume there is equal amount of browser chrome on the left and right sides of the screen.
-        canvas_left = driver.execute_script("return window.screenX + (window.outerWidth - window.innerWidth) / 2 - window.scrollX;")
-        # Assume all the browser chrome is on the top of the screen and none on the bottom.
-        canvas_top = driver.execute_script("return window.screenY + (window.outerHeight - window.innerHeight) - window.scrollY;")
-        canvas_bottom = driver.execute_script("return window.screenY + window.outerHeight - window.scrollY;")
-        nearest_element = None
-        nearest_element_distance_squared = float("inf")
-        for element in elements:
-            element_location = (element.rect["x"] + canvas_left + element.rect["width"] / 2,
-                                element.rect["y"] + canvas_top + element.rect["height"] / 2)
-            if not element.is_displayed():
-                # Element is not visible onscreen.
-                continue
-            offsets = (element_location[0] - gaze_location[0], element_location[1] - gaze_location[1])
-            distance_squared = offsets[0] * offsets[0] + offsets[1] * offsets[1]
-            if distance_squared < nearest_element_distance_squared:
-                nearest_element = element
-                nearest_element_distance_squared = distance_squared
-        if not nearest_element:
-            print("Matching elements were not visible")
-            return
-        self._execute_on_element(nearest_element)
+        nearest_element = find_nearest_element(lambda: driver.find_elements(self.by, events), tracker)
+        if nearest_element:
+            self._execute_on_element(nearest_element)
 
 
 class SmartClickElementAction(SmartElementAction):
 
     def _execute_on_element(self, element):
-        if browser == "chrome":
-            try:
-                element.click()
-            except:
-                # Move then click to avoid Chrome unwillingness to send a click
-                # which reaches an overlapping element.
-                ActionChains(driver).move_to_element(element).click().perform()
-        elif browser == "firefox":
-            element.click()
+        click_element(element)
 
 
 class DoubleClickElementAction(ElementAction):
 
     def _execute_on_element(self, element):
-        if browser == "chrome":
-            try:
-                element.double_click()
-            except:
-                # Move then click to avoid Chrome unwillingness to send a click
-                # which reaches an overlapping element.
-                ActionChains(driver).move_to_element(element).double_click().perform()
-        elif browser == "firefox":
-            element.double_click()
+        double_click_element(element)

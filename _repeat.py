@@ -44,6 +44,7 @@ from dragonfly import (
     DictList,
     DictListRef,
     Dictation,
+    DynStrActionBase,
     Empty,
     FocusWindow,
     Function,
@@ -1876,12 +1877,27 @@ chrome_action_map = odict[
     "webdriver test": Function(webdriver.test_driver),
     "go search": webdriver.ClickElementAction(By.NAME, "q"),
     "bill new": webdriver.ClickElementAction(By.LINK_TEXT, "Add a bill"),
-    # "<text> touch": webdriver.SmartClickElementAction(By.XPATH,
-    #                                                   ("//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " +
-    #                                                    "translate('%(text)s', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))]]"),
-    #                                                   tracker),
     "ghost open": Key("ca-k"),
 ]
+
+class ClickTextOrButtonAction(DynStrActionBase):
+
+    def __init__(self, spec):
+        DynStrActionBase.__init__(self, spec)
+
+    def _parse_spec(self, spec):
+        return spec
+
+    def _execute_events(self, events):
+        word_location = gaze_ocr_controller.move_cursor_to_word(events)
+        if word_location:
+            Mouse("left").execute()
+            return
+        nearest_element = webdriver.find_nearest_element(
+            lambda: webdriver.find_clickable_elements_by_name(events),
+            tracker)
+        if nearest_element:
+            webdriver.click_element(nearest_element)
 
 chrome_terminal_action_map = odict[
     "search <text>":        Key("c-l/15") + Text(u"%(text)s") + Pause("15") + Key("enter"),
@@ -1890,6 +1906,7 @@ chrome_terminal_action_map = odict[
     "moma search <text>": Key("c-l/15") + Text("moma") + Key("tab") + Text(u"%(text)s") + Key("enter"),
     "moma search": Key("c-l/15") + Text("moma") + Key("tab"),
     "<link>":          Text("%(link)s"),
+    utils.Override("<text> (touch|click) [left]"): ClickTextOrButtonAction("%(text)s"),
 ]
 
 link_chars_map = {
