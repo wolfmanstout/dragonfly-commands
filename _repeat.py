@@ -1208,14 +1208,17 @@ shell_command_map = utils.combine_maps(odict[
     "cat",
     "man",
     "less",
-    "git status",
     "git branch",
-    "git diff",
     "git checkout",
-    "git stash",
-    "git stash pop",
-    "git push",
+    "git diff",
+    "git fetch",
+    "git log",
+    "git merge",
     "git pull",
+    "git push",
+    "git stash pop",
+    "git stash",
+    "git status",
 ]))
 run_local_hook("AddShellCommands", shell_command_map)
 
