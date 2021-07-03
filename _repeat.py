@@ -2093,6 +2093,7 @@ docs_action_map = odict[
     "delete row": Key("a-e/15, d"),
     "(click|touch) present": webdriver.ClickElementAction(By.XPATH, "//*[@aria-label='Start presentation (Ctrl+F5)']"),
     "file rename": Key("as-f/50, r"),
+    "menu <text>": Key("a-slash/15") + Text("%(text)s") + Pause("25") + Key("enter"),
 ]
 docs_environment = MyEnvironment(name="Docs",
                                  parent=chrome_environment,
