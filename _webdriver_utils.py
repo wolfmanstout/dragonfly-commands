@@ -73,6 +73,7 @@ def quit_driver():
 
 def switch_to_active_tab():
     if browser == "chrome":
+        # driver.switch_to.window("main")
         tabs = json.load(urllib_request.urlopen("http://127.0.0.1:9222/json"))
         # Chrome seems to order the tabs by when they were last updated, so we find
         # the first one that is not an extension.

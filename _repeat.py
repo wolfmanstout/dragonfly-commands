@@ -68,6 +68,8 @@ from dragonfly import (
     get_accessibility_controller,
     get_engine,
 )
+from dragonfly.actions.action_base import ActionSeries
+from dragonfly.grammar.context import LogicAndContext, LogicOrContext
 import dragonfly.log
 from selenium.webdriver.common.by import By
 
@@ -1086,6 +1088,8 @@ class Environment(object):
                  context=None,
                  parent=None):
         self.name = name
+        self.unmerged_environment_map = environment_map
+        self.unmerged_context = context
         self.children = []
         if parent:
             parent.add_child(self)
@@ -1115,6 +1119,158 @@ class Environment(object):
         grammar.add_rule(exported_rule_factory(self.name + "_exported", **rule_map))
         grammars.append(grammar)
         return grammars
+
+    def generate_talon_files(self, dir_path, header_prefix=""):
+        file_path = os.path.join(dir_path, "{}.talon".format(self.name))
+        with open(file_path, "w") as file:
+            header = header_prefix + "\n" if header_prefix else ""
+            header += convert_context_to_talon_header(self.unmerged_context, self.name)
+            if header:
+                file.write("{}\n-\n".format(header))
+            for _, (action_map, _) in self.unmerged_environment_map.items():
+                file.write(convert_action_map_to_talon_body(action_map))
+        for child in self.children:
+            child.generate_talon_files(dir_path, header)
+
+
+def convert_context_to_talon_header(context, name=""):
+    known_headers = {
+        "Chrome": "tag: browser",
+    }
+    if name in known_headers:
+        return known_headers[name]
+    result = ""
+    if isinstance(context, AppContext):
+        if context._executable:
+            for executable in context._executable:
+                result += "app.exe: /{}/".format(executable)
+        if context._title:
+            for title in context._title:
+                result += "title: /{}/".format(title)
+    elif isinstance(context, LogicAndContext) or isinstance(context, LogicOrContext):
+        children_headers = [convert_context_to_talon_header(child)
+                            for child in context._children]
+        result += "\n".join(children_headers)
+    return result
+
+
+def convert_action_map_to_talon_body(action_map):
+    result = ""
+    for command, action in action_map.items():
+        if isinstance(command, utils.Override):
+            command = command.key
+        line = ""
+        if isinstance(command, str):
+            if "<" not in command:
+                talon_action = convert_action_to_talon(action)
+                if talon_action:
+                    line = "{}: {}\n".format(command, talon_action)
+        if line:
+            result += line
+        else:
+            result += "# {}: {}\n".format(command, action)
+    return result
+
+
+def convert_action_to_talon(action):
+    result = ""
+    if isinstance(action, Key):
+        key_sequence = [convert_key_spec_to_talon(spec.strip())
+                        for spec in action._spec.split(",")]
+        result += "key({})".format(" ".join(key_sequence))
+    elif isinstance(action, Text):
+        result += "insert(\"{}\")".format(action._spec)
+    elif isinstance(action, Mouse):
+        mouse_map = {
+            "left": "mouse_click(0)",
+            "right": "mouse_click(1)",
+            "middle": "mouse_click(2)",
+            "left:2": "\n    mouse_click(0)\n    mouse_click(0)",
+        }
+        if action._spec in mouse_map:
+            result += mouse_map[action._spec]
+    elif isinstance(action, Pause):
+        result += "sleep({}0ms)".format(action._spec)
+    elif isinstance(action, ActionSeries):
+        talon_actions = [convert_action_to_talon(child)
+                         for child in action.flat_action_list()]
+        if any(not talon_action for talon_action in talon_actions):
+            return ""
+        result += "\n    {}".format("\n    ".join(talon_actions))
+    return result
+
+
+def convert_key_spec_to_talon(spec):
+    result = ""
+    index = spec.find("-")
+    if index != -1:
+        s = spec[:index]
+        index += 1
+        modifier_map = {"c": "ctrl", "a": "alt", "s": "shift", "w": "win"}
+        modifiers = [modifier_map[c] for c in s]
+        result += "{}-".format("-".join(modifiers))
+    else:
+        index = 0
+
+    delimiters = [(c, i + index) for i, c in enumerate(spec[index:])
+                  if c in ":/"]
+    delimiter_sequence = "".join([d[0] for d in delimiters])
+    delimiter_index = [d[1] for d in delimiters]
+
+    inner_pause = None
+    special = None
+    outer_pause = None
+    if delimiter_sequence == "":
+        keyname = spec[index:]
+    elif delimiter_sequence == "/":
+        keyname = spec[index:delimiter_index[0]]
+        outer_pause = spec[delimiter_index[0]+1:]
+    elif delimiter_sequence == "/:":
+        keyname = spec[index:delimiter_index[0]]
+        inner_pause = spec[delimiter_index[0]+1:delimiter_index[1]]
+        special = spec[delimiter_index[1]+1:]
+    elif delimiter_sequence == "/:/":
+        keyname = spec[index:delimiter_index[0]]
+        inner_pause = spec[delimiter_index[0]+1:delimiter_index[1]]
+        special = spec[delimiter_index[1]+1:delimiter_index[2]]
+        outer_pause = spec[delimiter_index[2]+1:]
+    elif delimiter_sequence == ":":
+        keyname = spec[index:delimiter_index[0]]
+        special = spec[delimiter_index[0]+1:]
+    elif delimiter_sequence == ":/":
+        keyname = spec[index:delimiter_index[0]]
+        special = spec[delimiter_index[0]+1:delimiter_index[1]]
+        outer_pause = spec[delimiter_index[1]+1:]
+
+    key_map = {
+        "ampersand": "&",
+        "apostrophe": "'",
+        "asterisk": "*",
+        "backslash": "\\",
+        "backtick": "`",
+        "comma": ",",
+        "del": "delete",
+        "dollar": "$",
+        "dot": ".",
+        "equals": "=",
+        "hash": "#",
+        "langle": "<",
+        "lbracket": "[",
+        "lparen": "(",
+        "minus": "-",
+        "plus": "+",
+        "question": "?",
+        "rangle": ">",
+        "rbracket": "]",
+        "rparen": ")",
+        "semicolon": ";",
+        "slash": "/",
+        "tilde": "~",
+        "underscore": "_",
+    }
+    result += key_map[keyname] if keyname in key_map else keyname
+    if special: result += ":" + special
+    return result
 
 
 class MyEnvironment(object):
@@ -2299,3 +2455,7 @@ def unload():
     server.server_close()
     gaze_ocr_controller.shutdown(wait=False)
     print("Unloaded _repeat.py")
+
+if __name__ == "__main__" and sys.argv[1]:
+    global_environment.environment.generate_talon_files(sys.argv[1])
+    print("Completed talon conversion")
