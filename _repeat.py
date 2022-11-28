@@ -22,6 +22,7 @@ from collections import OrderedDict
 from concurrent import futures
 
 import gaze_ocr
+import gaze_ocr.dragonfly
 import head_scroll
 import screen_ocr
 import win32clipboard
@@ -79,15 +80,20 @@ import _linux_utils as linux
 import _text_utils as text
 import _webdriver_utils as webdriver
 
-tracker = eye_tracking.EyeTracker.get_connected_instance(local.DLL_DIRECTORY)
+tracker = eye_tracking.EyeTracker.get_connected_instance(local.DLL_DIRECTORY,
+                                                         mouse=gaze_ocr.dragonfly.Mouse(),
+                                                         keyboard=gaze_ocr.dragonfly.Keyboard(),
+                                                         windows=gaze_ocr.dragonfly.Windows())
 if local.OCR_READER == "fast" or local.OCR_READER == "winrt":
     ocr_reader = screen_ocr.Reader.create_fast_reader(radius=150)
 elif local.OCR_READER == "quality":
     ocr_reader = screen_ocr.Reader.create_quality_reader(radius=150)
 gaze_ocr_controller = gaze_ocr.Controller(ocr_reader,
                                           tracker,
+                                          mouse=gaze_ocr.dragonfly.Mouse(),
+                                          keyboard=gaze_ocr.dragonfly.Keyboard(),
                                           save_data_directory=local.SAVE_OCR_DATA_DIR)
-scroller = head_scroll.Scroller(tracker, gaze_ocr._dragonfly_wrappers.Mouse())
+scroller = head_scroll.Scroller(tracker, gaze_ocr.dragonfly.Mouse())
 
 # Load local hooks if defined.
 try:
@@ -644,27 +650,27 @@ terminal_command_action_map = odict[
     "scroll start": Function(lambda: scroller.start()),
     "[scroll] stop": Function(lambda: scroller.stop()),
     "scroll reset": Function(lambda: reset_scroller()),
-    "<text> move": gaze_ocr_controller.move_cursor_to_word_action("%(text)s"),
-    "<text> (touch|click) [left]": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left"),
-    "<text> (touch|click) right": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("right"),
-    "<text> (touch|click) middle": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("middle"),
-    "<text> (touch|click) [left] twice": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:2"),
-    "<text> (touch|click) hold": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:down"),
-    "<text> (touch|click) release": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Mouse("left:up"),
-    "<text> control (touch|click)": gaze_ocr_controller.move_cursor_to_word_action("%(text)s") + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
+    "<text> move": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s"),
+    "<text> (touch|click) [left]": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("left"),
+    "<text> (touch|click) right": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("right"),
+    "<text> (touch|click) middle": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("middle"),
+    "<text> (touch|click) [left] twice": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("left:2"),
+    "<text> (touch|click) hold": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("left:down"),
+    "<text> (touch|click) release": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Mouse("left:up"),
+    "<text> control (touch|click)": gaze_ocr.dragonfly.MoveCursorToWordAction(gaze_ocr_controller, "%(text)s") + Key("ctrl:down") + Mouse("left") + Key("ctrl:up"),
 
     # OCR-based commands.
-    "go before <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "before"),
-    "go after <text>": gaze_ocr_controller.move_text_cursor_action("%(text)s", "after"),
+    "go before <text>": gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "before"),
+    "go after <text>": gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "after"),
     # Note that the delete commands are declared first so that they have higher
     # priority than the selection variants.
-    "words before <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up") + Key("backspace"),
-    "words after <text> delete": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up") + Key("backspace"),
-    "words <text> [through <text2>] delete": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s", for_deletion=True) + Key("backspace"),
-    "words before <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "before") + Key("shift:up"),
-    "words after <text>": Key("shift:down") + gaze_ocr_controller.move_text_cursor_action("%(text)s", "after") + Key("shift:up"),
-    "words <text> [through <text2>]": gaze_ocr_controller.select_text_action("%(text)s", "%(text2)s"),
-    "replace <text> with <replacement>": gaze_ocr_controller.select_text_action("%(text)s") + Text("%(replacement)s"),
+    "words before <text> delete": Key("shift:down") + gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "before") + Key("shift:up") + Key("backspace"),
+    "words after <text> delete": Key("shift:down") + gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "after") + Key("shift:up") + Key("backspace"),
+    "words <text> [through <text2>] delete": gaze_ocr.dragonfly.SelectTextAction(gaze_ocr_controller, "%(text)s", "%(text2)s", for_deletion=True) + Key("backspace"),
+    "words before <text>": Key("shift:down") + gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "before") + Key("shift:up"),
+    "words after <text>": Key("shift:down") + gaze_ocr.dragonfly.MoveTextCursorAction(gaze_ocr_controller, "%(text)s", "after") + Key("shift:up"),
+    "words <text> [through <text2>]": gaze_ocr.dragonfly.SelectTextAction(gaze_ocr_controller, "%(text)s", "%(text2)s"),
+    "replace <text> with <replacement>": gaze_ocr.dragonfly.SelectTextAction(gaze_ocr_controller, "%(text)s", "%(text2)s") + Text("%(replacement)s"),
 
     # Full-text dictation commands.
     "speak <text>": Text(u"%(text)s"),
